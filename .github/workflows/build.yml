@@ -1,0 +1,64 @@
+name: build
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  linux:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Утилиты
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg imagemagick libheif-plugin-libde265 libheif-plugin-aomenc
+      - name: Тесты
+        run: dotnet test -c Release
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Скачать ffmpeg и ImageMagick
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./build/fetch-tools.ps1 -Destination tools
+      - name: Тесты
+        shell: pwsh
+        run: |
+          $env:DROPWHEEL_FFMPEG = "$PWD\tools\ffmpeg\ffmpeg.exe"
+          $env:DROPWHEEL_MAGICK = "$PWD\tools\imagemagick\magick.exe"
+          dotnet test -c Release --logger "console;verbosity=normal"
+      - name: Сборка
+        shell: pwsh
+        run: |
+          dotnet publish src/DropWheel.Cli -c Release -r win-x64 --self-contained `
+            -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=None `
+            -o out/DropWheel
+          Copy-Item tools out/DropWheel/tools -Recurse
+          Copy-Item packaging/* out/DropWheel/
+          Compress-Archive out/DropWheel DropWheel-win-x64.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DropWheel-win-x64
+          path: out/DropWheel
+      - name: Обновить релиз dev-build
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release delete dev-build --yes --cleanup-tag 2>$null
+          gh release create dev-build DropWheel-win-x64.zip --prerelease --target $env:GITHUB_SHA `
+            --title "Тестовая сборка ($env:GITHUB_REF_NAME)" `
+            --notes "Свежая сборка из ветки $env:GITHUB_REF_NAME, коммит $env:GITHUB_SHA. Инструкция — в README."
