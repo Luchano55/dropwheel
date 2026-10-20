@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+<title>DropWheel</title>
+<defs>
+  <linearGradient id="g" x1="0.2" y1="0" x2="0.8" y2="1">
+    <stop offset="0" stop-color="#4CC2FF"/><stop offset="1" stop-color="#0067C0"/>
+  </linearGradient>
+</defs>
+<style>
+  path{stroke-linejoin:round;stroke-width:3}
+  .a,.d{fill:url(#g);stroke:url(#g)}
+  .t1{fill:#2F96E8;stroke:#2F96E8;opacity:.6}
+  .t2{fill:#2F96E8;stroke:#2F96E8;opacity:.32}
+  .n{fill:#7A8BA0;stroke:#7A8BA0;opacity:.42}
+  @media (prefers-color-scheme: dark){
+    .n{fill:#9AA9BC;stroke:#9AA9BC;opacity:.36}
+  }
+</style>
+<path class="t1" d="M39.03 12.76A57 57 0 0 1 88.97 12.76L77.92 31.89A35 35 0 0 0 50.08 31.89Z"/><path class="a" d="M95.89 16.76A57 57 0 0 1 120.86 60L98.77 60A35 35 0 0 0 84.85 35.89Z" transform="translate(3.46 -2)"/><path class="n" d="M120.86 68A57 57 0 0 1 95.89 111.24L84.85 92.11A35 35 0 0 0 98.77 68Z"/><path class="n" d="M88.97 115.24A57 57 0 0 1 39.03 115.24L50.08 96.11A35 35 0 0 0 77.92 96.11Z"/><path class="n" d="M32.11 111.24A57 57 0 0 1 7.14 68L29.23 68A35 35 0 0 0 43.15 92.11Z"/><path class="t2" d="M7.14 60A57 57 0 0 1 32.11 16.76L43.15 35.89A35 35 0 0 0 29.23 60Z"/><path class="d" d="M64 44C67.78 50.72 79.12 57.27 79.12 70.88A15.12 15.12 0 0 1 48.88 70.88C48.88 57.27 60.22 50.72 64 44Z"/><path d="M56.5 71a8 8 0 0 0 5.5 7" fill="none" stroke="#fff" stroke-opacity="0.85" stroke-width="3" stroke-linecap="round"/>
+</svg>

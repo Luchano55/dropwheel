@@ -1,0 +1,109 @@
+name: 🐞 Bug report / Сообщить об ошибке
+description: Something doesn't work as expected. / Что-то работает не так.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this! English or Russian — both are fine.
+        Спасибо, что сообщаете об ошибке! Можно писать по-английски или по-русски.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened? / Что случилось?
+      description: |
+        What did you do, what did you expect, and what happened instead?
+        Что делали, чего ждали и что получилось на самом деле?
+      placeholder: |
+        1. Dragged photo.heic from Explorer and pressed Space / Потащил photo.heic из проводника, нажал Пробел
+        2. Dropped it on "JPG" / Бросил на «JPG»
+        3. Got the notification "…" / nothing happened / Пришло уведомление «…» / ничего не произошло
+    validations:
+      required: true
+
+  - type: dropdown
+    id: entry-point
+    attributes:
+      label: Where did it happen? / Где это случилось?
+      options:
+        - The wheel (drag + Space) / Колесо (перетаскивание + Пробел)
+        - Explorer menu «Конвертировать…» / Меню проводника
+        - Tray icon, job list, notifications / Значок в трее, окно задач, уведомления
+        - Update / Обновление
+        - dropwheel-cli.exe or try-dropwheel.cmd / Консольный режим
+        - Something else / Другое
+    validations:
+      required: true
+
+  - type: input
+    id: file-type
+    attributes:
+      label: File type and size / Тип и размер файла
+      description: |
+        For conversion problems: extension and approximate size.
+        Для проблем с конвертацией: расширение и примерный размер.
+      placeholder: "HEIC, 3 MB · MOV from iPhone, 1.2 GB"
+
+  - type: dropdown
+    id: windows
+    attributes:
+      label: Windows version / Версия Windows
+      description: "Press Win+R, type `winver`, Enter. / Нажмите Win+R, введите `winver`, Enter."
+      options:
+        - Windows 11 24H2 or newer
+        - Windows 11 23H2 / 22H2 / 21H2
+        - Windows 10 22H2
+        - Windows 10, older / Windows 10, старее
+        - Other / Другая
+    validations:
+      required: true
+
+  - type: input
+    id: build
+    attributes:
+      label: DropWheel build / Номер сборки DropWheel
+      description: |
+        Right-click the tray icon → «Проверить обновления» (check for updates) — it shows your build number. It's also in the first lines of the log: "Запуск DropWheel 0.2.N".
+        Правый клик по значку → «Проверить обновления» — там будет номер сборки. Он же в начале журнала: «Запуск DropWheel 0.2.N».
+      placeholder: "0.2.57"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: screens
+    attributes:
+      label: Screens (for wheel problems) / Экран (если проблема с колесом)
+      multiple: true
+      options:
+        - One monitor / Один монитор
+        - Several monitors / Несколько мониторов
+        - Scale 100% / Масштаб 100%
+        - Scale 125–150% / Масштаб 125–150%
+        - Scale 175% or more / Масштаб 175% и больше
+
+  - type: textarea
+    id: log
+    attributes:
+      label: Log file / Журнал
+      description: |
+        Right-click the tray icon → «Открыть журнал» (open log) → drag the newest `.log` file into this box. The log contains file paths — remove anything private.
+        Правый клик по значку → «Открыть журнал» → перетащите сюда самый свежий файл `.log`. В журнале есть пути к файлам — если нужно, уберите лишнее.
+      placeholder: Drop the .log file here / Перетащите сюда файл .log
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Screenshots, anything else / Скриншоты и всё остальное
+      description: |
+        A screenshot or a short screen recording helps a lot.
+        Скриншот или короткая запись экрана очень помогают.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before you submit / Перед отправкой
+      options:
+        - label: I'm on the latest build / У меня последняя сборка
+        - label: I searched the existing issues / Я поискал(а) похожие сообщения

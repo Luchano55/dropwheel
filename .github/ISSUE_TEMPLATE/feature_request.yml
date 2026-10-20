@@ -1,0 +1,63 @@
+name: 💡 Feature request / Предложить идею
+description: A new format, a new operation or an improvement. / Новый формат, операция или улучшение.
+title: "[Idea]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Ideas are very welcome! Please check the [Roadmap](https://github.com/Luchano55/dropwheel#roadmap) first — it may already be planned.
+        Идеи очень нужны! Загляните сначала в [планы](https://github.com/Luchano55/dropwheel/blob/HEAD/README.ru.md#планы) — может, это уже в работе.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What do you want to do? / Что хотите сделать?
+      description: |
+        Describe the task, not the solution: what file do you have, what do you need in the end?
+        Опишите задачу, а не решение: какой файл есть и что нужно получить?
+      placeholder: |
+        I often get .docx files and need to send them as PDF.
+        Мне часто присылают .docx, а отправлять дальше нужно PDF.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area / Раздел
+      options:
+        - Images / Фото
+        - Video / Видео
+        - Audio / Звук
+        - PDF
+        - Office documents / Документы
+        - Archives / Архивы
+        - The wheel / Колесо
+        - Explorer menu / Меню проводника
+        - Settings, tray, updates / Настройки, трей, обновления
+        - Something else / Другое
+    validations:
+      required: true
+
+  - type: input
+    id: formats
+    attributes:
+      label: Formats involved / Какие форматы
+      placeholder: "DOCX → PDF · MKV → MP4 without re-encoding / MKV → MP4 без перекодирования"
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: How should it work? / Как это должно выглядеть?
+      description: |
+        For example: a new sector on the wheel, an option, a different default.
+        Например: новый сектор на колесе, настройка, другое значение по умолчанию.
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What do you use today? / Чем пользуетесь сейчас?
+      description: |
+        Another program or website — helps to understand what "good" looks like.
+        Другая программа или сайт — так понятнее, как должно быть.
