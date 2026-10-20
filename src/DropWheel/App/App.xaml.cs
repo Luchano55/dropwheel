@@ -26,6 +26,8 @@ public partial class App : Application
     private Notifier? _notifier;
     private JobsWindow? _jobsWindow;
     private DragWheelController? _dragWheel;
+    private WheelWindow? _chooser;
+    private IReadOnlyList<string> _chooserPaths = [];
 
     internal static FileLog Log { get; private set; } = null!;
     internal AppSettings Settings { get; private set; } = new();
@@ -122,13 +124,44 @@ public partial class App : Application
         else if (fromPipe) Dispatcher.BeginInvoke(ShowJobs);
     }
 
-    /// <summary>Меню у курсора для путей из проводника; выбор — в очередь.</summary>
+    /// <summary>
+    /// «Конвертировать…» из проводника: то же колесо у курсора, в режиме клика (раздел 9 ТЗ, D16);
+    /// выбор — в очередь. Если колесо не открылось — запасное списочное меню.
+    /// </summary>
     private void ShowChooser(IReadOnlyList<string> paths)
     {
         Log.Write($"Выбор операции для {paths.Count} файл(ов)");
         var ops = OperationCatalog.ForFiles(paths, Queue.Converter.CanRun);
         Queue.Converter.Prepare(ops);
-        ChooserMenu.Show(paths, ops, op => Enqueue(paths, op));
+        try
+        {
+            var wheel = _chooser ??= CreateChooser();
+            var (x, y) = WheelNative.CursorPosition() ?? throw new InvalidOperationException("Не удалось узнать позицию курсора");
+            _chooserPaths = paths;
+            wheel.CloseOnDeactivate = true;
+            wheel.SetItems(WheelItems.For(ops, OperationMode.Convert), WheelItems.For(ops, OperationMode.Tool));
+            wheel.ShowAt(x, y, activate: true);
+        }
+        catch (Exception ex)
+        {
+            Log.Write("Колесо выбора не открылось, показываю список: " + ex);
+            try { _chooser?.Cancel(); }
+            catch (Exception) { }
+            ChooserMenu.Show(paths, ops, op => Enqueue(paths, op));
+        }
+    }
+
+    private WheelWindow CreateChooser()
+    {
+        var wheel = new WheelWindow { CloseOnDeactivate = true };
+        wheel.ItemChosen += id =>
+        {
+            var paths = _chooserPaths;
+            if (OperationCatalog.Find(id) is not { } op || paths.Count == 0) return;
+            Log.Write($"Колесо (меню проводника): {op.Id} для {paths.Count} файл(ов)");
+            Enqueue(paths, op);
+        };
+        return wheel;
     }
 
     internal void Enqueue(IReadOnlyList<string> paths, Operation op) => Queue.EnqueueSelection(paths, op);
@@ -174,6 +207,7 @@ public partial class App : Application
     protected override void OnExit(ExitEventArgs e)
     {
         _dragWheel?.Dispose();
+        _chooser?.Close();
         _pipe?.Dispose();
         _batcher?.Dispose();
         _tray?.Dispose();

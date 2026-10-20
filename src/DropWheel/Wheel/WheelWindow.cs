@@ -150,6 +150,9 @@ public sealed class WheelWindow : Window
             WheelNative.TrySetForeground(_hwnd);
             Activate();
             Focus();
+            // Как у всплывающих меню: мышь у колеса, клик мимо закрывает его, даже если Windows
+            // не дала окну стать активным (тогда Deactivated не придёт).
+            Mouse.Capture(this, CaptureMode.SubTree);
         }
     }
 
@@ -214,7 +217,16 @@ public sealed class WheelWindow : Window
         base.OnMouseLeftButtonDown(e);
         if (!_open) return;
         var p = e.GetPosition(_wheel);
-        if (!_wheel.IsOnDisc(p)) return;
+        if (!_wheel.IsOnDisc(p))
+        {
+            // Клик мимо колеса (мышь захвачена в режиме клика) — закрыть, как меню.
+            if (CloseOnDeactivate)
+            {
+                e.Handled = true;
+                Cancel();
+            }
+            return;
+        }
         _pressed = true;
         _pressDots = _wheel.IsOnModeDots(p);
         _pressIndex = _pressDots ? null : _wheel.HitTest(p);
@@ -253,7 +265,23 @@ public sealed class WheelWindow : Window
         base.OnMouseRightButtonUp(e);
         if (!_open) return;
         e.Handled = true;
-        ToggleMode();
+        if (_wheel.IsOnDisc(e.GetPosition(_wheel))) ToggleMode();
+        else if (CloseOnDeactivate) Cancel();
+    }
+
+    protected override void OnMouseWheel(MouseWheelEventArgs e)
+    {
+        base.OnMouseWheel(e);
+        if (!_open || !CloseOnDeactivate) return;
+        e.Handled = true;
+        MoveSelection(e.Delta < 0 ? +1 : -1);
+    }
+
+    protected override void OnLostMouseCapture(MouseEventArgs e)
+    {
+        base.OnLostMouseCapture(e);
+        // Захват теряется, когда пользователь ушёл в другое окно (Alt+Tab, клик по панели задач).
+        if (_open && CloseOnDeactivate && !_hiding && Mouse.Captured is null) Cancel();
     }
 
     protected override void OnPreviewKeyDown(KeyEventArgs e)
@@ -471,6 +499,7 @@ public sealed class WheelWindow : Window
         _open = false;
         _closing = true;
         _pressed = false;
+        if (IsMouseCaptureWithin) Mouse.Capture(null);
         if (accepted is { } i && Motion.Enabled)
         {
             _wheel.Pulse(i);
