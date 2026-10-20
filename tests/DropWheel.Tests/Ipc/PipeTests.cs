@@ -135,7 +135,14 @@ public class PipeTests
     {
         using var pipe = new NamedPipeClientStream(".", name, PipeDirection.InOut);
         pipe.Connect(5000);
-        pipe.Write(bytes);
-        pipe.Flush();
+        try
+        {
+            pipe.Write(bytes);
+            pipe.Flush();
+        }
+        catch (IOException)
+        {
+            // Сервер вправе оборвать соединение с мусорным клиентом раньше, чем тот допишет (так бывает на Windows).
+        }
     }
 }
