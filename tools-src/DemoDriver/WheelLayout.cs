@@ -7,12 +7,12 @@ namespace DemoDriver;
 /// <summary>
 /// Где на колесе нужный сектор. Считаем тем же кодом, что и программа (DropWheel.Core):
 /// каталог операций → доступные здесь → сектора режима → угол середины сектора.
-/// Радиус кольца — середина между «Отменой» и внешним краем (WheelControl: 55 и 130 DIP).
+/// Радиус кольца — середина лепестков (WheelControl: от CenterRadius+PetalGap = 65 до DiscRadius−PetalGap = 139 DIP).
 /// </summary>
 internal static class WheelLayout
 {
     /// <summary>Середина кольца секторов, DIP. Если поменяется рисунок колеса — поправить здесь (или --ring-radius).</summary>
-    public const double DefaultRingRadiusDip = 92;
+    public const double DefaultRingRadiusDip = 102;
 
     /// <summary>Сектора колеса для файла после toggles нажатий «сменить режим».</summary>
     public static IReadOnlyList<WheelItem> Items(string file, int toggles, string toolsDir)

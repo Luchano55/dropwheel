@@ -153,7 +153,7 @@ internal static class Keyboard
     {
         foreach (var m in modifiers) { Down(m); Thread.Sleep(30); }
         Tap(key, 60);
-        foreach (var m in modifiers.Reverse()) { Thread.Sleep(30); Up(m); }
+        foreach (var m in Enumerable.Reverse(modifiers)) { Thread.Sleep(30); Up(m); }
     }
 
     private static void Send(ushort vk, uint flags)
