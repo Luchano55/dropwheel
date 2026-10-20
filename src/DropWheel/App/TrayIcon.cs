@@ -8,7 +8,7 @@ using DropWheel.Settings;
 namespace DropWheel.App;
 
 /// <summary>Значок в трее: серый — простой, синий с цифрой — идёт работа. Клик — окно задач.</summary>
-internal sealed class TrayIcon : IDisposable
+internal sealed partial class TrayIcon : IDisposable
 {
     private readonly NotifyIcon _icon;
     private readonly Icon _idle;
@@ -31,7 +31,7 @@ internal sealed class TrayIcon : IDisposable
         menu.Items.Add(_contextMenuItem);
         menu.Items.Add("Открыть журнал", null, (_, _) => OpenFolder(AppPaths.LogsDir));
         menu.Items.Add(new ToolStripSeparator());
-        menu.Items.Add("Выход", null, (_, _) => app.Exit());
+        menu.Items.Add("Выход", null, (_, _) => app.Quit());
 
         _icon = new NotifyIcon
         {

@@ -136,10 +136,11 @@ public partial class App : Application
         if (enabled) ContextMenuInstaller.TryInstall(Log);
         else ContextMenuInstaller.TryUninstall(Log);
         Settings = Settings with { ContextMenuEnabled = enabled };
-        Settings.Save(AppPaths.SettingsFile);
+        try { Settings.Save(AppPaths.SettingsFile); }
+        catch (Exception ex) { Log.Write("Не удалось сохранить настройки: " + ex.Message); }
     }
 
-    internal void Exit()
+    internal void Quit()
     {
         foreach (var job in Queue.Jobs) job.Cancel();
         Shutdown();
