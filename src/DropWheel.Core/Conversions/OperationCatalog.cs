@@ -79,14 +79,18 @@ public static class OperationCatalog
         All.FirstOrDefault(o => string.Equals(o.Id, id, StringComparison.OrdinalIgnoreCase));
 
     /// <summary>Операции для одного файла (по расширению).</summary>
-    /// <param name="available">Доступна ли операция на этом компьютере (Converter.CanRun); null — не проверять.</param>
-    public static IReadOnlyList<Operation> ForFile(string path, Func<Operation, bool>? available = null) =>
-        All.Where(o => o.AppliesTo(Path.GetExtension(path)) && (available is null || available(o))).ToList();
+    /// <param name="available">Доступна ли операция для файла с этим расширением на этом компьютере
+    /// (Converter.CanRun); null — не проверять.</param>
+    public static IReadOnlyList<Operation> ForFile(string path, Func<Operation, string, bool>? available = null)
+    {
+        var ext = Path.GetExtension(path);
+        return All.Where(o => o.AppliesTo(ext) && (available is null || available(o, ext))).ToList();
+    }
 
     /// <summary>
     /// Операции, общие для всех файлов (с учётом MinFiles). Пустой список — «Нечего предложить».
     /// </summary>
-    public static IReadOnlyList<Operation> ForFiles(IEnumerable<string> paths, Func<Operation, bool>? available = null)
+    public static IReadOnlyList<Operation> ForFiles(IEnumerable<string> paths, Func<Operation, string, bool>? available = null)
     {
         IEnumerable<Operation>? common = null;
         var count = 0;

@@ -1,18 +1,18 @@
 namespace DropWheel.Conversions;
 
 /// <summary>Тип файла. Any — любой файл (например, «упаковать в ZIP»).</summary>
-public enum MediaKind { Image, Video, Audio, Pdf, Document, Archive, Any }
+public enum MediaKind { Image, Video, Audio, Pdf, Document, Archive, Text, Any }
 
 public enum OperationMode { Convert, Tool }
 
 /// <summary>
-/// Внешние утилиты (FFmpeg, ImageMagick, Qpdf, Pdftoppm, SevenZip) запускаются процессом с аргументами из шаблона;
+/// Внешние утилиты (FFmpeg, ImageMagick, Qpdf, Pdftoppm, Pdftotext, SevenZip) запускаются процессом с аргументами из шаблона;
 /// остальные — встроенные движки (IInternalEngine):
 /// Zip — System.IO.Compression; Office — Word/Excel/PowerPoint через COM (только если установлен);
 /// DocLibs — бесплатные библиотеки (OpenXML, ClosedXML, Markdig…); WebPdf — HTML → PDF через Edge (WebView2);
 /// Ocr — распознавание текста Windows; Text — перекодировка текста.
 /// </summary>
-public enum EngineKind { FFmpeg, ImageMagick, Qpdf, Pdftoppm, Zip, Office, DocLibs, WebPdf, Ocr, SevenZip, Text }
+public enum EngineKind { FFmpeg, ImageMagick, Qpdf, Pdftoppm, Pdftotext, Zip, Office, DocLibs, WebPdf, Ocr, SevenZip, Text }
 
 /// <summary>PerFile — каждый файл отдельно; Combine — все выбранные файлы в один результат (склеить PDF, ZIP).</summary>
 public enum InputMode { PerFile, Combine }

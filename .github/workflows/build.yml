@@ -42,6 +42,18 @@ jobs:
           $env:DROPWHEEL_QPDF = "$PWD\tools\qpdf\qpdf.exe"
           $env:DROPWHEEL_PDFTOPPM = "$PWD\tools\poppler\pdftoppm.exe"
           dotnet test -c Release --logger "console;verbosity=normal"
+      - name: Windows-тесты и скриншоты интерфейса
+        shell: pwsh
+        run: |
+          $env:DROPWHEEL_SCREENSHOTS = "$PWD\screenshots"
+          dotnet test tests/DropWheel.Windows.Tests -c Release --logger "console;verbosity=normal"
+      - name: Скриншоты
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: screenshots
+          if-no-files-found: ignore
       - name: Сборка
         shell: pwsh
         run: |

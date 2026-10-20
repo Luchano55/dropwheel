@@ -67,7 +67,7 @@ public partial class App : Application
 
         Settings = AppSettings.Load(AppPaths.SettingsFile);
         var tools = new ToolLocator { FfmpegPath = Settings.FfmpegPath, MagickPath = Settings.MagickPath };
-        Queue = new JobQueue(new Converter(tools, Settings.Conversion, [new ZipEngine()]), maxParallel: 2, Log.Write);
+        Queue = new JobQueue(new Converter(tools, Settings.Conversion, AppEngines.EngineRegistry.Create(Log)), maxParallel: 2, Log.Write);
 
         _notifier = new Notifier(Log);
         _tray = new TrayIcon(this);

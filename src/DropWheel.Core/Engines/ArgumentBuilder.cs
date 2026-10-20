@@ -37,7 +37,7 @@ public static class ArgumentBuilder
                 output,
             ],
             // Остальные внешние утилиты: шаблон целиком, с явными {in} / {ins} / {out}.
-            EngineKind.Qpdf or EngineKind.Pdftoppm => Explicit(middle, inputs, output),
+            EngineKind.Qpdf or EngineKind.Pdftoppm or EngineKind.Pdftotext or EngineKind.SevenZip => Explicit(middle, inputs, output),
             _ => throw new ArgumentOutOfRangeException(nameof(op), op.Engine, "Встроенный движок — не процесс"),
         };
     }

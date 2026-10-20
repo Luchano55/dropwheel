@@ -4,7 +4,7 @@ namespace DropWheel.Engines;
 
 /// <summary>
 /// Где лежат ffmpeg и magick. Порядок: явный путь → переменная окружения
-/// (DROPWHEEL_FFMPEG / _MAGICK / _QPDF / _PDFTOPPM) → папка tools/ рядом с exe → PATH.
+/// (DROPWHEEL_FFMPEG / _MAGICK / _QPDF / _PDFTOPPM / _PDFTOTEXT / _7Z) → папка tools/ рядом с exe → PATH.
 /// На Linux без ImageMagick 7 используется convert из ImageMagick 6 (синтаксис совместим).
 /// </summary>
 public sealed class ToolLocator
@@ -13,6 +13,8 @@ public sealed class ToolLocator
     public string? MagickPath { get; init; }
     public string? QpdfPath { get; init; }
     public string? PdftoppmPath { get; init; }
+    public string? PdftotextPath { get; init; }
+    public string? SevenZipPath { get; init; }
     public string ToolsDirectory { get; init; } = Path.Combine(AppContext.BaseDirectory, "tools");
 
     public string Resolve(EngineKind engine) => engine switch
@@ -25,6 +27,11 @@ public sealed class ToolLocator
             ?? throw new ConversionException("Не найден qpdf. Положите qpdf.exe в папку tools рядом с программой."),
         EngineKind.Pdftoppm => Find(PdftoppmPath, "DROPWHEEL_PDFTOPPM", ["pdftoppm"])
             ?? throw new ConversionException("Не найден pdftoppm (poppler). Положите его в папку tools рядом с программой."),
+        EngineKind.Pdftotext => Find(PdftotextPath, "DROPWHEEL_PDFTOTEXT", ["pdftotext"])
+            ?? throw new ConversionException("Не найден pdftotext (poppler). Положите его в папку tools рядом с программой."),
+        // 7z.exe (полная версия с 7z.dll — умеет RAR); 7za — урезанная, без RAR; 7zz — Linux.
+        EngineKind.SevenZip => Find(SevenZipPath, "DROPWHEEL_7Z", ["7z", "7zz", "7za"])
+            ?? throw new ConversionException("Не найден 7-Zip. Положите 7z.exe и 7z.dll в папку tools рядом с программой."),
         _ => throw new ArgumentOutOfRangeException(nameof(engine)),
     };
 

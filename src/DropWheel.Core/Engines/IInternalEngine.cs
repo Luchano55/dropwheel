@@ -14,6 +14,12 @@ public interface IInternalEngine
     bool CanRun(Operation op) => IsAvailable;
 
     /// <summary>
+    /// То же для конкретного входного расширения (без точки, в нижнем регистре). Нужно запасным движкам,
+    /// которые умеют только часть входов операции: Edge печатает в PDF только DOCX, а не DOC/RTF.
+    /// </summary>
+    bool CanRun(Operation op, string extension) => CanRun(op);
+
+    /// <summary>
     /// Подготовиться заранее: пользователь видит колесо/меню с этими операциями и сейчас выберет.
     /// Office здесь запускает Word в фоне («прогрев»). Вызывается в потоке UI — не блокировать.
     /// </summary>

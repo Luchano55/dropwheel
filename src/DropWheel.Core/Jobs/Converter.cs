@@ -21,6 +21,10 @@ public sealed class Converter(ToolLocator tools, ConversionSettings settings, IE
     public bool CanRun(Operation op) =>
         EngineFor(op) is not null;
 
+    /// <summary>То же для файла с этим расширением — для фильтра каталога (ForFiles).</summary>
+    public bool CanRun(Operation op, string extension) =>
+        EngineFor(op, extension) is not null;
+
     /// <summary>Пользователь сейчас выберет одну из операций — дать движкам подготовиться (прогрев Office).</summary>
     public void Prepare(IReadOnlyList<Operation> offered)
     {
@@ -29,19 +33,23 @@ public sealed class Converter(ToolLocator tools, ConversionSettings settings, IE
                 engine.Prepare(group.ToList());
     }
 
-    /// <summary>Движок, которым операция будет выполнена здесь: основной, иначе запасной, иначе null.</summary>
-    public EngineKind? EngineFor(Operation op)
+    /// <summary>
+    /// Движок, которым операция будет выполнена здесь: основной, иначе запасной, иначе null.
+    /// extension — входное расширение (без точки); null — не проверять расширение.
+    /// </summary>
+    public EngineKind? EngineFor(Operation op, string? extension = null)
     {
-        if (CanUse(op.Engine, op)) return op.Engine;
-        if (op.Fallback is { } fb && CanUse(fb, op)) return fb;
+        if (CanUse(op.Engine, op, extension)) return op.Engine;
+        if (op.Fallback is { } fb && CanUse(fb, op, extension)) return fb;
         return null;
     }
 
-    private bool CanUse(EngineKind kind, Operation op)
+    private bool CanUse(EngineKind kind, Operation op, string? extension)
     {
-        if (_internal.TryGetValue(kind, out var engine)) return engine.CanRun(op);
+        if (_internal.TryGetValue(kind, out var engine))
+            return extension is null ? engine.CanRun(op) : engine.CanRun(op, Extensions.Normalize(extension));
         return kind is EngineKind.FFmpeg or EngineKind.ImageMagick or EngineKind.Qpdf
-                or EngineKind.Pdftoppm or EngineKind.SevenZip
+                or EngineKind.Pdftoppm or EngineKind.Pdftotext or EngineKind.SevenZip
             && _toolFound.GetOrAdd(kind, tools.IsAvailable);
     }
 
@@ -112,7 +120,7 @@ public sealed class Converter(ToolLocator tools, ConversionSettings settings, IE
     private async Task RunEngineAsync(Operation op, IReadOnlyList<string> inputs, string output,
         IProgress<double>? progress, Action<string>? log, CancellationToken ct)
     {
-        var kind = EngineFor(op) ?? throw new ConversionException(op.Engine == EngineKind.Office
+        var kind = EngineFor(op, Path.GetExtension(inputs[0])) ?? throw new ConversionException(op.Engine == EngineKind.Office
             ? "Не найден Microsoft Office"
             : $"На этом компьютере нечем выполнить «{op.Label}»");
 

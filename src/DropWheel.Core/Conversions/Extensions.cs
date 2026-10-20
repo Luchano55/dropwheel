@@ -22,6 +22,9 @@ public static class Extensions
 
     public static readonly IReadOnlyList<string> Archive = ["zip"];
 
+    /// <summary>Текстовые файлы: Markdown/HTML/TXT → PDF через Edge, перекодировка.</summary>
+    public static readonly IReadOnlyList<string> Text = ["txt", "md", "markdown", "html", "htm"];
+
     /// <summary>Синонимы одного формата: исходнику .jpeg не предлагаем «→ JPG».</summary>
     private static readonly string[][] Aliases =
         [["jpg", "jpeg", "jfif"], ["tif", "tiff"], ["heic", "heif"], ["mp4", "m4v"]];
@@ -38,6 +41,7 @@ public static class Extensions
         if (Pdf.Contains(ext)) return MediaKind.Pdf;
         if (Document.Contains(ext)) return MediaKind.Document;
         if (Archive.Contains(ext)) return MediaKind.Archive;
+        if (Text.Contains(ext)) return MediaKind.Text;
         return null;
     }
 
@@ -49,5 +53,5 @@ public static class Extensions
     }
 
     /// <summary>Все известные расширения (для пункта меню проводника см. ContextMenuRegistration).</summary>
-    public static IEnumerable<string> All => Image.Concat(Video).Concat(Audio).Concat(Pdf).Concat(Document).Concat(Archive);
+    public static IEnumerable<string> All => Image.Concat(Video).Concat(Audio).Concat(Pdf).Concat(Document).Concat(Archive).Concat(Text);
 }
