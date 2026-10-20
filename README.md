@@ -29,3 +29,11 @@
 - `dotnet test` — все тесты; без утилит интеграционные тесты пропускаются.
 - Сборка для Windows делается автоматически (GitHub Actions, `.github/workflows/build.yml`): тесты на Linux и Windows, затем архив с `tools/` выкладывается в релиз `dev-build`. Утилиты скачивает `build/fetch-tools.ps1`.
 - Документы: `docs/spec.md` (ТЗ), `docs/decisions.md`, `docs/questions.md`, `CLAUDE.md`.
+
+## Лицензии сторонних программ
+
+Архив сборки содержит:
+- **ffmpeg** — GPL-сборка [BtbN/FFmpeg-Builds](https://github.com/BtbN/FFmpeg-Builds) (лицензия GPL v3, исходный код — там же и на [ffmpeg.org](https://ffmpeg.org)); текст лицензии — `tools/ffmpeg/LICENSE.txt`.
+- **ImageMagick** — portable-сборка с [imagemagick.org](https://imagemagick.org) (лицензия ImageMagick, Apache-2.0-совместимая).
+
+DropWheel запускает их как отдельные программы и не изменяет.
