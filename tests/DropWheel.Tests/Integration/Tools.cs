@@ -15,6 +15,8 @@ internal static class Tools
 
     public static bool HasFfmpeg => Locator.IsAvailable(EngineKind.FFmpeg);
     public static bool HasMagick => Locator.IsAvailable(EngineKind.ImageMagick);
+    public static bool HasQpdf => Locator.IsAvailable(EngineKind.Qpdf);
+    public static bool HasPdftoppm => Locator.IsAvailable(EngineKind.Pdftoppm);
 
     public static string Fixture(string name) => Path.Combine(AppContext.BaseDirectory, "Fixtures", name);
 
@@ -37,6 +39,10 @@ internal static class Tools
 
     public static string Ffmpeg => Locator.Resolve(EngineKind.FFmpeg);
     public static string Magick => Locator.Resolve(EngineKind.ImageMagick);
+    public static string Qpdf => Locator.Resolve(EngineKind.Qpdf);
+
+    /// <summary>Число страниц PDF (заодно проверка, что qpdf его читает).</summary>
+    public static int PdfPages(string path) => int.Parse(Run(Qpdf, "--show-npages", path));
 
     public static string Ffprobe
     {

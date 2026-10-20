@@ -21,6 +21,14 @@ public class CatalogTests
     }
 
     [Fact]
+    public void Wheel_has_at_most_8_sectors_per_mode_for_every_extension()
+    {
+        foreach (var ext in Extensions.All)
+            foreach (var group in OperationCatalog.ForFile("file." + ext).GroupBy(o => o.Mode))
+                Assert.True(group.Count() <= 8, $"{ext} {group.Key}: {group.Count()}");
+    }
+
+    [Fact]
     public void Heic_gets_all_image_conversions()
     {
         var ids = Ids(OperationCatalog.ForFile("photo.heic"));
@@ -104,5 +112,47 @@ public class CatalogTests
     {
         var op = OperationCatalog.Find(opId)!;
         Assert.Equal(expected, op.Output.Resolve(Path.GetExtension(input)));
+    }
+
+    // --- PDF ---
+
+    [Fact]
+    public void Single_pdf_gets_pages_split_optimize_but_not_merge()
+    {
+        var ids = Ids(OperationCatalog.ForFiles(["/docs/отчёт 1.PDF"])).ToList();
+        Assert.Equal(["pdf-to-png", "pdf-to-jpg", "pdf-split", "pdf-optimize"], ids);
+    }
+
+    [Fact]
+    public void Two_pdfs_can_be_merged()
+    {
+        Assert.Contains("pdf-merge", Ids(OperationCatalog.ForFiles(["a.pdf", "b.pdf"])));
+        Assert.Empty(OperationCatalog.ForFiles(["a.pdf", "b.png"]));
+    }
+
+    [Fact]
+    public void Several_images_can_become_one_pdf()
+    {
+        Assert.DoesNotContain("images-to-pdf", Ids(OperationCatalog.ForFiles(["a.jpg"])));
+        Assert.Contains("images-to-pdf", Ids(OperationCatalog.ForFiles(["a.jpg", "b.heic", "c.png"])));
+        Assert.Contains("to-pdf", Ids(OperationCatalog.ForFiles(["a.jpg"]))); // по одному — как раньше
+    }
+
+    [Theory]
+    [InlineData("pdf-to-png", OperationMode.Convert, ResultKind.Folder, InputMode.PerFile, 1, " (страницы)")]
+    [InlineData("pdf-to-jpg", OperationMode.Convert, ResultKind.Folder, InputMode.PerFile, 1, " (страницы)")]
+    [InlineData("pdf-split", OperationMode.Tool, ResultKind.Folder, InputMode.PerFile, 1, " (по страницам)")]
+    [InlineData("pdf-merge", OperationMode.Tool, ResultKind.File, InputMode.Combine, 2, " (объединено)")]
+    [InlineData("pdf-optimize", OperationMode.Tool, ResultKind.File, InputMode.PerFile, 1, " (оптим.)")]
+    [InlineData("images-to-pdf", OperationMode.Tool, ResultKind.File, InputMode.Combine, 2, " (все)")]
+    public void Pdf_operations_shape(string id, OperationMode mode, ResultKind result, InputMode inputs, int minFiles, string suffix)
+    {
+        var op = OperationCatalog.Find(id)!;
+        Assert.Equal(mode, op.Mode);
+        Assert.Equal(result, op.Result);
+        Assert.Equal(inputs, op.Inputs);
+        Assert.Equal(minFiles, op.MinFiles);
+        Assert.Equal(suffix, op.Suffix);
+        Assert.True(op.Label.Length <= 16, op.Label); // помещается в сектор колеса
     }
 }

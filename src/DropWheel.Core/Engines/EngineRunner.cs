@@ -4,7 +4,7 @@ using DropWheel.Conversions;
 
 namespace DropWheel.Engines;
 
-/// <summary>Запускает ffmpeg / magick, читает прогресс, превращает сбой в ConversionException.</summary>
+/// <summary>Запускает ffmpeg / magick / qpdf / pdftoppm, читает прогресс, превращает сбой в ConversionException.</summary>
 public sealed class EngineRunner(ToolLocator tools)
 {
     private const int StderrTailLines = 40;
@@ -68,14 +68,22 @@ public sealed class EngineRunner(ToolLocator tools)
 
         string tail;
         lock (stderr) tail = string.Join('\n', stderr);
-        if (process.ExitCode != 0)
+        if (!Succeeded(engine, process.ExitCode))
         {
             log?.Invoke(tail);
             throw new ConversionException(ErrorTranslator.Translate(engine, tail),
                 $"{Path.GetFileName(exe)} завершился с кодом {process.ExitCode}\n{tail}");
         }
+        if (process.ExitCode != 0 && tail.Length > 0) log?.Invoke(tail); // предупреждения при успехе
         progress?.Report(1.0);
     }
+
+    /// <summary>
+    /// Код выхода «успех». qpdf: 3 — были предупреждения (например, починил битую таблицу xref),
+    /// но результат записан.
+    /// </summary>
+    public static bool Succeeded(EngineKind engine, int exitCode) =>
+        exitCode == 0 || (engine == EngineKind.Qpdf && exitCode == 3);
 
     private static string Quote(string a) => a.Contains(' ') ? $"\"{a}\"" : a;
 }

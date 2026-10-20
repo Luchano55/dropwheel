@@ -11,7 +11,7 @@ public class WheelItemsTests
     [Fact]
     public void Items_are_filtered_by_mode_in_catalog_order()
     {
-        var ops = OperationCatalog.ForFile("photo.heic");
+        var ops = OperationCatalog.ForFiles(["photo.heic"]); // как в приложении: «Один PDF» нужен от 2 файлов
 
         var convert = WheelItems.For(ops, OperationMode.Convert);
         Assert.Equal(["to-jpg", "to-png", "to-webp", "to-avif", "to-pdf"], convert.Select(i => i.Id));

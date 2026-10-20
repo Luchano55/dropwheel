@@ -3,7 +3,7 @@ using DropWheel.Conversions;
 namespace DropWheel.Engines;
 
 /// <summary>
-/// Собирает список аргументов для ffmpeg / ImageMagick.
+/// Собирает список аргументов для ffmpeg / ImageMagick / qpdf / pdftoppm.
 /// Пути передаются отдельными элементами списка — без кавычек и экранирования.
 /// </summary>
 public static class ArgumentBuilder
@@ -28,9 +28,10 @@ public static class ArgumentBuilder
                 output,
             ],
             // [0] — только первый кадр/страница: статичный результат из GIF/TIFF/HEIC-серий.
+            // Combine (картинки → один PDF): все входы, каждый — первым кадром, по странице на файл.
             EngineKind.ImageMagick =>
             [
-                input + "[0]",
+                .. (op.Inputs == InputMode.Combine ? inputs : [input]).Select(i => i + "[0]"),
                 .. middle,
                 .. (outExt is "jpg" or "jpeg" or "pdf" ? FlattenOnWhite : []),
                 output,
@@ -51,7 +52,9 @@ public static class ArgumentBuilder
         foreach (var token in template)
         {
             if (token == "{ins}") args.AddRange(inputs);
-            else args.Add(token.Replace("{in}", inputs[0]).Replace("{out}", output));
+            // «{out}/стр» → разделитель текущей ОС (в Windows — «\»).
+            else args.Add(token.Replace("{in}", inputs[0])
+                .Replace("{out}/", output + Path.DirectorySeparatorChar).Replace("{out}", output));
         }
         return args;
     }
