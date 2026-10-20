@@ -48,7 +48,8 @@ packaging/            файлы, которые кладутся в архив 
 
 - Облачная сессия — Linux. Ядро, CLI и тесты собираются и проверяются здесь (нужны .NET 8 SDK, ffmpeg, ImageMagick).
 - WPF-проект собирается на Linux с `EnableWindowsTargeting=true`, но не запускается: UI, хуки, контекстное меню и уведомления Роман проверяет на своём ПК по инструкции.
-- Сборка для Романа: GitHub Actions (`.github/workflows/build.yml`) — тесты на Linux и Windows, архив в релиз `dev-build`. Отсюда скачать Windows-утилиты нельзя.
+- Сборка для Романа: GitHub Actions (`.github/workflows/build.yml`) — тесты на Linux и Windows, архивы в релиз `dev-build` (только из `main`; программа обновляется сама по `version.json`). Отсюда скачать Windows-утилиты нельзя. Рабочие ветки — `claude/*`, в `main` — проверенное CI.
+- Скриншоты интерфейса (и демо-ролик) CI кладёт в ветку `screenshots` (`git fetch origin screenshots`).
 - .NET здесь: Microsoft SDK 8.0 из packages.microsoft.com (у Ubuntu-сборки нет WindowsDesktop SDK), `/opt/dotnet-ms`, ссылка `/usr/local/bin/dotnet`. Если сессия новая — поставить заново (см. историю коммитов/решение D15).
 - Ручная проверка на Windows — `docs/manual-tests.md`.
 

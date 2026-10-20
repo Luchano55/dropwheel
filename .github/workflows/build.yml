@@ -132,8 +132,8 @@ jobs:
           name: DropWheel-win-x64
           path: out/DropWheel
       - name: Обновить релиз dev-build
-        # Тестовую сборку для Романа обновляет только основная рабочая ветка.
-        if: github.ref == 'refs/heads/claude/dropwheel-stage1'
+        # Сборку для пользователей (релиз dev-build) обновляет только main.
+        if: github.ref == 'refs/heads/main'
         shell: pwsh
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
