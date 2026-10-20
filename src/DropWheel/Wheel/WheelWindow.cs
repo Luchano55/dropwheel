@@ -100,7 +100,22 @@ public sealed class WheelWindow : Window
         _wheel.VerticalAlignment = VerticalAlignment.Center;
         _wheel.IsPending = true;
         _wheel.RenderTransform = _scale;
-        Content = _wheel;
+
+        // Почти невидимая (альфа 1/255) подложка диска без анимации: у слоистого окна пиксели с нулевой
+        // альфой «проницаемы» для мыши и перетаскивания, а колесо появляется из прозрачности —
+        // без подложки первый DragEnter мог бы уйти окну под колесом.
+        var backing = new System.Windows.Shapes.Ellipse
+        {
+            Width = 2 * WheelControl.DiscRadius,
+            Height = 2 * WheelControl.DiscRadius,
+            Fill = new SolidColorBrush(Color.FromArgb(1, 0, 0, 0)),
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        var root = new System.Windows.Controls.Grid();
+        root.Children.Add(backing);
+        root.Children.Add(_wheel);
+        Content = root;
 
         SourceInitialized += (_, _) =>
         {
