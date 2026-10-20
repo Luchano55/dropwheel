@@ -73,6 +73,31 @@ public static class OperationCatalog
             { Inputs = InputMode.Combine, ResultStem = Engines.ZipEngine.ArchiveName },
         new(Engines.ZipEngine.ExtractId, "Распаковать", Tool, Archive, Zip, "", OutputRule.Fixed("zip"))
             { Result = ResultKind.Folder },
+
+        // OFFICE — Word / Excel / PowerPoint через COM (OfficeEngine), только если Office установлен.
+        // Что именно делает Office для операции (коды форматов) — Engines.OfficeFormats.
+        // Запасные движки без Office: Word → PDF — Edge (WebPdf, только DOCX); Word → TXT и Excel → CSV — DocLibs.
+        new("word-to-pdf",   "PDF",  Conv, Document, Office, "", OutputRule.Fixed("pdf"))  { InputExtensions = Extensions.Word, Fallback = WebPdf },
+        new("word-to-docx",  "DOCX", Conv, Document, Office, "", OutputRule.Fixed("docx")) { InputExtensions = Extensions.Word },
+        new("word-to-doc",   "DOC",  Conv, Document, Office, "", OutputRule.Fixed("doc"))  { InputExtensions = Extensions.Word },
+        new("word-to-odt",   "ODT",  Conv, Document, Office, "", OutputRule.Fixed("odt"))  { InputExtensions = Extensions.Word },
+        new("word-to-rtf",   "RTF",  Conv, Document, Office, "", OutputRule.Fixed("rtf"))  { InputExtensions = Extensions.Word },
+        new("word-to-txt",   "TXT",  Conv, Document, Office, "", OutputRule.Fixed("txt"))  { InputExtensions = Extensions.Word, Fallback = DocLibs },
+        // Excel: PDF — вся книга; CSV — первый лист, UTF-8, разделитель из региональных настроек Windows.
+        new("excel-to-pdf",  "PDF",  Conv, Document, Office, "", OutputRule.Fixed("pdf"))  { InputExtensions = Extensions.Excel },
+        new("excel-to-xlsx", "XLSX", Conv, Document, Office, "", OutputRule.Fixed("xlsx")) { InputExtensions = Extensions.Excel },
+        new("excel-to-xls",  "XLS",  Conv, Document, Office, "", OutputRule.Fixed("xls"))  { InputExtensions = Extensions.Excel },
+        new("excel-to-csv",  "CSV",  Conv, Document, Office, "", OutputRule.Fixed("csv"))  { InputExtensions = Extensions.Excel, Fallback = DocLibs },
+        new("excel-to-ods",  "ODS",  Conv, Document, Office, "", OutputRule.Fixed("ods"))  { InputExtensions = Extensions.Excel },
+        // PowerPoint. «Слайды PNG» — папка «доклад (слайды)» с файлами слайд-1.png… (1920 px по ширине).
+        new("ppt-to-pdf",    "PDF",  Conv, Document, Office, "", OutputRule.Fixed("pdf"))  { InputExtensions = Extensions.PowerPoint },
+        new("ppt-to-pptx",   "PPTX", Conv, Document, Office, "", OutputRule.Fixed("pptx")) { InputExtensions = Extensions.PowerPoint },
+        new("ppt-to-ppt",    "PPT",  Conv, Document, Office, "", OutputRule.Fixed("ppt"))  { InputExtensions = Extensions.PowerPoint },
+        new("ppt-to-odp",    "ODP",  Conv, Document, Office, "", OutputRule.Fixed("odp"))  { InputExtensions = Extensions.PowerPoint },
+        new("ppt-to-png",    "Слайды PNG", Conv, Document, Office, "", OutputRule.Fixed("png"), " (слайды)")
+            { InputExtensions = Extensions.PowerPoint, Result = ResultKind.Folder },
+        // PDF → Word: Word сам переводит PDF в редактируемый документ.
+        new("pdf-to-docx",   "DOCX", Conv, Pdf, Office, "", OutputRule.Fixed("docx")),
     ];
 
     public static Operation? Find(string id) =>

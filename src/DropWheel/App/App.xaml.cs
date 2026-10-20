@@ -26,6 +26,7 @@ public partial class App : Application
     private Notifier? _notifier;
     private JobsWindow? _jobsWindow;
     private DragWheelController? _dragWheel;
+    private IReadOnlyList<IInternalEngine> _engines = [];
 
     internal static FileLog Log { get; private set; } = null!;
     internal AppSettings Settings { get; private set; } = new();
@@ -67,7 +68,8 @@ public partial class App : Application
 
         Settings = AppSettings.Load(AppPaths.SettingsFile);
         var tools = new ToolLocator { FfmpegPath = Settings.FfmpegPath, MagickPath = Settings.MagickPath };
-        Queue = new JobQueue(new Converter(tools, Settings.Conversion, AppEngines.EngineRegistry.Create(Log)), maxParallel: 2, Log.Write);
+        _engines = AppEngines.EngineRegistry.Create(Log);
+        Queue = new JobQueue(new Converter(tools, Settings.Conversion, _engines), maxParallel: 2, Log.Write);
 
         _notifier = new Notifier(Log);
         _tray = new TrayIcon(this);
@@ -175,6 +177,12 @@ public partial class App : Application
         _batcher?.Dispose();
         _tray?.Dispose();
         _instance?.Dispose();
+        // Движки со своими процессами (Office): закрыть, иначе останутся скрытые WINWORD.EXE.
+        foreach (var engine in _engines.OfType<IDisposable>())
+        {
+            try { engine.Dispose(); }
+            catch (Exception ex) { Log.Write("Ошибка при закрытии движка: " + ex.Message); }
+        }
         base.OnExit(e);
     }
 
