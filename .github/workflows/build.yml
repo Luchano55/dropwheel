@@ -54,6 +54,31 @@ jobs:
           name: screenshots
           path: screenshots
           if-no-files-found: ignore
+      - name: Скриншоты в ветку screenshots
+        # Свежие картинки интерфейса: их видно в README и их может забрать разработчик (git fetch).
+        if: always() && github.event_name != 'pull_request' && hashFiles('screenshots/*.png') != ''
+        shell: pwsh
+        run: |
+          $branch = "$env:GITHUB_REF_NAME" -replace '[^A-Za-z0-9._-]', '-'
+          $dir = "$env:RUNNER_TEMP\shots"
+          git worktree add --detach $dir
+          Push-Location $dir
+          git checkout --orphan screenshots-tmp
+          git rm -rf . --quiet
+          New-Item -ItemType Directory $branch -Force | Out-Null
+          Copy-Item "$env:GITHUB_WORKSPACE\screenshots\*" $branch -Recurse
+          # Сохраняем картинки других веток, если ветка screenshots уже есть.
+          git fetch origin screenshots 2>$null
+          if ($LASTEXITCODE -eq 0) {
+            git checkout FETCH_HEAD -- . 2>$null
+            Remove-Item $branch -Recurse -Force -ErrorAction SilentlyContinue
+            New-Item -ItemType Directory $branch -Force | Out-Null
+            Copy-Item "$env:GITHUB_WORKSPACE\screenshots\*" $branch -Recurse
+          }
+          git add -A
+          git -c user.name="github-actions" -c user.email="github-actions@users.noreply.github.com" commit -m "Скриншоты: $env:GITHUB_REF_NAME $env:GITHUB_SHA" --quiet
+          git push --force origin HEAD:screenshots
+          Pop-Location
       - name: Сборка
         shell: pwsh
         run: |
