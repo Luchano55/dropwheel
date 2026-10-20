@@ -56,7 +56,8 @@ internal sealed class DragWheelController : IDisposable
     public void Start()
     {
         _hooks.Start();
-        _log.Write($"Хуки установлены, горячая клавиша: VK 0x{_detector.HotkeyVk:X2}");
+        _log.Write($"Хуки установлены, горячая клавиша: VK 0x{_detector.HotkeyVk:X2}"
+            + (LowLevelHooks.AcceptInjectedKeys ? " (DROPWHEEL_DEMO: программные нажатия принимаются)" : ""));
     }
 
     public string Hotkey

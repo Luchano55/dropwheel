@@ -73,9 +73,10 @@ jobs:
           git fetch origin screenshots 2>$null
           if ($LASTEXITCODE -eq 0) {
             git checkout FETCH_HEAD -- . 2>$null
-            Remove-Item $branch -Recurse -Force -ErrorAction SilentlyContinue
+            # Папку demo/ (ролик из задачи demo) не трогаем — её обновляет сама задача demo.
+            Get-ChildItem $branch -ErrorAction SilentlyContinue | Where-Object Name -ne "demo" | Remove-Item -Recurse -Force
             New-Item -ItemType Directory $branch -Force | Out-Null
-            Copy-Item "$env:GITHUB_WORKSPACE\screenshots\*" $branch -Recurse
+            Copy-Item "$env:GITHUB_WORKSPACE\screenshots\*" $branch -Recurse -Force
           }
           git add -A
           git -c user.name="github-actions" -c user.email="github-actions@users.noreply.github.com" commit -m "Скриншоты: $env:GITHUB_REF_NAME $env:GITHUB_SHA" --quiet
@@ -143,3 +144,78 @@ jobs:
             --prerelease --target $env:GITHUB_SHA `
             --title "Тестовая сборка $env:GITHUB_RUN_NUMBER" `
             --notes "Первая установка — DropWheel-win-x64.zip (всё сразу). Дальше программа обновляется сама (трей → «Обновить»). Сборка $env:GITHUB_RUN_NUMBER, ветка $env:GITHUB_REF_NAME, коммит $env:GITHUB_SHA."
+
+  demo:
+    # Настоящий ролик с экрана windows-latest и заодно сквозной тест: проводник → Пробел → колесо →
+    # файл рядом с исходником (docs/demo.md). Пока не блокирует сборку и релиз: ошибка видна, но не красит запуск.
+    needs: windows
+    if: github.event_name == 'workflow_dispatch' || github.ref_name != github.event.repository.default_branch
+    runs-on: windows-latest
+    continue-on-error: true
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Сборка DropWheel из задачи windows
+        uses: actions/download-artifact@v4
+        with:
+          name: DropWheel-win-x64
+          path: out/DropWheel
+      - name: Собрать DemoDriver
+        shell: pwsh
+        run: dotnet publish tools-src/DemoDriver -c Release -o out/DemoDriver
+      - name: Записать демо-ролик (сквозной тест)
+        shell: pwsh
+        run: ./build/demo/record-demo.ps1 -AppDir out/DropWheel -Driver out/DemoDriver/DemoDriver.exe -OutDir screenshots
+      - name: Ролик, скриншоты и журналы
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: demo
+          path: screenshots
+          if-no-files-found: ignore
+      - name: Сырая запись экрана (для разбора)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: demo-raw
+          path: ${{ runner.temp }}/demo/raw.mkv
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Ролик в ветку screenshots
+        # Кладётся в <ветка>/demo/ ветки screenshots; картинки задачи windows и других веток сохраняются.
+        if: always() && github.event_name != 'pull_request' && hashFiles('screenshots/**') != ''
+        shell: pwsh
+        run: |
+          $branch = "$env:GITHUB_REF_NAME" -replace '[^A-Za-z0-9._-]', '-'
+          $target = "$branch/demo"
+          $dir = "$env:RUNNER_TEMP\demo-shots"
+          git worktree add --detach $dir
+          Push-Location $dir
+          # Ветку могла только что обновить задача windows (или другая ветка) — тогда пробуем ещё раз.
+          for ($attempt = 1; $attempt -le 3; $attempt++) {
+            git checkout --orphan "demo-tmp-$attempt" --quiet
+            git rm -rf . --quiet 2>$null
+            git clean -fdxq
+            $lease = @()
+            git fetch origin screenshots 2>$null
+            if ($LASTEXITCODE -eq 0) {
+              $remote = (git rev-parse FETCH_HEAD).Trim()
+              git checkout FETCH_HEAD -- . 2>$null
+              $lease = @("--force-with-lease=screenshots:$remote")
+            }
+            Remove-Item $target -Recurse -Force -ErrorAction SilentlyContinue
+            New-Item -ItemType Directory $target -Force | Out-Null
+            Copy-Item "$env:GITHUB_WORKSPACE\screenshots\*" $target -Recurse -Force
+            git add -A
+            git -c user.name="github-actions" -c user.email="github-actions@users.noreply.github.com" commit -m "Демо-ролик: $env:GITHUB_REF_NAME $env:GITHUB_SHA" --quiet
+            git push @lease origin HEAD:screenshots
+            if ($LASTEXITCODE -eq 0) { break }
+            Write-Host "Ветка screenshots изменилась во время записи — повтор ($attempt)"
+            Start-Sleep -Seconds (5 * $attempt)
+          }
+          Pop-Location
+          Write-Host "Ролик: https://github.com/$env:GITHUB_REPOSITORY/blob/screenshots/$target/demo.mp4"
+          Write-Host "GIF:   https://raw.githubusercontent.com/$env:GITHUB_REPOSITORY/screenshots/$target/demo.gif"
