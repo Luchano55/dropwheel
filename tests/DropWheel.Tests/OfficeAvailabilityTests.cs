@@ -79,7 +79,7 @@ public class OfficeAvailabilityTests : IDisposable
 
         // Общие для любых файлов архиваторы (В ZIP/В 7Z) здесь не про Office — не учитываем.
         Assert.Equal(["word-to-pdf", "word-to-txt"], Offered(converter, "отчёт.docx").Where(id => id is not ("zip-pack" or "pack-7z")));
-        Assert.Empty(Offered(converter, "старый.doc").Where(id => id is not ("zip-pack" or "pack-7z")));
+        Assert.DoesNotContain(Offered(converter, "старый.doc"), id => id is not ("zip-pack" or "pack-7z"));
         Assert.Equal(EngineKind.WebPdf, converter.EngineFor(OperationCatalog.Find("word-to-pdf")!, "docx"));
         Assert.Null(converter.EngineFor(OperationCatalog.Find("word-to-pdf")!, "doc"));
 
