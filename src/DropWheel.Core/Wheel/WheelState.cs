@@ -18,6 +18,9 @@ public sealed class WheelState
 
     public bool IsEmpty => Items.Count == 0;
 
+    /// <summary>В обоих режимах есть сектора — переключать режим имеет смысл.</summary>
+    public bool HasBothModes => _convert.Count > 0 && _tools.Count > 0;
+
     /// <summary>Новые наборы; режим — «Конвертация», а если она пуста — «Инструменты».</summary>
     public void SetItems(IReadOnlyList<WheelItem> convertItems, IReadOnlyList<WheelItem> toolItems)
     {

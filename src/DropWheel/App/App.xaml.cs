@@ -65,6 +65,9 @@ public partial class App : Application
             ex.Handled = true;
         };
 
+        // Тема, акцент и анимации Windows: колесо и окна перечитывают их при смене настроек.
+        Ui.SystemTheme.Subscribe();
+
         Settings = AppSettings.Load(AppPaths.SettingsFile);
         var tools = new ToolLocator { FfmpegPath = Settings.FfmpegPath, MagickPath = Settings.MagickPath };
         Queue = new JobQueue(new Converter(tools, Settings.Conversion, AppEngines.EngineRegistry.Create(Log)), maxParallel: 2, Log.Write);

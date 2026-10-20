@@ -52,6 +52,27 @@ internal static class WheelNative
         return (work, dpi);
     }
 
+    /// <summary>Позиция курсора в физических пикселях; null — не удалось.</summary>
+    public static (int X, int Y)? CursorPosition()
+    {
+        try
+        {
+            return GetCursorPos(out var p) ? (p.X, p.Y) : null;
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>Вывести окно на передний план (для режима клика). Ошибки не важны: Activate всё равно вызывается.</summary>
+    public static void TrySetForeground(IntPtr hwnd)
+    {
+        if (hwnd == IntPtr.Zero) return;
+        try { SetForegroundWindow(hwnd); }
+        catch (Exception) { }
+    }
+
     /// <summary>Убрать окно из Alt+Tab.</summary>
     public static void MakeToolWindow(IntPtr hwnd)
     {
@@ -65,6 +86,14 @@ internal static class WheelNative
 
     [DllImport("user32.dll")]
     private static extern IntPtr MonitorFromPoint(NativePoint pt, uint flags);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetCursorPos(out NativePoint pt);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool SetForegroundWindow(IntPtr hwnd);
 
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     [return: MarshalAs(UnmanagedType.Bool)]
