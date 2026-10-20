@@ -79,6 +79,65 @@ internal static class Scenes
     }
 
     /// <summary>
+    /// Окно задач у трея поверх обоев: скруглённые углы и тень, как у всплывающих окон Windows 11.
+    /// overBackdrop — под окном размытые обои (системная акриловая подложка Windows 11 22H2+).
+    /// </summary>
+    public static (FrameworkElement Scene, double Width, double Height) Flyout(FrameworkElement view, bool light, bool overBackdrop)
+    {
+        const double margin = 24;
+        view.Measure(new Size(view.Width, double.PositiveInfinity));
+        var w = view.Width;
+        var h = Math.Ceiling(view.DesiredSize.Height);
+        var sceneW = w + 2 * margin;
+        var sceneH = h + 2 * margin;
+
+        var grid = new Grid { Width = sceneW, Height = sceneH };
+        grid.Children.Add(Wallpaper(sceneW, sceneH, light));
+
+        var frame = new Grid
+        {
+            Width = w, Height = h,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            Clip = new RectangleGeometry(new Rect(0, 0, w, h), 8, 8),
+        };
+        if (overBackdrop)
+        {
+            var blurred = Wallpaper(sceneW, sceneH, light);
+            blurred.Effect = new BlurEffect { Radius = 40, KernelType = KernelType.Gaussian };
+            blurred.Margin = new Thickness(-margin, -margin, 0, 0);
+            blurred.HorizontalAlignment = HorizontalAlignment.Left;
+            blurred.VerticalAlignment = VerticalAlignment.Top;
+            frame.Children.Add(blurred);
+            // Подкраска самой подложки Windows (акрил: свой полупрозрачный тон).
+            frame.Children.Add(new Border { Background = new SolidColorBrush(light ? Color.FromArgb(0x99, 0xF3, 0xF3, 0xF3) : Color.FromArgb(0xAA, 0x20, 0x20, 0x20)) });
+        }
+        frame.Children.Add(view);
+
+        // Тень и тонкая рамка Windows 11.
+        var shadow = new Border
+        {
+            Width = w, Height = h, CornerRadius = new CornerRadius(8),
+            Background = Brushes.Black,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            Effect = new DropShadowEffect { BlurRadius = 24, ShadowDepth = 6, Direction = 270, Opacity = 0.35 },
+        };
+        var border = new Border
+        {
+            Width = w, Height = h, CornerRadius = new CornerRadius(8), BorderThickness = new Thickness(1),
+            BorderBrush = new SolidColorBrush(light ? Color.FromArgb(0x1F, 0, 0, 0) : Color.FromArgb(0x33, 0x75, 0x75, 0x75)),
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            IsHitTestVisible = false,
+        };
+        grid.Children.Add(shadow);
+        grid.Children.Add(frame);
+        grid.Children.Add(border);
+        return (grid, sceneW, sceneH);
+    }
+
+    /// <summary>
     /// Колесо поверх обоев. Translucent — под диском размытая копия обоев (так выглядит системный акрил),
     /// Solid — просто обои (так колесо выглядит без эффектов прозрачности).
     /// </summary>

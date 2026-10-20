@@ -183,10 +183,17 @@ public partial class App : Application
     {
         if (_jobsWindow is null)
         {
-            _jobsWindow = new JobsWindow(Queue);
+            _jobsWindow = new JobsWindow(Queue, Log, Input.Hotkeys.DisplayName(Settings.Hotkey));
             _jobsWindow.Closed += (_, _) => _jobsWindow = null;
         }
         _jobsWindow.ShowNearTray();
+    }
+
+    /// <summary>Клик по значку в трее: окно задач открыть или спрятать.</summary>
+    internal void ToggleJobs()
+    {
+        if (_jobsWindow is null) ShowJobs();
+        else _jobsWindow.Toggle();
     }
 
     internal void SetContextMenuEnabled(bool enabled)

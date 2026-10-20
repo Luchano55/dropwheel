@@ -33,6 +33,19 @@ internal static class WheelNative
         public int Left, Top, Right, Bottom;
     }
 
+    private const uint AbmGetTaskbarPos = 5;
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct AppBarData
+    {
+        public int Size;
+        public IntPtr Window;
+        public uint CallbackMessage;
+        public uint Edge;
+        public Rect Rect;
+        public IntPtr Param;
+    }
+
     [StructLayout(LayoutKind.Sequential)]
     private struct MonitorInfo
     {
@@ -56,6 +69,37 @@ internal static class WheelNative
             ? dx
             : 96u;
         return (work, dpi);
+    }
+
+    /// <summary>Рабочая область, границы и эффективный DPI монитора под точкой (физические пиксели).</summary>
+    public static (Rect Work, Rect Bounds, uint Dpi) MonitorAreasAt(int x, int y)
+    {
+        var (work, dpi) = MonitorAt(x, y);
+        var bounds = work;
+        try
+        {
+            var mon = MonitorFromPoint(new NativePoint(x, y), MonitorDefaultToNearest);
+            var info = new MonitorInfo { Size = Marshal.SizeOf<MonitorInfo>() };
+            if (mon != IntPtr.Zero && GetMonitorInfo(mon, ref info)) bounds = info.Monitor;
+        }
+        catch (Exception)
+        {
+        }
+        return (work, bounds, dpi);
+    }
+
+    /// <summary>Прямоугольник панели задач (основной), физические пиксели; null — не удалось.</summary>
+    public static Rect? TaskbarRect()
+    {
+        try
+        {
+            var data = new AppBarData { Size = Marshal.SizeOf<AppBarData>() };
+            return SHAppBarMessage(AbmGetTaskbarPos, ref data) != UIntPtr.Zero ? data.Rect : null;
+        }
+        catch (Exception)
+        {
+            return null;
+        }
     }
 
     /// <summary>Позиция курсора в физических пикселях; null — не удалось.</summary>
@@ -132,6 +176,9 @@ internal static class WheelNative
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool GetMonitorInfo(IntPtr hMonitor, ref MonitorInfo info);
+
+    [DllImport("shell32.dll")]
+    private static extern UIntPtr SHAppBarMessage(uint message, ref AppBarData data);
 
     [DllImport("shcore.dll")]
     private static extern int GetDpiForMonitor(IntPtr hMonitor, int dpiType, out uint dpiX, out uint dpiY);
