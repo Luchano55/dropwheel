@@ -7,8 +7,8 @@ if "%~1"=="" (
   pause
   exit /b
 )
-dropwheel.exe list "%~1"
+dropwheel-cli.exe list "%~1"
 echo.
 set /p OP=Operation (for example to-jpg):
-dropwheel.exe convert "%~1" %OP%
+dropwheel-cli.exe convert "%~1" %OP%
 pause
