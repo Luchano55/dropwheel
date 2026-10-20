@@ -27,6 +27,9 @@ internal static class Tools
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
+            // Имена файлов в выводе (7z l -sccUTF-8) — в UTF-8, а не в OEM-кодировке консоли Windows.
+            StandardOutputEncoding = System.Text.Encoding.UTF8,
+            StandardErrorEncoding = System.Text.Encoding.UTF8,
         };
         foreach (var a in args) psi.ArgumentList.Add(a);
         using var p = Process.Start(psi)!;

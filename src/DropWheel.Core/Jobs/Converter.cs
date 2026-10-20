@@ -134,8 +134,16 @@ public sealed class Converter(ToolLocator tools, ConversionSettings settings, IE
 
         // Запасной внешний движок получает операцию «как свою» — с подменённым Engine.
         var effective = kind == op.Engine ? op : op with { Engine = kind };
+        // Распаковка 7-Zip: .tar.gz — в два запуска (см. SevenZip.ExtractAsync).
+        if (kind == EngineKind.SevenZip && op.Result == ResultKind.Folder)
+        {
+            await SevenZip.ExtractAsync(_runner, effective, inputs[0], output, Settings, progress, log, ct);
+            return;
+        }
         var args = ArgumentBuilder.Build(effective, inputs, output, Settings);
         await _runner.RunAsync(kind, args, progress, log, ct);
+        // У скана pdftotext «успешно» пишет пустой текст.
+        if (kind == EngineKind.Pdftotext) PdfText.EnsureHasText(output);
     }
 
     /// <summary>Имя выбираем в последний момент; если его успели занять — берём следующее.</summary>
