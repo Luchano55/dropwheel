@@ -76,7 +76,7 @@ public partial class App : Application
 
         Settings = AppSettings.Load(AppPaths.SettingsFile);
         var tools = new ToolLocator { FfmpegPath = Settings.FfmpegPath, MagickPath = Settings.MagickPath };
-        _engines = AppEngines.EngineRegistry.Create(Log);
+        _engines = AppEngines.EngineRegistry.Create(Log, Dispatcher);
         Queue = new JobQueue(new Converter(tools, Settings.Conversion, _engines), maxParallel: 2, Log.Write);
 
         _notifier = new Notifier(Log);

@@ -28,5 +28,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Toolkit.Uwp.Notifications" Version="7.1.3" />
+    <!-- HTML → PDF через встроенный в Windows Edge (WebView2 Runtime), WebPdfEngine. Лицензия — BSD-3-Clause. -->
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4258.31" />
   </ItemGroup>
 </Project>

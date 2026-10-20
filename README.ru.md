@@ -70,6 +70,7 @@
 | Звук (MP3, M4A, WAV, FLAC, OGG, Opus) | `to-mp3` `to-m4a` `to-wav` `to-flac` `to-ogg` | `audio-normalize` выровнять громкость |
 | PDF | `pdf-to-png` `pdf-to-jpg` — каждая страница картинкой, в папку `документ (страницы)` · `pdf-to-txt` текст (у сканов текста нет — будет понятная ошибка) | `pdf-merge` склеить несколько PDF · `pdf-split` разбить по страницам · `pdf-optimize` оптимизировать без потери качества · `pdf-rotate` повернуть все страницы на 90° по часовой |
 | Текст (TXT, CSV, SRT, MD, INI, LOG, XML, JSON) | — | `text-to-utf8` перекодировать в UTF-8 (из Windows-1251, DOS-866, UTF-16): `заметки (UTF-8).txt` |
+| Документы без Office (DOCX, CSV, Markdown, TXT, HTML) | `word-to-html` `word-to-md` Word (DOCX) → HTML / Markdown · `csv-to-xlsx` CSV → Excel (разделитель и кодировка угадываются) · `md-to-html` · `text-to-pdf` TXT / Markdown / HTML → PDF через Edge (только в приложении) · если Office не установлен: `word-to-pdf` (только DOCX, «почти как в Word»), `word-to-txt`, `excel-to-csv` (XLSX, XLS) | — |
 | Любые файлы, ZIP | — | `zip-pack` упаковать в ZIP (несколько файлов — в один архив) · `pack-7z` то же в 7Z · `zip-extract` распаковать ZIP в папку |
 | Архивы (7Z, RAR, TAR, GZ, TGZ, BZ2, XZ) | — | `archive-extract` распаковать в папку с именем архива (`.tar.gz` — сразу файлы); архивы с паролем не поддерживаются |
 
@@ -83,7 +84,6 @@
 <br>
 
 - **Документы Office → PDF** — DOC/DOCX/RTF/ODT, XLS/XLSX/ODS/CSV, PPT/PPTX/ODP: через установленный Microsoft Office (заранее «прогретый», чтобы было быстро) или встроенными библиотеками и печатью через Edge, если Office нет.
-- **Текст и веб-страницы → PDF** — TXT, Markdown, HTML.
 - **OCR** — распознать текст на сканах и фото.
 - **Архивы 7-Zip** — 7z, RAR и другие.
 - **Значки** — `.ico` из картинки.
@@ -241,6 +241,13 @@ dotnet test
 - **7-Zip** (`7z.exe`, `7z.dll`) — официальная сборка Игоря Павлова ([7-zip.org](https://www.7-zip.org), релизы [ip7z/7zip](https://github.com/ip7z/7zip)): лицензия GNU LGPL-2.1 или новее, часть кода — BSD-3-Clause; код распаковки RAR — под лицензией unRAR с ограничением: его нельзя использовать, чтобы воссоздать алгоритм сжатия RAR (DropWheel RAR только распаковывает). Текст лицензии — `tools/7zip/License.txt`, исходный код — на 7-zip.org.
 
 DropWheel запускает их как отдельные программы и не изменяет.
+
+Внутри самой программы (документы без Office, решение D-DOCLIBS в `docs/decisions.md`):
+- [**Open XML SDK**](https://github.com/dotnet/Open-XML-SDK) (`DocumentFormat.OpenXml`) — чтение DOCX, запись XLSX; лицензия MIT.
+- [**OpenXmlPowerTools**](https://github.com/Codeuctivity/OpenXmlPowerTools) (сборка Codeuctivity) — DOCX → HTML; MIT. Вместе с ним — [**SkiaSharp**](https://github.com/mono/SkiaSharp) (MIT; внутри — Skia, BSD-3-Clause, и другие библиотеки со своими свободными лицензиями).
+- [**ExcelDataReader**](https://github.com/ExcelDataReader/ExcelDataReader) — чтение XLSX/XLS; MIT. [**ExcelNumberFormat**](https://github.com/andersnm/ExcelNumberFormat) — числа и даты как в Excel; MIT.
+- [**Markdig**](https://github.com/xoofx/markdig) — Markdown → HTML; BSD-2-Clause.
+- [**Microsoft.Web.WebView2**](https://www.nuget.org/packages/Microsoft.Web.WebView2) — печать в PDF через Edge WebView2 Runtime, который уже есть в Windows 10/11; BSD-3-Clause.
 
 Программа написана на [.NET 8](https://dotnet.microsoft.com) и WPF; уведомления — [Microsoft.Toolkit.Uwp.Notifications](https://github.com/CommunityToolkit/WindowsCommunityToolkit) (MIT). Надписи на картинках — шрифтом [Inter](https://rsms.me/inter/) (SIL OFL 1.1).
 

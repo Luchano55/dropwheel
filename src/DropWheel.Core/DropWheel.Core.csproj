@@ -6,4 +6,12 @@
   <ItemGroup>
     <InternalsVisibleTo Include="DropWheel.Tests" />
   </ItemGroup>
+  <ItemGroup>
+    <!-- Документы без Office (DocLibsEngine, решение D-DOCLIBS). Все библиотеки — MIT / BSD-2-Clause. -->
+    <PackageReference Include="DocumentFormat.OpenXml" Version="3.5.1" />
+    <PackageReference Include="Codeuctivity.OpenXmlPowerTools" Version="9.0.493" />
+    <PackageReference Include="ExcelDataReader" Version="3.9.0" />
+    <PackageReference Include="ExcelNumberFormat" Version="1.1.0" />
+    <PackageReference Include="Markdig" Version="1.3.2" />
+  </ItemGroup>
 </Project>

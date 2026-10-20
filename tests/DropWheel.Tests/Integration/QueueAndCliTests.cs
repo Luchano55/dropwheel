@@ -71,7 +71,7 @@ public class QueueAndCliTests : IDisposable
     public async Task Cli_list_for_unknown_file_offers_zip()
     {
         var stdout = new StringWriter();
-        var code = await Program.RunAsync(["list", "readme.txt"], stdout, new StringWriter());
+        var code = await Program.RunAsync(["list", "data.bin"], stdout, new StringWriter());
         Assert.Equal(0, code);
         Assert.Equal("zip-pack", stdout.ToString().Trim().Split(' ')[0]);
     }

@@ -4,5 +4,16 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <!-- XML-документация пакетов (WebView2 и др.) в архиве сборки не нужна. -->
+    <PublishReferencesDocumentationFiles>false</PublishReferencesDocumentationFiles>
   </PropertyGroup>
+
+  <!-- Пакет SkiaSharp (нужен OpenXmlPowerTools) кладёт рядом с родной libSkiaSharp.dll её отладочные символы —
+       83 МБ. Ни в выходную папку, ни в архив сборки они не нужны. -->
+  <Target Name="DropNativeDebugSymbols" AfterTargets="ResolvePackageAssets">
+    <ItemGroup>
+      <RuntimeTargetsCopyLocalItems Remove="@(RuntimeTargetsCopyLocalItems)" Condition="'%(Extension)' == '.pdb'" />
+      <NativeCopyLocalItems Remove="@(NativeCopyLocalItems)" Condition="'%(Extension)' == '.pdb'" />
+    </ItemGroup>
+  </Target>
 </Project>

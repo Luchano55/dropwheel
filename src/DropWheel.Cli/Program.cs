@@ -96,7 +96,7 @@ public static class Program
             OutputFolder = outDir is null ? null : Path.GetFullPath(outDir),
         };
         Action<string>? log = verbose ? line => { lock (stderr) stderr.WriteLine(line); } : null;
-        var queue = new JobQueue(new Converter(tools, settings, [new ZipEngine(), new TextEngine()]), maxParallel: 2, log);
+        var queue = new JobQueue(new Converter(tools, settings, [new ZipEngine(), new TextEngine(), new DocLibsEngine()]), maxParallel: 2, log);
 
         var jobs = queue.EnqueueSelection(files, op);
         await Task.WhenAll(jobs.Select(j => j.Completion));

@@ -101,7 +101,7 @@ public class OfficeCatalogTests : IDisposable
     [InlineData("макрос.docm", "word-to-docx")]
     [InlineData("макрос.xlsm", "excel-to-xlsx")]
     [InlineData("макрос.pptm", "ppt-to-pptx")]
-    [InlineData("данные.csv", "excel-to-xlsx")]
+    [InlineData("данные.csv", "csv-to-xlsx")] // CSV → XLSX — без Office (DocLibs): разделитель и кодировка угадываются
     [InlineData("данные.csv", "excel-to-pdf")]
     [InlineData("скан.pdf", "pdf-to-docx")]
     [InlineData("доклад.pptx", "ppt-to-png")]
