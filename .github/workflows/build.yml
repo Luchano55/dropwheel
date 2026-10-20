@@ -58,30 +58,38 @@ jobs:
           if-no-files-found: ignore
       - name: Скриншоты в ветку screenshots
         # Свежие картинки интерфейса: их видно в README и их может забрать разработчик (git fetch).
+        # Ветка без истории (каждый раз один коммит), но параллельные сборки не затирают папки друг друга:
+        # берём текущее содержимое, меняем только свою папку, пушим с --force-with-lease и повторяем при гонке.
         if: always() && github.event_name != 'pull_request' && hashFiles('screenshots/*.png') != ''
         shell: pwsh
         run: |
           $branch = "$env:GITHUB_REF_NAME" -replace '[^A-Za-z0-9._-]', '-'
-          $dir = "$env:RUNNER_TEMP\shots"
-          git worktree add --detach $dir
-          Push-Location $dir
-          git checkout --orphan screenshots-tmp
-          git rm -rf . --quiet
-          New-Item -ItemType Directory $branch -Force | Out-Null
-          Copy-Item "$env:GITHUB_WORKSPACE\screenshots\*" $branch -Recurse
-          # Сохраняем картинки других веток, если ветка screenshots уже есть.
-          git fetch origin screenshots 2>$null
-          if ($LASTEXITCODE -eq 0) {
-            git checkout FETCH_HEAD -- . 2>$null
-            # Папку demo/ (ролик из задачи demo) не трогаем — её обновляет сама задача demo.
-            Get-ChildItem $branch -ErrorAction SilentlyContinue | Where-Object Name -ne "demo" | Remove-Item -Recurse -Force
+          $shots = "$env:GITHUB_WORKSPACE\screenshots"
+          $ok = $false
+          for ($attempt = 1; $attempt -le 6 -and -not $ok; $attempt++) {
+            git fetch origin screenshots 2>$null
+            $hasRemote = $LASTEXITCODE -eq 0
+            $base = if ($hasRemote) { (git rev-parse FETCH_HEAD).Trim() } else { "" }
+            $dir = "$env:RUNNER_TEMP\shots$attempt"
+            git worktree add --detach $dir 2>$null
+            Push-Location $dir
+            git checkout --orphan "screenshots-tmp$attempt" --quiet
+            git rm -rf . --quiet 2>$null
+            if ($hasRemote) { git checkout FETCH_HEAD -- . 2>$null }
+            # Своя папка — заново; demo/ внутри неё обновляет задача demo, её не трогаем.
+            if (Test-Path $branch) { Get-ChildItem $branch | Where-Object Name -ne "demo" | Remove-Item -Recurse -Force }
             New-Item -ItemType Directory $branch -Force | Out-Null
-            Copy-Item "$env:GITHUB_WORKSPACE\screenshots\*" $branch -Recurse -Force
+            Copy-Item "$shots\*" $branch -Recurse -Force
+            git add -A
+            git -c user.name="github-actions" -c user.email="github-actions@users.noreply.github.com" commit -m "Скриншоты: $env:GITHUB_REF_NAME $env:GITHUB_SHA" --quiet
+            if ($hasRemote) { git push "--force-with-lease=screenshots:$base" origin HEAD:screenshots }
+            else { git push origin HEAD:screenshots }
+            $ok = $LASTEXITCODE -eq 0
+            Pop-Location
+            if (-not $ok) { Write-Host "Гонка с другой сборкой, попытка $attempt — повторяю"; Start-Sleep -Seconds (Get-Random -Minimum 3 -Maximum 12) }
           }
-          git add -A
-          git -c user.name="github-actions" -c user.email="github-actions@users.noreply.github.com" commit -m "Скриншоты: $env:GITHUB_REF_NAME $env:GITHUB_SHA" --quiet
-          git push --force origin HEAD:screenshots
-          Pop-Location
+          if (-not $ok) { Write-Warning "Скриншоты не опубликованы (ветка занята другими сборками)" }
+          $global:LASTEXITCODE = 0
       - name: Сборка
         shell: pwsh
         run: |
