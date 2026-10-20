@@ -16,6 +16,7 @@ namespace DropWheel.Input;
 /// <para>
 /// Программно сгенерированные нажатия клавиш (LLKHF_INJECTED: SendInput, экранная клавиатура,
 /// AutoHotkey) пропускаются мимо детектора — не реагируем на собственный и чужой синтетический ввод.
+/// Исключение — демо-режим для CI (<see cref="AcceptInjectedKeys"/>, DROPWHEEL_DEMO=1).
 /// Синтетические события мыши, наоборот, учитываются: сдвиг курсора <see cref="CursorNudge"/> и
 /// ввод с сенсорного экрана/пера тоже двигают перетаскивание. Мышь никогда не глотается.
 /// </para>
@@ -27,6 +28,13 @@ public sealed class LowLevelHooks : IDisposable
 {
     private static readonly TimeSpan StartTimeout = TimeSpan.FromSeconds(5);
     private static readonly TimeSpan StopTimeout = TimeSpan.FromSeconds(2);
+
+    /// <summary>
+    /// ТОЛЬКО для автоматического демо-ролика / сквозного теста в CI (build/demo/record-demo.ps1):
+    /// при DROPWHEEL_DEMO=1 программные нажатия клавиш (SendInput) тоже доходят до детектора —
+    /// иначе робот не сможет «нажать Пробел». Без этой переменной поведение не меняется.
+    /// </summary>
+    public static bool AcceptInjectedKeys { get; } = Environment.GetEnvironmentVariable("DROPWHEEL_DEMO") == "1";
 
     private readonly DragDetector _detector;
     private readonly Dispatcher _ui;
@@ -206,7 +214,7 @@ public sealed class LowLevelHooks : IDisposable
             try
             {
                 var flags = Marshal.ReadInt32(lParam, KbdFlagsOffset);
-                if ((flags & LLKHF_INJECTED) == 0)
+                if ((flags & LLKHF_INJECTED) == 0 || AcceptInjectedKeys)
                 {
                     var vk = Marshal.ReadInt32(lParam, KbdVkCodeOffset);
                     var swallow = false;

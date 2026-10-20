@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Робот для демо-ролика и сквозного теста на windows-latest (build/demo/record-demo.ps1).
+       Не входит в DropWheel.sln и в архив программы: собирается только CI-задачей demo.
+       Двигает мышь и жмёт клавиши через SendInput, ищет файлы в проводнике через UI Automation,
+       пишет экран через ffmpeg (gdigrab) и монтирует ролик с подписями. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <!-- WPF — ради System.Windows.Automation (UIAutomationClient), WinForms — ради System.Drawing (скриншоты). -->
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <AssemblyName>DemoDriver</AssemblyName>
+    <RootNamespace>DemoDriver</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <IsPackable>false</IsPackable>
+    <NoWarn>$(NoWarn);WFAC010</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+    <Using Include="System.IO" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Каталог операций и геометрия колеса — те же, что у программы: робот сам считает, где сектор «PNG». -->
+    <ProjectReference Include="..\..\src\DropWheel.Core\DropWheel.Core.csproj" />
+  </ItemGroup>
+</Project>
