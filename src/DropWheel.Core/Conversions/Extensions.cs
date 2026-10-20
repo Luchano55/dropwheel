@@ -16,7 +16,7 @@ public static class Extensions
 
     /// <summary>Документы Microsoft Office (и форматы, которые Office открывает).</summary>
     public static readonly IReadOnlyList<string> Word = ["doc", "docx", "docm", "rtf", "odt"];
-    public static readonly IReadOnlyList<string> Excel = ["xls", "xlsx", "xlsm", "ods"];
+    public static readonly IReadOnlyList<string> Excel = ["xls", "xlsx", "xlsm", "ods", "csv"];
     public static readonly IReadOnlyList<string> PowerPoint = ["ppt", "pptx", "pptm", "odp"];
     public static readonly IReadOnlyList<string> Document = [.. Word, .. Excel, .. PowerPoint];
 
