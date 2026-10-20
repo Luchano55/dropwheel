@@ -18,7 +18,7 @@ public class WheelItemsTests
         Assert.Equal("JPG", convert[0].Label);
 
         var tools = WheelItems.For(ops, OperationMode.Tool);
-        Assert.Equal(["img-compress", "img-half", "img-1920", "img-strip"], tools.Select(i => i.Id));
+        Assert.Equal(["img-compress", "img-half", "img-1920", "img-strip", "zip-pack"], tools.Select(i => i.Id));
         Assert.Equal("Сжать", tools[0].Label);
     }
 

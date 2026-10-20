@@ -20,6 +20,7 @@
 | Фото (JPG, PNG, WebP, HEIC, AVIF, BMP, TIFF, GIF) | `to-jpg` `to-png` `to-webp` `to-avif` `to-pdf` | `img-compress` сжать · `img-half` уменьшить ×2 · `img-1920` до 1920 px · `img-strip` убрать метаданные |
 | Видео (MP4, MOV, MKV, WebM, AVI) | `to-mp4` `to-webm` `to-gif` `video-to-mp3` | `video-compress` сжать · `video-720p` · `video-mute` убрать звук |
 | Звук (MP3, M4A, WAV, FLAC, OGG, Opus) | `to-mp3` `to-m4a` `to-wav` `to-flac` `to-ogg` | `audio-normalize` выровнять громкость |
+| Любые файлы, ZIP | — | `zip-pack` упаковать в ZIP (несколько файлов — в один архив) · `zip-extract` распаковать ZIP в папку |
 
 Исходный файл никогда не меняется и не удаляется. Если имя занято — `photo (1).jpg`. Инструменты добавляют пометку: `photo (сжато).jpg`.
 

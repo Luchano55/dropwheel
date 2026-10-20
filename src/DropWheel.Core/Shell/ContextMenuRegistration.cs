@@ -14,24 +14,31 @@ public static class ContextMenuRegistration
     public const string VerbKey = "DropWheel.Convert";
     public const string MenuText = "Конвертировать…";
 
-    public static IReadOnlyList<RegistryValue> Entries(string exePath)
-    {
-        var list = new List<RegistryValue>();
-        foreach (var key in KeysToDelete())
-        {
-            list.Add(new(key, "MUIVerb", MenuText));
-            list.Add(new(key, "Icon", $"\"{exePath}\",0"));
-            // Player: проводник отдаёт выделенные файлы без лимита в 15 штук (MultipleInvokePromptMinimum)
-            // и запускает процесс на каждый файл. TODO: проверить на настоящей Windows 10/11.
-            list.Add(new(key, "MultiSelectModel", "Player"));
-            list.Add(new(key + @"\command", null, $"\"{exePath}\" --convert \"%1\""));
-        }
-        return list;
-    }
+    /// <summary>
+    /// Ключ для всех файлов («*»): «В ZIP» подходит к любому файлу, поэтому пункт есть везде.
+    /// Папки (Directory) пока не регистрируем.
+    /// </summary>
+    public const string AllFilesKey = @"Software\Classes\*\shell\" + VerbKey;
 
-    /// <summary>Ключи ...\shell\DropWheel.Convert по каждому расширению — удалять целиком, с подключами.</summary>
-    public static IReadOnlyList<string> KeysToDelete() =>
+    public static IReadOnlyList<RegistryValue> Entries(string exePath) =>
+    [
+        new(AllFilesKey, "MUIVerb", MenuText),
+        new(AllFilesKey, "Icon", $"\"{exePath}\",0"),
+        // Player: проводник отдаёт выделенные файлы без лимита в 15 штук (MultipleInvokePromptMinimum)
+        // и запускает процесс на каждый файл. TODO: проверить на настоящей Windows 10/11.
+        new(AllFilesKey, "MultiSelectModel", "Player"),
+        new(AllFilesKey + @"\command", null, $"\"{exePath}\" --convert \"%1\""),
+    ];
+
+    /// <summary>
+    /// Ключи прежних версий — по каждому расширению (...\SystemFileAssociations\.jpg\shell\DropWheel.Convert).
+    /// Удаляются при установке, иначе после обновления пункт в меню двоится.
+    /// </summary>
+    public static IReadOnlyList<string> LegacyKeys() =>
         Extensions.All.Distinct()
             .Select(ext => $@"Software\Classes\SystemFileAssociations\.{ext}\shell\{VerbKey}")
             .ToList();
+
+    /// <summary>Все ключи пункта меню (текущий и прежние) — удалять целиком, с подключами.</summary>
+    public static IReadOnlyList<string> KeysToDelete() => [AllFilesKey, .. LegacyKeys()];
 }

@@ -53,6 +53,11 @@ public sealed record Operation(
     public int MinFiles { get; init; } = 1;
     /// <summary>Сузить вход до этих расширений внутри типа (Word / Excel / PowerPoint). null — весь тип.</summary>
     public IReadOnlyList<string>? InputExtensions { get; init; }
+    /// <summary>
+    /// Основа имени результата (без пометки и расширения) по полным путям всех входов.
+    /// null — имя первого входа (photo.heic → photo). Пример: ZIP из нескольких файлов — по имени папки.
+    /// </summary>
+    public Func<IReadOnlyList<string>, string>? ResultStem { get; init; }
 
     /// <summary>Операция-конвертация не предлагается файлу, который уже в целевом формате.</summary>
     public bool AppliesTo(string inputExtension)

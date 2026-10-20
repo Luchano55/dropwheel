@@ -11,6 +11,8 @@ internal static class ContextMenuInstaller
         try
         {
             var exe = Environment.ProcessPath ?? throw new InvalidOperationException("Не известен путь к exe");
+            foreach (var path in ContextMenuRegistration.LegacyKeys())
+                Registry.CurrentUser.DeleteSubKeyTree(path, throwOnMissingSubKey: false);
             foreach (var entry in ContextMenuRegistration.Entries(exe))
             {
                 using var key = Registry.CurrentUser.CreateSubKey(entry.KeyPath, writable: true);

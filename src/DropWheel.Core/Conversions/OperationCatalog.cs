@@ -56,6 +56,13 @@ public static class OperationCatalog
         // Аудио — инструменты (loudnorm внутри работает на 192 кГц — возвращаем 48 кГц)
         new("audio-normalize", "Нормализовать", Tool, Audio, FFmpeg, "-vn -af loudnorm=I=-16:TP=-1.5:LRA=11 -ar 48000 {acodec}",
             OutputRule.Same("mp3", "mp3", "m4a", "wav", "flac", "ogg", "opus"), " (норм)"),
+
+        // ZIP (встроенный движок ZipEngine). «В ZIP» — для любых файлов, все выбранные в один архив;
+        // «Распаковать» — в папку с именем архива (photos.zip → photos, занято → photos (1)).
+        new(Engines.ZipEngine.PackId, "В ZIP", Tool, Any, Zip, "", OutputRule.Fixed("zip"))
+            { Inputs = InputMode.Combine, ResultStem = Engines.ZipEngine.ArchiveName },
+        new(Engines.ZipEngine.ExtractId, "Распаковать", Tool, Archive, Zip, "", OutputRule.Fixed("zip"))
+            { Result = ResultKind.Folder },
     ];
 
     public static Operation? Find(string id) =>
