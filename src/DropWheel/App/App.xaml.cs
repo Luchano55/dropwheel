@@ -6,6 +6,7 @@ using DropWheel.Jobs;
 using DropWheel.Logging;
 using DropWheel.Settings;
 using DropWheel.Shell;
+using DropWheel.Wheel;
 using Microsoft.Toolkit.Uwp.Notifications;
 
 namespace DropWheel.App;
@@ -24,6 +25,7 @@ public partial class App : Application
     private TrayIcon? _tray;
     private Notifier? _notifier;
     private JobsWindow? _jobsWindow;
+    private DragWheelController? _dragWheel;
 
     internal static FileLog Log { get; private set; } = null!;
     internal AppSettings Settings { get; private set; } = new();
@@ -73,6 +75,8 @@ public partial class App : Application
 
         if (Settings.ContextMenuEnabled) ContextMenuInstaller.TryInstall(Log);
 
+        StartDragWheel();
+
         _batcher = new InvocationBatcher(BatchQuiet, paths => Dispatcher.BeginInvoke(() => ShowChooser(paths)));
         _pipe = new PipeServer(pipeName, message => HandleArgs(CommandLine.Parse(message), fromPipe: true));
         _pipe.Start();
@@ -80,6 +84,22 @@ public partial class App : Application
         // Запуск двойным кликом: окна нет — подскажем, где искать программу.
         if (args.ConvertPaths.Count == 0) _tray.ShowStartHint();
         HandleArgs(args, fromPipe: false);
+    }
+
+    /// <summary>Колесо по горячей клавише при перетаскивании (этап 3). Сбой хуков не мешает остальному.</summary>
+    private void StartDragWheel()
+    {
+        try
+        {
+            _dragWheel = new DragWheelController(Settings.Hotkey, Dispatcher, Enqueue, Log);
+            _dragWheel.Start();
+        }
+        catch (Exception ex)
+        {
+            Log.Write("Не удалось включить колесо (хуки): " + ex);
+            _dragWheel?.Dispose();
+            _dragWheel = null;
+        }
     }
 
     private static void SendToFirstInstance(string pipeName, string[] args)
@@ -152,6 +172,7 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        _dragWheel?.Dispose();
         _pipe?.Dispose();
         _batcher?.Dispose();
         _tray?.Dispose();
