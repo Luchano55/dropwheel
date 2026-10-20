@@ -18,10 +18,21 @@
 ## Структура
 
 ```
-src/DropWheel.Core/   Conversions, Engines, Jobs — без UI, кроссплатформенно (net8.0)
-src/DropWheel.Cli/    dropwheel convert <файл> <операция>
-src/DropWheel/        WPF-приложение (net8.0-windows): App, Input, Wheel, Shell, Settings
+src/DropWheel.Core/   без UI, кроссплатформенно (net8.0), всё покрыто тестами:
+  Conversions/        каталог операций, настройки качества
+  Engines/            запуск ffmpeg/magick, прогресс, ошибки
+  Jobs/               конвертер (временный файл → свободное имя), очередь на 2 задачи
+  Settings/ Logging/  settings.json, журнал в %AppData%\DropWheel
+  Ipc/                один экземпляр (Mutex), named pipe между экземплярами
+  Shell/              записи реестра для меню проводника, сборщик путей (300 мс)
+  Input/              DragDetector — логика горячей клавиши при перетаскивании
+  Wheel/              геометрия колеса, состояние, размещение на мониторе
+src/DropWheel.Cli/    dropwheel-cli.exe convert <файл> <операция>
+src/DropWheel/        WPF-приложение DropWheel.exe (net8.0-windows): App (трей, окно задач),
+                      Shell (меню у курсора, уведомления, реестр), Input (хуки), Wheel (окно колеса)
 tests/DropWheel.Tests/
+build/fetch-tools.ps1 скачивает ffmpeg + ImageMagick для Windows (используется в CI)
+packaging/            файлы, которые кладутся в архив сборки
 ```
 
 Каталог операций — декларативный: одна запись = id, подпись, входные расширения, движок, шаблон аргументов, выходное расширение.
@@ -37,7 +48,9 @@ tests/DropWheel.Tests/
 
 - Облачная сессия — Linux. Ядро, CLI и тесты собираются и проверяются здесь (нужны .NET 8 SDK, ffmpeg, ImageMagick).
 - WPF-проект собирается на Linux с `EnableWindowsTargeting=true`, но не запускается: UI, хуки, контекстное меню и уведомления Роман проверяет на своём ПК по инструкции.
-- Сборка для Романа: `dotnet publish` self-contained win-x64 + папка `tools/`; инструкция — в README.
+- Сборка для Романа: GitHub Actions (`.github/workflows/build.yml`) — тесты на Linux и Windows, архив в релиз `dev-build`. Отсюда скачать Windows-утилиты нельзя.
+- .NET здесь: Microsoft SDK 8.0 из packages.microsoft.com (у Ubuntu-сборки нет WindowsDesktop SDK), `/opt/dotnet-ms`, ссылка `/usr/local/bin/dotnet`. Если сессия новая — поставить заново (см. историю коммитов/решение D15).
+- Ручная проверка на Windows — `docs/manual-tests.md`.
 
 ## Правила работы (из ТЗ, раздел 14)
 
