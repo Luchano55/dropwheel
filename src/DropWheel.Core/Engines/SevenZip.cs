@@ -51,7 +51,7 @@ public static class SevenZip
             return;
         }
 
-        // .tar — рядом с временной папкой (тоже «.dropwheel-…»), чтобы его записи ни с чем не совпали.
+        // .tar — рядом с временной папкой (в той же скрытой .dropwheel-tmp), чтобы его записи ни с чем не совпали.
         var inner = output + ".tar";
         File.Move(tar, inner);
         try

@@ -32,7 +32,7 @@ public class TextEngineTests : IDisposable
         var source = File.ReadAllBytes(path);
         var result = await _converter.ConvertAsync(path, ToUtf8);
         Assert.Equal(source, File.ReadAllBytes(path)); // исходник не тронут
-        Assert.Empty(Directory.GetFiles(_dir.Path, ".dropwheel-*"));
+        Assert.Empty(Directory.GetFileSystemEntries(_dir.Path, ".dropwheel-*"));
         return File.ReadAllBytes(result);
     }
 

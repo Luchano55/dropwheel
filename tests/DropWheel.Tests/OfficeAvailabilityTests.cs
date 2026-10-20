@@ -116,7 +116,9 @@ public class OfficeAvailabilityTests : IDisposable
         Assert.Equal(Path.Combine(_dir.Path, "тест 1.pdf"), result);
         Assert.Equal("Office", File.ReadAllText(result));
         var run = Assert.Single(office.Runs);
-        Assert.Equal(_dir.Path, Path.GetDirectoryName(run.Output)); // временный файл — рядом, потом переименован
+        // Временный файл — в скрытой папке рядом, потом переименован; папка после работы удалена.
+        Assert.Equal(Path.Combine(_dir.Path, Converter.TempDirName), Path.GetDirectoryName(run.Output));
+        Assert.False(Directory.Exists(Path.Combine(_dir.Path, Converter.TempDirName)));
         Assert.EndsWith(".pdf", run.Output);
         Assert.Equal(["тест 1.docx", "тест 1.pdf"], Directory.GetFiles(_dir.Path).Select(Path.GetFileName).Order());
     }

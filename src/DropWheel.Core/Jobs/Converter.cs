@@ -90,8 +90,10 @@ public sealed class Converter(ToolLocator tools, ConversionSettings settings, IE
         var dir = Path.GetDirectoryName(desired)!;
         Directory.CreateDirectory(dir);
 
-        // Временное имя без пробелов и скобок: расширение нужно утилите, чтобы выбрать формат.
-        var temp = Path.Combine(dir, folder ? $".dropwheel-{Guid.NewGuid():N}" : $".dropwheel-{Guid.NewGuid():N}.{outExt}");
+        // Временный результат — в скрытой папке рядом (в проводнике его не видно; точка в начале имени
+        // Windows файл не прячет). Имя без пробелов и скобок; расширение нужно утилите, чтобы выбрать формат.
+        var tempDir = AcquireTempDir(dir);
+        var temp = Path.Combine(tempDir, folder ? $".dropwheel-{Guid.NewGuid():N}" : $".dropwheel-{Guid.NewGuid():N}.{outExt}");
         try
         {
             if (folder) Directory.CreateDirectory(temp);
@@ -114,6 +116,44 @@ public sealed class Converter(ToolLocator tools, ConversionSettings settings, IE
         finally
         {
             TryDelete(temp);
+            ReleaseTempDir(tempDir);
+        }
+    }
+
+    /// <summary>Скрытая папка для временных результатов. Её делят задачи в одной папке — удаляет последняя.</summary>
+    public const string TempDirName = ".dropwheel-tmp";
+
+    private static readonly object TempLock = new();
+    private static readonly Dictionary<string, int> TempUsers = new(StringComparer.OrdinalIgnoreCase);
+
+    private static string AcquireTempDir(string dir)
+    {
+        var path = Path.Combine(dir, TempDirName);
+        lock (TempLock)
+        {
+            var info = Directory.CreateDirectory(path);
+            try { info.Attributes |= FileAttributes.Hidden; } catch { /* не на Windows — точки достаточно */ }
+            TempUsers[path] = TempUsers.GetValueOrDefault(path) + 1;
+        }
+        return path;
+    }
+
+    private static void ReleaseTempDir(string path)
+    {
+        lock (TempLock)
+        {
+            var users = TempUsers.GetValueOrDefault(path) - 1;
+            if (users > 0)
+            {
+                TempUsers[path] = users;
+                return;
+            }
+            TempUsers.Remove(path);
+            try
+            {
+                if (Directory.Exists(path) && !Directory.EnumerateFileSystemEntries(path).Any()) Directory.Delete(path);
+            }
+            catch { /* не критично */ }
         }
     }
 

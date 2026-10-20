@@ -25,7 +25,7 @@ public class ConversionTests : IDisposable
         var output = await _converter.ConvertAsync(input, OperationCatalog.Find(opId)!);
         Assert.True(new FileInfo(output).Length > 0);
         Assert.Equal(hash, Tools.Hash(input)); // исходник не тронут
-        Assert.Empty(Directory.GetFiles(_dir.Path, ".dropwheel-*")); // временных файлов не осталось
+        Assert.Empty(Directory.GetFileSystemEntries(_dir.Path, ".dropwheel-*")); // временных файлов не осталось
         return output;
     }
 

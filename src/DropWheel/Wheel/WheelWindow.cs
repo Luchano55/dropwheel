@@ -497,7 +497,11 @@ public sealed class WheelWindow : Window
         var palette = WheelPalette.FromSystem();
         _wheel.Palette = palette;
 
-        var wantBlur = SystemTheme.TransparencyEnabled && NativeEffects.SupportsAcrylic && NativeEffects.EffectsAllowed;
+        // Системное размытие на прозрачном (layered) окне WPF Windows рисует квадратом, даже с круглым регионом —
+        // так было на живой записи (CI, Windows Server 2025). Поэтому колесо рисует «стекло» само (полупрозрачный
+        // диск и тень в своём окне), а размытие оставлено экспериментом: DROPWHEEL_WHEEL_BLUR=1.
+        var wantBlur = Environment.GetEnvironmentVariable("DROPWHEEL_WHEEL_BLUR") == "1"
+            && SystemTheme.TransparencyEnabled && NativeEffects.SupportsAcrylic && NativeEffects.EffectsAllowed;
         var blur = wantBlur && NativeEffects.SetAcrylic(_hwnd, true, palette.AcrylicTint);
         if (!blur && _blur)
         {

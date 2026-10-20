@@ -74,6 +74,19 @@ internal static class Native
     [DllImport("winmm.dll")]
     public static extern uint timeBeginPeriod(uint period);
 
+    public const int SRCCOPY = 0x00CC0020;
+    public const int CAPTUREBLT = 0x40000000;
+
+    [DllImport("user32.dll")]
+    public static extern IntPtr GetDC(IntPtr hwnd);
+
+    [DllImport("user32.dll")]
+    public static extern int ReleaseDC(IntPtr hwnd, IntPtr hdc);
+
+    [DllImport("gdi32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool BitBlt(IntPtr hdcDest, int x, int y, int w, int h, IntPtr hdcSrc, int x1, int y1, int rop);
+
     // ---- курсор ----
     [StructLayout(LayoutKind.Sequential)]
     public struct POINT

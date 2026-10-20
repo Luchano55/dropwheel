@@ -365,7 +365,16 @@ internal static class Desktop
             var vh = GetSystemMetrics(SM_CYVIRTUALSCREEN);
             bmp = new Bitmap(vw, vh, PixelFormat.Format24bppRgb);
             using var g = Graphics.FromImage(bmp);
-            g.CopyFromScreen(vx, vy, 0, 0, new Size(vw, vh), CopyPixelOperation.SourceCopy | CopyPixelOperation.CaptureBlt);
+            // BitBlt с CAPTUREBLT вручную: без него не попадают прозрачные (layered) окна — само колесо.
+            // Graphics.CopyFromScreen такую комбинацию флагов не принимает (проверка enum).
+            var dest = g.GetHdc();
+            var screen = Native.GetDC(IntPtr.Zero);
+            try { Native.BitBlt(dest, 0, 0, vw, vh, screen, vx, vy, Native.SRCCOPY | Native.CAPTUREBLT); }
+            finally
+            {
+                Native.ReleaseDC(IntPtr.Zero, screen);
+                g.ReleaseHdc(dest);
+            }
             DrawCursor(g, vx, vy);
         }
         catch (Exception ex)
