@@ -3,8 +3,14 @@ namespace DropWheel.Conversions;
 /// <summary>Поддерживаемые входные расширения и их типы.</summary>
 public static class Extensions
 {
+    /// <summary>RAW фотокамер (ImageMagick читает через LibRaw): Canon, Nikon, Sony, Adobe DNG, Fujifilm, Olympus, Panasonic.</summary>
+    /// <remarks>Объявлен раньше Image: статические поля инициализируются по порядку.</remarks>
+    public static readonly IReadOnlyList<string> Raw = ["cr2", "cr3", "nef", "arw", "dng", "raf", "orf", "rw2"];
+
     public static readonly IReadOnlyList<string> Image =
-        ["jpg", "jpeg", "jfif", "png", "webp", "heic", "heif", "avif", "bmp", "tif", "tiff", "gif"];
+        ["jpg", "jpeg", "jfif", "png", "webp", "heic", "heif", "avif", "bmp", "tif", "tiff", "gif",
+         // Только чтение: SVG растрируется в своём размере, у PSD берётся сведённое изображение.
+         "svg", "psd", .. Raw];
 
     public static readonly IReadOnlyList<string> Video =
         ["mp4", "m4v", "mov", "mkv", "webm", "avi"];

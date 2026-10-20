@@ -14,7 +14,7 @@ public class WheelItemsTests
         var ops = OperationCatalog.ForFiles(["photo.heic"]); // как в приложении: «Один PDF» нужен от 2 файлов
 
         var convert = WheelItems.For(ops, OperationMode.Convert);
-        Assert.Equal(["to-jpg", "to-png", "to-webp", "to-avif", "to-pdf"], convert.Select(i => i.Id));
+        Assert.Equal(["to-jpg", "to-png", "to-webp", "to-avif", "to-pdf", "img-ico"], convert.Select(i => i.Id));
         Assert.Equal("JPG", convert[0].Label);
 
         var tools = WheelItems.For(ops, OperationMode.Tool);

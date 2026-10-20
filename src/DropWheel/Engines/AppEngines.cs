@@ -12,5 +12,7 @@ internal static class EngineRegistry
     public static IReadOnlyList<IInternalEngine> Create(FileLog log) =>
     [
         new ZipEngine(),
+        new TextEngine(),
+        new OcrEngine(log.Write),
     ];
 }

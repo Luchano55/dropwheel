@@ -73,7 +73,33 @@ public static class OperationCatalog
             { Inputs = InputMode.Combine, ResultStem = Engines.ZipEngine.ArchiveName },
         new(Engines.ZipEngine.ExtractId, "Распаковать", Tool, Archive, Zip, "", OutputRule.Fixed("zip"))
             { Result = ResultKind.Folder },
+
+        // EXTRAS
+        // Значок: картинка вписывается в прозрачный квадрат 256×256, в ICO — размеры 256…16.
+        new("img-ico", "ICO (значок)", Conv, Image, ImageMagick,
+            "-auto-orient -background none -resize 256x256 -gravity center -extent 256x256 -define icon:auto-resize=256,128,64,48,32,16",
+            OutputRule.Fixed("ico")),
+        // Распознать текст (OCR Windows, встроенный движок) — только форматы, которые Windows открывает сама.
+        // GIF не берём: у него колесо уже заполнено (+ MP4/WebM ниже), а текст в GIF — редкость.
+        new(OcrId, "Текст (OCR)", Conv, Image, Ocr, "", OutputRule.Fixed("txt"))
+            { InputExtensions = ["jpg", "jpeg", "jfif", "png", "bmp", "tif", "tiff"] },
+        // Анимированный GIF → видео (D8): без звука, чётные размеры кадра, yuv420p — иначе не играют плееры.
+        new("gif-to-mp4",  "MP4",  Conv, Image, FFmpeg,
+            $"-map 0:v:0 -an -vf {Even} -c:v libx264 -preset medium -pix_fmt yuv420p -crf {{crf}} -movflags +faststart",
+            OutputRule.Fixed("mp4")) { InputExtensions = ["gif"] },
+        new("gif-to-webm", "WebM", Conv, Image, FFmpeg,
+            $"-map 0:v:0 -an -vf {Even} -c:v libvpx-vp9 -crf 32 -b:v 0 -row-mt 1 -deadline good -cpu-used 4 -pix_fmt yuv420p",
+            OutputRule.Fixed("webm")) { InputExtensions = ["gif"] },
+        // Первая дорожка субтитров → .srt без пометки: плееры сами подхватывают «фильм.srt» рядом с «фильм.mkv».
+        new("video-subs", "Субтитры SRT", Tool, Video, FFmpeg, "-map 0:s:0 -c:s srt", OutputRule.Fixed("srt")),
+        // Перекодировать текст из Windows-1251 / DOS-866 / UTF-16 в UTF-8 (встроенный TextEngine).
+        new(Engines.TextEngine.ToUtf8Id, "В UTF-8", Tool, Any, EngineKind.Text, "",
+            OutputRule.Same("txt", [.. Engines.TextEngine.InputExtensions]), " (UTF-8)")
+            { InputExtensions = Engines.TextEngine.InputExtensions },
     ];
+
+    /// <summary>Id операции OCR: движок живёт в WPF-приложении (Windows.Media.Ocr), каталог — здесь.</summary>
+    public const string OcrId = "img-ocr";
 
     public static Operation? Find(string id) =>
         All.FirstOrDefault(o => string.Equals(o.Id, id, StringComparison.OrdinalIgnoreCase));
