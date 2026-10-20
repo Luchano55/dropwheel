@@ -67,6 +67,12 @@ public static class OperationCatalog
         new("pdf-optimize",  "Оптимизировать", Tool, Pdf, Qpdf, "--object-streams=generate --compress-streams=y --recompress-flate --compression-level=9 {in} {out}", OutputRule.Fixed("pdf"), " (оптим.)"),
         // Картинки → один PDF: каждая картинка — страница.
         new("images-to-pdf", "Один PDF",       Tool, Image, ImageMagick, "-auto-orient -compress jpeg -quality {jpgq}", OutputRule.Fixed("pdf"), " (все)") { Inputs = InputMode.Combine, MinFiles = 2 },
+        // ZIP (встроенный движок ZipEngine). «В ZIP» — для любых файлов, все выбранные в один архив;
+        // «Распаковать» — в папку с именем архива (photos.zip → photos, занято → photos (1)).
+        new(Engines.ZipEngine.PackId, "В ZIP", Tool, Any, Zip, "", OutputRule.Fixed("zip"))
+            { Inputs = InputMode.Combine, ResultStem = Engines.ZipEngine.ArchiveName },
+        new(Engines.ZipEngine.ExtractId, "Распаковать", Tool, Archive, Zip, "", OutputRule.Fixed("zip"))
+            { Result = ResultKind.Folder },
     ];
 
     public static Operation? Find(string id) =>

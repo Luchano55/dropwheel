@@ -16,8 +16,10 @@ public class CatalogTests
     [Fact]
     public void Wheel_has_at_most_8_sectors_per_mode()
     {
-        foreach (var group in OperationCatalog.All.GroupBy(o => (o.Kind, o.Mode)))
-            Assert.True(group.Count() <= 8, $"{group.Key}: {group.Count()}");
+        // Считаем по каждому расширению: операции «для любых файлов» (В ZIP) добавляются к операциям типа.
+        foreach (var ext in Extensions.All.Append("txt"))
+            foreach (var group in OperationCatalog.ForFile("file." + ext).GroupBy(o => o.Mode))
+                Assert.True(group.Count() <= 8, $"{ext} {group.Key}: {group.Count()}");
     }
 
     [Fact]
@@ -62,17 +64,37 @@ public class CatalogTests
     public void Extension_case_does_not_matter(string file, MediaKind kind)
     {
         var ops = OperationCatalog.ForFile(file);
-        Assert.NotEmpty(ops);
-        Assert.All(ops, o => Assert.Equal(kind, o.Kind));
+        Assert.Contains(ops, o => o.Kind == kind);
+        Assert.All(ops, o => Assert.True(o.Kind == kind || o.Kind == MediaKind.Any, o.Id));
     }
 
     [Theory]
-    [InlineData("document.docx")]
+    [InlineData("readme.txt")]
     [InlineData("noextension")]
-    [InlineData("archive.zip")]
-    public void Unsupported_file_gets_nothing(string file)
+    [InlineData(".gitignore")]
+    public void Unknown_file_gets_only_zip(string file)
     {
-        Assert.Empty(OperationCatalog.ForFile(file));
+        Assert.Equal(["zip-pack"], Ids(OperationCatalog.ForFile(file)));
+    }
+
+    [Fact]
+    public void Zip_archive_can_be_extracted()
+    {
+        var ids = Ids(OperationCatalog.ForFile("photos.ZIP")).ToList();
+        Assert.Contains("zip-extract", ids);
+        Assert.Contains("zip-pack", ids);
+        Assert.DoesNotContain("zip-extract", Ids(OperationCatalog.ForFile("photo.jpg")));
+    }
+
+    [Fact]
+    public void Zip_operations_shape()
+    {
+        var pack = OperationCatalog.Find("zip-pack")!;
+        Assert.Equal((OperationMode.Tool, MediaKind.Any, InputMode.Combine, ResultKind.File, 1),
+            (pack.Mode, pack.Kind, pack.Inputs, pack.Result, pack.MinFiles));
+        var extract = OperationCatalog.Find("zip-extract")!;
+        Assert.Equal((OperationMode.Tool, MediaKind.Archive, InputMode.PerFile, ResultKind.Folder, ""),
+            (extract.Mode, extract.Kind, extract.Inputs, extract.Result, extract.Suffix));
     }
 
     [Fact]
@@ -86,9 +108,9 @@ public class CatalogTests
     }
 
     [Fact]
-    public void Mixed_types_have_nothing_in_common()
+    public void Mixed_types_have_only_zip_in_common()
     {
-        Assert.Empty(OperationCatalog.ForFiles(["a.png", "b.mp4"]));
+        Assert.Equal(["zip-pack"], Ids(OperationCatalog.ForFiles(["a.png", "b.mp4", "c.txt"])));
         Assert.Empty(OperationCatalog.ForFiles(Array.Empty<string>()));
     }
 
@@ -120,14 +142,14 @@ public class CatalogTests
     public void Single_pdf_gets_pages_split_optimize_but_not_merge()
     {
         var ids = Ids(OperationCatalog.ForFiles(["/docs/отчёт 1.PDF"])).ToList();
-        Assert.Equal(["pdf-to-png", "pdf-to-jpg", "pdf-split", "pdf-optimize"], ids);
+        Assert.Equal(["pdf-to-png", "pdf-to-jpg", "pdf-split", "pdf-optimize", "zip-pack"], ids);
     }
 
     [Fact]
     public void Two_pdfs_can_be_merged()
     {
         Assert.Contains("pdf-merge", Ids(OperationCatalog.ForFiles(["a.pdf", "b.pdf"])));
-        Assert.Empty(OperationCatalog.ForFiles(["a.pdf", "b.png"]));
+        Assert.Equal(["zip-pack"], Ids(OperationCatalog.ForFiles(["a.pdf", "b.png"])));
     }
 
     [Fact]

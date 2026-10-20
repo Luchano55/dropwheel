@@ -4,18 +4,20 @@ namespace DropWheel.Jobs;
 public static class OutputNamer
 {
     /// <summary>Желаемый путь результата (без проверки занятости).</summary>
-    public static string DesiredPath(string input, string outputExtension, string suffix = "", string? outputFolder = null)
+    /// <param name="stem">Основа имени вместо имени исходника (см. Operation.ResultStem).</param>
+    public static string DesiredPath(string input, string outputExtension, string suffix = "", string? outputFolder = null,
+        string? stem = null)
     {
         var dir = outputFolder ?? Path.GetDirectoryName(Path.GetFullPath(input))!;
-        var name = Path.GetFileNameWithoutExtension(input) + suffix + "." + outputExtension.TrimStart('.');
+        var name = (stem ?? Path.GetFileNameWithoutExtension(input)) + suffix + "." + outputExtension.TrimStart('.');
         return Path.Combine(dir, name);
     }
 
     /// <summary>Желаемая папка-результат: photo.pdf + « (страницы)» → «photo (страницы)».</summary>
-    public static string DesiredFolder(string input, string suffix, string? outputFolder = null)
+    public static string DesiredFolder(string input, string suffix, string? outputFolder = null, string? stem = null)
     {
         var dir = outputFolder ?? Path.GetDirectoryName(Path.GetFullPath(input))!;
-        var name = Path.GetFileNameWithoutExtension(input) + suffix;
+        var name = (stem ?? Path.GetFileNameWithoutExtension(input)) + suffix;
         return Path.Combine(dir, name);
     }
 

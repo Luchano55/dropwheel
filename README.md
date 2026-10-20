@@ -21,6 +21,7 @@
 | Видео (MP4, MOV, MKV, WebM, AVI) | `to-mp4` `to-webm` `to-gif` `video-to-mp3` | `video-compress` сжать · `video-720p` · `video-mute` убрать звук |
 | Звук (MP3, M4A, WAV, FLAC, OGG, Opus) | `to-mp3` `to-m4a` `to-wav` `to-flac` `to-ogg` | `audio-normalize` выровнять громкость |
 | PDF | `pdf-to-png` `pdf-to-jpg` — каждая страница картинкой, в папку `документ (страницы)` | `pdf-merge` склеить несколько PDF · `pdf-split` разбить по страницам · `pdf-optimize` оптимизировать без потери качества |
+| Любые файлы, ZIP | — | `zip-pack` упаковать в ZIP (несколько файлов — в один архив) · `zip-extract` распаковать ZIP в папку |
 
 Исходный файл никогда не меняется и не удаляется. Если имя занято — `photo (1).jpg`. Инструменты добавляют пометку: `photo (сжато).jpg`.
 

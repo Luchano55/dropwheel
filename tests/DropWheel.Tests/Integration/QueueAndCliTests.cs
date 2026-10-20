@@ -68,12 +68,30 @@ public class QueueAndCliTests : IDisposable
     }
 
     [Fact]
-    public async Task Cli_list_for_unsupported_file()
+    public async Task Cli_list_for_unknown_file_offers_zip()
     {
         var stdout = new StringWriter();
-        var code = await Program.RunAsync(["list", "doc.docx"], stdout, new StringWriter());
-        Assert.Equal(1, code);
-        Assert.Contains("Нечего предложить", stdout.ToString());
+        var code = await Program.RunAsync(["list", "readme.txt"], stdout, new StringWriter());
+        Assert.Equal(0, code);
+        Assert.Equal("zip-pack", stdout.ToString().Trim().Split(' ')[0]);
+    }
+
+    [Fact]
+    public async Task Cli_zip_pack_makes_one_archive()
+    {
+        var a = _dir.File("a.txt", "первый");
+        var b = _dir.File("b.txt", "второй");
+
+        var stdout = new StringWriter();
+        var stderr = new StringWriter();
+        var code = await Program.RunAsync(["convert", a, b, "zip-pack"], stdout, stderr);
+
+        Assert.True(code == 0, stderr.ToString());
+        var zip = Path.Combine(_dir.Path, "Мои фото.zip"); // несколько файлов — по имени папки
+        Assert.Equal([zip], Directory.GetFiles(_dir.Path, "*.zip"));
+        using var archive = System.IO.Compression.ZipFile.OpenRead(zip);
+        Assert.Equal(["a.txt", "b.txt"], archive.Entries.Select(e => e.FullName).Order());
+        Assert.Single(stdout.ToString().Split('\n', StringSplitOptions.RemoveEmptyEntries));
     }
 
     [Fact]

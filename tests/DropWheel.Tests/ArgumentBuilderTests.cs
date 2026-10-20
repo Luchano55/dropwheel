@@ -18,7 +18,9 @@ public class ArgumentBuilderTests
     public static TheoryData<string> AllOperations()
     {
         var data = new TheoryData<string>();
-        foreach (var op in OperationCatalog.All) data.Add(op.Id);
+        // Встроенные движки (ZIP, Office) работают без аргументов процесса.
+        foreach (var op in OperationCatalog.All.Where(o => o.Engine is not (EngineKind.Zip or EngineKind.Office)))
+            data.Add(op.Id);
         return data;
     }
 

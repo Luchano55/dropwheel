@@ -52,7 +52,7 @@ public sealed class Converter(ToolLocator tools, ConversionSettings settings, IE
 
     /// <summary>
     /// PerFile-операция — ровно один вход; Combine — все входы в один результат.
-    /// Имя результата — по первому входу (+ пометка операции).
+    /// Имя результата — по первому входу или Operation.ResultStem (+ пометка операции).
     /// </summary>
     /// <returns>Полный путь готового файла или папки.</returns>
     public async Task<string> ConvertAsync(IReadOnlyList<string> inputs, Operation op,
@@ -75,9 +75,10 @@ public sealed class Converter(ToolLocator tools, ConversionSettings settings, IE
         var first = full[0];
         var folder = op.Result == ResultKind.Folder;
         var outExt = folder ? "" : op.Output.Resolve(Path.GetExtension(first));
+        var stem = op.ResultStem?.Invoke(full);
         var desired = folder
-            ? OutputNamer.DesiredFolder(first, op.Suffix, Settings.OutputFolder)
-            : OutputNamer.DesiredPath(first, outExt, op.Suffix, Settings.OutputFolder);
+            ? OutputNamer.DesiredFolder(first, op.Suffix, Settings.OutputFolder, stem)
+            : OutputNamer.DesiredPath(first, outExt, op.Suffix, Settings.OutputFolder, stem);
         var dir = Path.GetDirectoryName(desired)!;
         Directory.CreateDirectory(dir);
 
