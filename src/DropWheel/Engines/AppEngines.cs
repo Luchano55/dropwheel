@@ -14,5 +14,6 @@ internal static class EngineRegistry
         new ZipEngine(),
         new TextEngine(),
         new OcrEngine(log.Write),
+        new OfficeEngine(log.Write),
     ];
 }
