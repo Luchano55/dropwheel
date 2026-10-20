@@ -8,6 +8,8 @@
     <RootNamespace>DropWheel</RootNamespace>
     <StartupObject>DropWheel.App.App</StartupObject>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- Значок: docs/assets/icon.svg → build/make-icon.sh. -->
+    <ApplicationIcon>Assets\DropWheel.ico</ApplicationIcon>
     <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
     <!-- DPI задаётся манифестом (PerMonitorV2) — это WPF-приложение, совет WinForms-анализатора не к нам. -->
     <NoWarn>$(NoWarn);WFAC010</NoWarn>
@@ -25,5 +27,9 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Toolkit.Uwp.Notifications" Version="7.1.3" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Тот же значок для трея и окон (берётся нужный размер). -->
+    <EmbeddedResource Include="Assets\DropWheel.ico" LogicalName="DropWheel.ico" />
   </ItemGroup>
 </Project>

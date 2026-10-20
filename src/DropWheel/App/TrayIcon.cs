@@ -1,24 +1,28 @@
 using System.Diagnostics;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using DropWheel.Jobs;
 using DropWheel.Settings;
+using DropWheel.Ui;
 
 namespace DropWheel.App;
 
-/// <summary>Значок в трее: серый — простой, синий с цифрой — идёт работа. Клик — окно задач.</summary>
+/// <summary>
+/// Значок в трее: значок программы; пока идёт работа — с оранжевым кружком-счётчиком задач.
+/// Клик — окно задач (ещё клик — спрятать). Меню — в цветах темы Windows.
+/// </summary>
 internal sealed partial class TrayIcon : IDisposable
 {
     private readonly NotifyIcon _icon;
-    private readonly Icon _idle;
+    private readonly ContextMenuStrip _menu;
     private readonly ToolStripMenuItem _contextMenuItem;
+    private readonly Icon _idle;
     private Icon? _busy;
     private int _busyCount = -1;
 
     public TrayIcon(App app)
     {
-        _idle = Draw(Color.FromArgb(90, 90, 90), null);
+        _idle = TrayIconArt.CreateIcon(IconSize, null);
         _contextMenuItem = new ToolStripMenuItem("Пункт «Конвертировать…» в проводнике")
         {
             Checked = app.Settings.ContextMenuEnabled,
@@ -26,28 +30,42 @@ internal sealed partial class TrayIcon : IDisposable
         };
         _contextMenuItem.CheckedChanged += (_, _) => app.SetContextMenuEnabled(_contextMenuItem.Checked);
 
-        var menu = new ContextMenuStrip();
-        menu.Items.Add("Задачи", null, (_, _) => app.ShowJobs());
-        menu.Items.Add(_contextMenuItem);
-        menu.Items.Add("Открыть журнал", null, (_, _) => OpenFolder(AppPaths.LogsDir));
-        menu.Items.Add(new ToolStripSeparator());
-        menu.Items.Add("Выход", null, (_, _) => app.Quit());
+        _menu = new ContextMenuStrip
+        {
+            Font = new Font("Segoe UI", 9f),
+            ShowImageMargin = true,
+            Padding = new Padding(2, 4, 2, 4),
+        };
+        _menu.Items.Add(Item("Задачи", app.ShowJobs));
+        _menu.Items.Add(_contextMenuItem);
+        _menu.Items.Add(Item("Открыть журнал", () => OpenFolder(AppPaths.LogsDir)));
+        _menu.Items.Add(new ToolStripSeparator());
+        _menu.Items.Add(Item("Выход", app.Quit));
+        foreach (ToolStripItem item in _menu.Items)
+            if (item is ToolStripMenuItem) item.Padding = new Padding(4, 5, 8, 5);
+        // Тема могла поменяться — перекрашиваем при каждом открытии.
+        _menu.Opening += (_, _) => ApplyMenuTheme();
+        _menu.Opened += (_, _) => NativeEffects.SetCorners(_menu.Handle, NativeEffects.CornerRoundSmall);
+        ApplyMenuTheme();
 
         _icon = new NotifyIcon
         {
             Icon = _idle,
             Text = "DropWheel",
-            ContextMenuStrip = menu,
+            ContextMenuStrip = _menu,
             Visible = true,
         };
         _icon.MouseClick += (_, e) =>
         {
-            if (e.Button == MouseButtons.Left) app.ShowJobs();
+            if (e.Button == MouseButtons.Left) app.ToggleJobs();
         };
     }
 
+    /// <summary>Размер маленького значка Windows (16 при 100 %, 20 при 125 %, 24 при 150 %).</summary>
+    private static int IconSize => Math.Clamp(SystemInformation.SmallIconSize.Width, 16, 64);
+
     public void ShowStartHint() => _icon.ShowBalloonTip(5000, "DropWheel работает",
-        "Значок — здесь, в трее. Нажмите правой кнопкой на фото, видео или музыку → «Конвертировать…».",
+        "Значок — здесь, в трее. Потащите файл и нажмите Пробел — или правой кнопкой по файлу → «Конвертировать…».",
         ToolTipIcon.Info);
 
     public void Update(IReadOnlyList<Job> jobs)
@@ -57,36 +75,25 @@ internal sealed partial class TrayIcon : IDisposable
         _busyCount = active;
 
         var old = _busy;
-        _busy = active > 0 ? Draw(Color.FromArgb(0, 120, 215), active) : null;
+        _busy = active > 0 ? TrayIconArt.CreateIcon(IconSize, active) : null;
         _icon.Icon = _busy ?? _idle;
         _icon.Text = active > 0 ? $"DropWheel — в работе: {active}" : "DropWheel";
         DestroyIcon(old);
     }
 
-    /// <summary>Значок рисуем сами: кольцо-«колесо», при работе — число задач.</summary>
-    private static Icon Draw(Color color, int? count)
+    private void ApplyMenuTheme()
     {
-        using var bmp = new Bitmap(32, 32);
-        using (var g = Graphics.FromImage(bmp))
-        {
-            g.SmoothingMode = SmoothingMode.AntiAlias;
-            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
-            using var pen = new Pen(color, 5);
-            g.DrawEllipse(pen, 4, 4, 24, 24);
-            using var thin = new Pen(color, 2);
-            g.DrawLine(thin, 16, 4, 16, 28);
-            g.DrawLine(thin, 4, 16, 28, 16);
-            if (count is { } n)
-            {
-                using var bg = new SolidBrush(color);
-                g.FillEllipse(bg, 8, 8, 16, 16);
-                using var font = new Font("Segoe UI", n > 9 ? 8 : 10, System.Drawing.FontStyle.Bold, GraphicsUnit.Pixel);
-                var text = n > 9 ? "9+" : n.ToString();
-                var size = g.MeasureString(text, font);
-                g.DrawString(text, font, Brushes.White, 16 - size.Width / 2, 16 - size.Height / 2);
-            }
-        }
-        return Icon.FromHandle(bmp.GetHicon());
+        var dark = !SystemTheme.ShellLight;
+        _menu.Renderer = new TrayMenuRenderer(dark, drawBorder: !NativeEffects.IsWindows11);
+        _menu.BackColor = dark ? Color.FromArgb(0x2C, 0x2C, 0x2C) : Color.FromArgb(0xF9, 0xF9, 0xF9);
+        _menu.ForeColor = dark ? Color.White : Color.FromArgb(0x1A, 0x1A, 0x1A);
+    }
+
+    private static ToolStripMenuItem Item(string text, Action click)
+    {
+        var item = new ToolStripMenuItem(text);
+        item.Click += (_, _) => click();
+        return item;
     }
 
     private static void DestroyIcon(Icon? icon)
@@ -106,6 +113,7 @@ internal sealed partial class TrayIcon : IDisposable
     {
         _icon.Visible = false;
         _icon.Dispose();
+        _menu.Dispose();
         DestroyIcon(_busy);
         DestroyIcon(_idle);
     }

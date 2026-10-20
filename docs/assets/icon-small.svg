@@ -1,0 +1,15 @@
+<!-- Значок DropWheel для 16–24 px: тот же рисунок, упрощённый под пиксельную сетку 16×16
+     (зазоры ровно 2 px по осям, без «подъёма» плитки). -->
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+<title>DropWheel (16–24 px)</title>
+<defs>
+<linearGradient id="cool" gradientUnits="userSpaceOnUse" x1="1.88" y1="1.88" x2="14.12" y2="14.12"><stop offset="0" stop-color="#52B4FF"/><stop offset="0.55" stop-color="#2F6CF5"/><stop offset="1" stop-color="#4B3CD6"/></linearGradient>
+<linearGradient id="warm" gradientUnits="userSpaceOnUse" x1="9.38" y1="1.25" x2="15.00" y2="6.88"><stop offset="0" stop-color="#FFC94D"/><stop offset="1" stop-color="#FF7433"/></linearGradient>
+<linearGradient id="hub" gradientUnits="userSpaceOnUse" x1="6.25" y1="6.25" x2="9.75" y2="9.75"><stop offset="0" stop-color="#4F95FF"/><stop offset="1" stop-color="#2B4FD6"/></linearGradient>
+</defs>
+<path d="M9.90,1.16 A7.10,7.10 0 0 1 14.84,6.10 L11.97,6.10 A4.40,4.40 0 0 0 9.90,4.03 Z" fill="url(#warm)" stroke="url(#warm)" stroke-width="1.80" stroke-linejoin="round"/>
+<path d="M14.84,9.90 A7.10,7.10 0 0 1 9.90,14.84 L9.90,11.97 A4.40,4.40 0 0 0 11.97,9.90 Z" fill="url(#cool)" stroke="url(#cool)" stroke-width="1.80" stroke-linejoin="round"/>
+<path d="M6.10,14.84 A7.10,7.10 0 0 1 1.16,9.90 L4.03,9.90 A4.40,4.40 0 0 0 6.10,11.97 Z" fill="url(#cool)" stroke="url(#cool)" stroke-width="1.80" stroke-linejoin="round"/>
+<path d="M1.16,6.10 A7.10,7.10 0 0 1 6.10,1.16 L6.10,4.03 A4.40,4.40 0 0 0 4.03,6.10 Z" fill="url(#cool)" stroke="url(#cool)" stroke-width="1.80" stroke-linejoin="round"/>
+<circle cx="8.0" cy="8.0" r="1.75" fill="url(#hub)"/>
+</svg>

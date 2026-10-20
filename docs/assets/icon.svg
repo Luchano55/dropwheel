@@ -1,0 +1,16 @@
+<!-- Значок DropWheel (32 px и больше). Кольцо из четырёх «плиток» — как сектора колеса;
+     верхняя правая приподнята и тёплого цвета: туда «бросили» файл. Мелкие размеры — icon-small.svg.
+     Пересобрать DropWheel.ico: build/make-icon.sh -->
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+<title>DropWheel</title>
+<defs>
+<linearGradient id="cool" gradientUnits="userSpaceOnUse" x1="30.00" y1="30.00" x2="226.00" y2="226.00"><stop offset="0" stop-color="#52B4FF"/><stop offset="0.55" stop-color="#2F6CF5"/><stop offset="1" stop-color="#4B3CD6"/></linearGradient>
+<linearGradient id="warm" gradientUnits="userSpaceOnUse" x1="150.00" y1="20.00" x2="240.00" y2="110.00"><stop offset="0" stop-color="#FFC94D"/><stop offset="1" stop-color="#FF7433"/></linearGradient>
+<linearGradient id="hub" gradientUnits="userSpaceOnUse" x1="103.00" y1="103.00" x2="153.00" y2="153.00"><stop offset="0" stop-color="#4F95FF"/><stop offset="1" stop-color="#2B4FD6"/></linearGradient>
+</defs>
+<path d="M156.07,24.18 A99.00,99.00 0 0 1 231.82,99.93 L204.99,99.93 A73.00,73.00 0 0 0 156.07,51.01 Z" fill="url(#warm)" stroke="url(#warm)" stroke-width="26.00" stroke-linejoin="round"/>
+<path d="M224.75,149.00 A99.00,99.00 0 0 1 149.00,224.75 L149.00,197.91 A73.00,73.00 0 0 0 197.91,149.00 Z" fill="url(#cool)" stroke="url(#cool)" stroke-width="26.00" stroke-linejoin="round"/>
+<path d="M107.00,224.75 A99.00,99.00 0 0 1 31.25,149.00 L58.09,149.00 A73.00,73.00 0 0 0 107.00,197.91 Z" fill="url(#cool)" stroke="url(#cool)" stroke-width="26.00" stroke-linejoin="round"/>
+<path d="M31.25,107.00 A99.00,99.00 0 0 1 107.00,31.25 L107.00,58.09 A73.00,73.00 0 0 0 58.09,107.00 Z" fill="url(#cool)" stroke="url(#cool)" stroke-width="26.00" stroke-linejoin="round"/>
+<circle cx="128.0" cy="128.0" r="25" fill="url(#hub)"/>
+</svg>
