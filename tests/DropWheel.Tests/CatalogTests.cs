@@ -69,7 +69,7 @@ public class CatalogTests
     }
 
     [Theory]
-    [InlineData("readme.txt")]
+    [InlineData("data.bin")]
     [InlineData("noextension")]
     [InlineData(".gitignore")]
     public void Unknown_file_gets_only_zip(string file)

@@ -15,6 +15,7 @@ public static class ErrorTranslator
         ("Permission denied", "Нет доступа к файлу или папке"),
         ("No space left", "Закончилось место на диске"),
         ("Unknown encoder", "В этой сборке ffmpeg нет нужного кодировщика"),
+        ("only possible from text to text", "Субтитры в видео — картинками, в текст (SRT) их не перевести"),
         ("no decode delegate", "ImageMagick не умеет читать этот формат"),
         ("no encode delegate", "ImageMagick не умеет сохранять в этот формат"),
         ("NoDecodeDelegateForThisImageFormat", "ImageMagick не умеет читать этот формат"),

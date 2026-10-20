@@ -18,8 +18,9 @@ public class ArgumentBuilderTests
     public static TheoryData<string> AllOperations()
     {
         var data = new TheoryData<string>();
-        // Встроенные движки (ZIP, Office) работают без аргументов процесса.
-        foreach (var op in OperationCatalog.All.Where(o => o.Engine is not (EngineKind.Zip or EngineKind.Office)))
+        // Только внешние утилиты: встроенные движки (ZIP, Office, OCR, текст…) работают без аргументов процесса.
+        foreach (var op in OperationCatalog.All.Where(o => o.Engine is EngineKind.FFmpeg or EngineKind.ImageMagick
+                     or EngineKind.Qpdf or EngineKind.Pdftoppm or EngineKind.Pdftotext or EngineKind.SevenZip))
             data.Add(op.Id);
         return data;
     }

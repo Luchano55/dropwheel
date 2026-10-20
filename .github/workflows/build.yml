@@ -18,7 +18,7 @@ jobs:
       - name: Утилиты
         run: |
           sudo apt-get update
-          sudo apt-get install -y ffmpeg imagemagick libheif-plugin-libde265 libheif-plugin-aomenc qpdf poppler-utils
+          sudo apt-get install -y ffmpeg imagemagick libheif-plugin-libde265 libheif-plugin-aomenc librsvg2-bin qpdf poppler-utils
       - name: Тесты
         run: dotnet test -c Release
 
