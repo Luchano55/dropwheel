@@ -1,7 +1,10 @@
-# Скачивает ffmpeg (GPL-сборка BtbN, свежая release-ветка) и ImageMagick 7 portable в папку tools/.
+# Скачивает в папку tools/: ffmpeg (GPL-сборка BtbN, свежая release-ветка), ImageMagick 7 portable,
+# qpdf (официальная сборка MSVC) и poppler (pdftoppm, сборка oschwartz10612/poppler-windows).
 # Результат:
 #   tools/ffmpeg/ffmpeg.exe, tools/ffmpeg/ffprobe.exe
 #   tools/imagemagick/magick.exe (+ его dll)
+#   tools/qpdf/qpdf.exe (+ его dll)
+#   tools/poppler/pdftoppm.exe (+ его dll)
 param([string]$Destination = "tools")
 
 $ErrorActionPreference = "Stop"
@@ -55,5 +58,45 @@ Copy-Item $magick.DirectoryName $imDest -Recurse
 # DropWheel вызывает только magick.exe (а ffmpeg.exe у нас свой).
 Get-ChildItem $imDest -Filter *.exe | Where-Object { $_.Name -ne "magick.exe" } | Remove-Item -Force
 
+# Скачать архив из последнего релиза GitHub, распаковать, вернуть папку распаковки.
+function Get-GitHubAsset([string]$repo, [string]$pattern, [string]$name) {
+    $release = Invoke-RestMethod -Headers $headers "https://api.github.com/repos/$repo/releases/latest"
+    $asset = $release.assets | Where-Object { $_.name -match $pattern } | Select-Object -First 1
+    if (-not $asset) { throw "Не найдена сборка $name ($repo, $pattern)" }
+    Write-Host "${name}: $($asset.name)"
+    $zip = Join-Path $work "$name.zip"
+    Invoke-WebRequest -Headers $headers $asset.browser_download_url -OutFile $zip
+    $extract = Join-Path $work $name
+    if (Test-Path $extract) { Remove-Item $extract -Recurse -Force }
+    Expand-Archive $zip -DestinationPath $extract -Force
+    return $extract
+}
+
+# Из папки bin берём только нужный exe и все dll (+ файлы лицензии, если есть в архиве).
+function Copy-ToolBin([string]$extract, [string]$exeName, [string]$targetName) {
+    $exe = Get-ChildItem $extract -Recurse -Filter $exeName | Select-Object -First 1
+    if (-not $exe) { throw "В архиве нет $exeName" }
+    $target = Join-Path $dest $targetName
+    if (Test-Path $target) { Remove-Item $target -Recurse -Force }
+    $target = New-Item -ItemType Directory -Force -Path $target
+    Copy-Item $exe.FullName $target
+    Get-ChildItem $exe.DirectoryName -Filter *.dll | Copy-Item -Destination $target
+    Get-ChildItem $extract -Recurse -File | Where-Object { $_.Name -match '^(LICENSE|COPYING|NOTICE)' } |
+        Select-Object -First 3 | ForEach-Object { Copy-Item $_.FullName (Join-Path $target $_.Name) -Force }
+    return (Join-Path $target $exeName)
+}
+
+# --- qpdf (склеить / разбить / оптимизировать PDF) ---
+$qpdfExtract = Get-GitHubAsset "qpdf/qpdf" '-msvc64\.zip$' "qpdf"
+$qpdfExe = Copy-ToolBin $qpdfExtract "qpdf.exe" "qpdf"
+
+# --- poppler: pdftoppm (страницы PDF → PNG/JPG) ---
+$popplerExtract = Get-GitHubAsset "oschwartz10612/poppler-windows" '^Release-.*\.zip$' "poppler"
+$pdftoppmExe = Copy-ToolBin $popplerExtract "pdftoppm.exe" "poppler"
+
 & (Join-Path $ffDest "ffmpeg.exe") -hide_banner -version | Select-Object -First 1
 & (Join-Path $imDest "magick.exe") -version | Select-Object -First 1
+& $qpdfExe --version | Select-Object -First 1
+# pdftoppm печатает версию в stderr.
+$ErrorActionPreference = "Continue"
+& $pdftoppmExe -v 2>&1 | ForEach-Object { "$_" } | Select-Object -First 1

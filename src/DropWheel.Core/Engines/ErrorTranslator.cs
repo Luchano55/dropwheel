@@ -22,6 +22,10 @@ public static class ErrorTranslator
         ("not authorized", "ImageMagick запретил этот формат своей политикой безопасности"),
         ("improper image header", "Файл повреждён или формат не распознан"),
         ("Unsupported codec", "ImageMagick не умеет читать этот формат"),
+        ("invalid password", "PDF защищён паролем"),        // qpdf
+        ("Incorrect password", "PDF защищён паролем"),      // pdftoppm
+        ("can't find PDF header", "Файл повреждён или это не PDF"),
+        ("May not be a PDF file", "Файл повреждён или это не PDF"),
     ];
 
     public static string Translate(EngineKind engine, string stderr)

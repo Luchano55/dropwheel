@@ -11,7 +11,7 @@
 ## Стек
 
 - C# + WPF, .NET 8, приложение в трее.
-- Движки — внешние утилиты в `tools/` рядом с exe: **ffmpeg** (видео/аудио/GIF) и **ImageMagick** portable (`magick`, изображения, включая HEIC/AVIF).
+- Движки — внешние утилиты в `tools/` рядом с exe: **ffmpeg** (видео/аудио/GIF), **ImageMagick** portable (`magick`, изображения, включая HEIC/AVIF), **qpdf** (склеить/разбить/оптимизировать PDF) и **pdftoppm** из poppler (страницы PDF → PNG/JPG).
 - Настройки: `%AppData%\DropWheel\settings.json`; логи: `%AppData%\DropWheel\logs\`.
 - Тесты: xUnit.
 
@@ -31,7 +31,7 @@ src/DropWheel.Cli/    dropwheel-cli.exe convert <файл> <операция>
 src/DropWheel/        WPF-приложение DropWheel.exe (net8.0-windows): App (трей, окно задач),
                       Shell (меню у курсора, уведомления, реестр), Input (хуки), Wheel (окно колеса)
 tests/DropWheel.Tests/
-build/fetch-tools.ps1 скачивает ffmpeg + ImageMagick для Windows (используется в CI)
+build/fetch-tools.ps1 скачивает ffmpeg, ImageMagick, qpdf, poppler для Windows (используется в CI)
 packaging/            файлы, которые кладутся в архив сборки
 ```
 
