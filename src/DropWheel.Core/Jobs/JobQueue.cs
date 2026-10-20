@@ -40,6 +40,8 @@ public sealed class JobQueue(Converter converter, int maxParallel = 2, Action<st
     private readonly SemaphoreSlim _slots = new(maxParallel, maxParallel);
     private readonly List<Job> _jobs = [];
 
+    public Converter Converter => converter;
+
     /// <summary>Любое изменение задачи: состояние или прогресс. Вызывается из фонового потока.</summary>
     public event Action<Job>? Changed;
 

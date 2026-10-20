@@ -1,6 +1,7 @@
 using System.Windows.Threading;
 using DropWheel.Conversions;
 using DropWheel.Input;
+using DropWheel.Jobs;
 using DropWheel.Logging;
 
 namespace DropWheel.Wheel;
@@ -21,11 +22,14 @@ internal sealed class DragWheelController : IDisposable
     private readonly DragDetector _detector;
     private readonly LowLevelHooks _hooks;
     private readonly DispatcherTimer _releaseTimer;
+    private readonly Converter _converter;
     private readonly Action<IReadOnlyList<string>, Operation> _enqueue;
     private readonly FileLog _log;
 
-    public DragWheelController(string hotkey, Dispatcher ui, Action<IReadOnlyList<string>, Operation> enqueue, FileLog log)
+    public DragWheelController(string hotkey, Dispatcher ui, Converter converter,
+        Action<IReadOnlyList<string>, Operation> enqueue, FileLog log)
     {
+        _converter = converter;
         _enqueue = enqueue;
         _log = log;
         var vk = Hotkeys.ToVirtualKey(hotkey) ?? Hotkeys.ToVirtualKey(Hotkeys.Default)!.Value;
@@ -89,7 +93,8 @@ internal sealed class DragWheelController : IDisposable
 
     private void OnFilesEntered(string[] files)
     {
-        var ops = OperationCatalog.ForFiles(files);
+        var ops = OperationCatalog.ForFiles(files, _converter.CanRun);
+        _converter.Prepare(ops);
         _wheel.SetItems(WheelItems.For(ops, OperationMode.Convert), WheelItems.For(ops, OperationMode.Tool));
     }
 

@@ -91,7 +91,7 @@ public partial class App : Application
     {
         try
         {
-            _dragWheel = new DragWheelController(Settings.Hotkey, Dispatcher, Enqueue, Log);
+            _dragWheel = new DragWheelController(Settings.Hotkey, Dispatcher, Queue.Converter, Enqueue, Log);
             _dragWheel.Start();
         }
         catch (Exception ex)
@@ -123,7 +123,8 @@ public partial class App : Application
     private void ShowChooser(IReadOnlyList<string> paths)
     {
         Log.Write($"Выбор операции для {paths.Count} файл(ов)");
-        var ops = OperationCatalog.ForFiles(paths);
+        var ops = OperationCatalog.ForFiles(paths, Queue.Converter.CanRun);
+        Queue.Converter.Prepare(ops);
         ChooserMenu.Show(paths, ops, op => Enqueue(paths, op));
     }
 

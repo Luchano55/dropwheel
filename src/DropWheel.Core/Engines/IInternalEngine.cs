@@ -2,13 +2,22 @@ using DropWheel.Conversions;
 
 namespace DropWheel.Engines;
 
-/// <summary>Движок без внешнего процесса: ZIP (.NET), Office (COM).</summary>
+/// <summary>Движок без внешнего процесса: ZIP (.NET), Office (COM), библиотеки, Edge, OCR.</summary>
 public interface IInternalEngine
 {
     EngineKind Kind { get; }
 
-    /// <summary>Проверка до запуска: есть ли всё нужное (например, установлен ли Office).</summary>
+    /// <summary>Проверка до запуска: есть ли всё нужное (например, установлен ли Office). Должна быть быстрой — кэшируйте.</summary>
     bool IsAvailable { get; }
+
+    /// <summary>Может ли выполнить именно эту операцию (например, Excel есть, а PowerPoint нет).</summary>
+    bool CanRun(Operation op) => IsAvailable;
+
+    /// <summary>
+    /// Подготовиться заранее: пользователь видит колесо/меню с этими операциями и сейчас выберет.
+    /// Office здесь запускает Word в фоне («прогрев»). Вызывается в потоке UI — не блокировать.
+    /// </summary>
+    void Prepare(IReadOnlyList<Operation> offered) { }
 
     /// <param name="output">Временный путь результата (файл или уже созданная пустая папка для ResultKind.Folder).</param>
     Task RunAsync(Operation op, IReadOnlyList<string> inputs, string output, ConversionSettings settings,

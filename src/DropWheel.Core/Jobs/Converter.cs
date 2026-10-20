@@ -12,8 +12,38 @@ public sealed class Converter(ToolLocator tools, ConversionSettings settings, IE
     private readonly EngineRunner _runner = new(tools);
     private readonly Dictionary<EngineKind, IInternalEngine> _internal =
         (internalEngines ?? []).ToDictionary(e => e.Kind);
+    // Утилиты в tools/ за время работы не появляются и не пропадают — ищем один раз.
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<EngineKind, bool> _toolFound = new();
 
     public ConversionSettings Settings { get; } = settings;
+
+    /// <summary>Можно ли выполнить операцию на этом компьютере (основным или запасным движком).</summary>
+    public bool CanRun(Operation op) =>
+        EngineFor(op) is not null;
+
+    /// <summary>Пользователь сейчас выберет одну из операций — дать движкам подготовиться (прогрев Office).</summary>
+    public void Prepare(IReadOnlyList<Operation> offered)
+    {
+        foreach (var group in offered.GroupBy(o => EngineFor(o)))
+            if (group.Key is { } kind && _internal.TryGetValue(kind, out var engine))
+                engine.Prepare(group.ToList());
+    }
+
+    /// <summary>Движок, которым операция будет выполнена здесь: основной, иначе запасной, иначе null.</summary>
+    public EngineKind? EngineFor(Operation op)
+    {
+        if (CanUse(op.Engine, op)) return op.Engine;
+        if (op.Fallback is { } fb && CanUse(fb, op)) return fb;
+        return null;
+    }
+
+    private bool CanUse(EngineKind kind, Operation op)
+    {
+        if (_internal.TryGetValue(kind, out var engine)) return engine.CanRun(op);
+        return kind is EngineKind.FFmpeg or EngineKind.ImageMagick or EngineKind.Qpdf
+                or EngineKind.Pdftoppm or EngineKind.SevenZip
+            && _toolFound.GetOrAdd(kind, tools.IsAvailable);
+    }
 
     /// <returns>Полный путь готового файла.</returns>
     public Task<string> ConvertAsync(string input, Operation op,
@@ -81,20 +111,22 @@ public sealed class Converter(ToolLocator tools, ConversionSettings settings, IE
     private async Task RunEngineAsync(Operation op, IReadOnlyList<string> inputs, string output,
         IProgress<double>? progress, Action<string>? log, CancellationToken ct)
     {
-        if (_internal.TryGetValue(op.Engine, out var engine))
+        var kind = EngineFor(op) ?? throw new ConversionException(op.Engine == EngineKind.Office
+            ? "Не найден Microsoft Office"
+            : $"На этом компьютере нечем выполнить «{op.Label}»");
+
+        if (_internal.TryGetValue(kind, out var engine))
         {
-            if (!engine.IsAvailable)
-                throw new ConversionException(op.Engine == EngineKind.Office
-                    ? "Не найден Microsoft Office"
-                    : $"Недоступен движок {op.Engine}");
-            log?.Invoke($"> [{op.Engine}] {op.Id} {string.Join(" | ", inputs)} → {output}");
+            log?.Invoke($"> [{kind}] {op.Id} {string.Join(" | ", inputs)} → {output}");
             await engine.RunAsync(op, inputs, output, Settings, progress, ct);
             progress?.Report(1.0);
             return;
         }
 
-        var args = ArgumentBuilder.Build(op, inputs, output, Settings);
-        await _runner.RunAsync(op.Engine, args, progress, log, ct);
+        // Запасной внешний движок получает операцию «как свою» — с подменённым Engine.
+        var effective = kind == op.Engine ? op : op with { Engine = kind };
+        var args = ArgumentBuilder.Build(effective, inputs, output, Settings);
+        await _runner.RunAsync(kind, args, progress, log, ct);
     }
 
     /// <summary>Имя выбираем в последний момент; если его успели занять — берём следующее.</summary>
