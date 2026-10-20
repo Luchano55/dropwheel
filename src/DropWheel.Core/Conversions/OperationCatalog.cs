@@ -120,7 +120,8 @@ public static class OperationCatalog
         new("word-to-txt",   "TXT",  Conv, Document, Office, "", OutputRule.Fixed("txt"))  { InputExtensions = Extensions.Word, Fallback = DocLibs },
         // Excel: PDF — вся книга; CSV — первый лист, UTF-8, разделитель из региональных настроек Windows.
         new("excel-to-pdf",  "PDF",  Conv, Document, Office, "", OutputRule.Fixed("pdf"))  { InputExtensions = Extensions.Excel },
-        new("excel-to-xlsx", "XLSX", Conv, Document, Office, "", OutputRule.Fixed("xlsx")) { InputExtensions = Extensions.Excel },
+        // CSV → XLSX — не здесь, а в DOCLIBS (csv-to-xlsx): сам угадывает разделитель и кодировку, коды «007» не портит.
+        new("excel-to-xlsx", "XLSX", Conv, Document, Office, "", OutputRule.Fixed("xlsx")) { InputExtensions = [.. Extensions.Excel.Except(["csv"])] },
         new("excel-to-xls",  "XLS",  Conv, Document, Office, "", OutputRule.Fixed("xls"))  { InputExtensions = Extensions.Excel },
         new("excel-to-csv",  "CSV",  Conv, Document, Office, "", OutputRule.Fixed("csv"))  { InputExtensions = Extensions.Excel, Fallback = DocLibs },
         new("excel-to-ods",  "ODS",  Conv, Document, Office, "", OutputRule.Fixed("ods"))  { InputExtensions = Extensions.Excel },
@@ -133,6 +134,14 @@ public static class OperationCatalog
             { InputExtensions = Extensions.PowerPoint, Result = ResultKind.Folder },
         // PDF → Word: Word сам переводит PDF в редактируемый документ.
         new("pdf-to-docx",   "DOCX", Conv, Pdf, Office, "", OutputRule.Fixed("docx")),
+
+        // DOCLIBS — документы без Office (решение D-DOCLIBS): бесплатные библиотеки (DocLibsEngine)
+        // и печать HTML в PDF через Edge (WebPdfEngine, только Windows). Word — только DOCX/DOCM.
+        new(Engines.DocLibsEngine.WordToHtmlId, "HTML",     Conv, Document,       DocLibs, "", OutputRule.Fixed("html")) { InputExtensions = Engines.DocLibsEngine.WordInputs },
+        new(Engines.DocLibsEngine.WordToMdId,   "Markdown", Conv, Document,       DocLibs, "", OutputRule.Fixed("md"))   { InputExtensions = Engines.DocLibsEngine.WordInputs },
+        new(Engines.DocLibsEngine.CsvToXlsxId,  "XLSX",     Conv, Document,       DocLibs, "", OutputRule.Fixed("xlsx")) { InputExtensions = Engines.DocLibsEngine.CsvInputs },
+        new(Engines.DocLibsEngine.MdToHtmlId,   "HTML",     Conv, MediaKind.Text, DocLibs, "", OutputRule.Fixed("html")) { InputExtensions = Engines.DocLibsEngine.MarkdownInputs },
+        new("text-to-pdf",                      "PDF",      Conv, MediaKind.Text, WebPdf,  "", OutputRule.Fixed("pdf")),
     ];
 
     /// <summary>Id операции OCR: движок живёт в WPF-приложении (Windows.Media.Ocr), каталог — здесь.</summary>

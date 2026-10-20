@@ -217,12 +217,26 @@ The wheel only offers what makes sense for the file you are dragging: a `.jpg` n
 </details>
 
 <details>
+<summary><b>📄 Documents without Office</b> — DOCX, CSV, Markdown, TXT, HTML</summary>
+
+<br>
+
+| | Operation | What you get | CLI id |
+|---|---|---|---|
+| Convert | Word (DOCX) → HTML · Markdown | a self-contained web page (images inside) or Markdown text | `word-to-html` `word-to-md` |
+| Convert | CSV → XLSX | separator (`;` `,` tab) and encoding (UTF-8 / Windows-1251) detected; codes like `007` stay text | `csv-to-xlsx` |
+| Convert | Markdown → HTML | a styled page | `md-to-html` |
+| Convert | TXT · Markdown · HTML → PDF | printed by the Edge (WebView2) built into Windows — app only | `text-to-pdf` |
+| Convert | No Office installed | Word → PDF (DOCX only, close to Word), Word → TXT, Excel (XLSX/XLS) → CSV | `word-to-pdf` `word-to-txt` `excel-to-csv` |
+
+</details>
+
+<details>
 <summary><b>🚧 In progress</b> — Office documents, OCR, 7-Zip, icons, RAW photos</summary>
 
 <br>
 
 - **Office documents → PDF** — DOC/DOCX/RTF/ODT, XLS/XLSX/ODS/CSV, PPT/PPTX/ODP. Through your installed Microsoft Office (kept warm in the background so it's fast), or built-in libraries and Edge printing when Office isn't installed.
-- **Text & web pages → PDF** — TXT, Markdown, HTML.
 - **OCR** — get the text out of scans and photos.
 - **7-Zip archives** — 7z, RAR and friends.
 - **Icons** — make an `.ico` from a picture.
@@ -412,6 +426,8 @@ DropWheel is a thin, friendly layer over excellent open-source tools. The releas
 | [**poppler**](https://poppler.freedesktop.org) (`pdftoppm`) — build by [oschwartz10612/poppler-windows](https://github.com/oschwartz10612/poppler-windows) | PDF pages → images | GPL-2.0 or later (source code at poppler.freedesktop.org) |
 
 DropWheel runs them as separate programs and doesn't modify them. Planned additions such as [7-Zip](https://www.7-zip.org) keep their own licenses and will be listed here when they ship.
+
+Inside DropWheel itself (documents without Office): [Open XML SDK](https://github.com/dotnet/Open-XML-SDK) (MIT), [OpenXmlPowerTools](https://github.com/Codeuctivity/OpenXmlPowerTools) by Codeuctivity (MIT) with [SkiaSharp](https://github.com/mono/SkiaSharp) (MIT; bundles Skia, BSD-3-Clause), [ExcelDataReader](https://github.com/ExcelDataReader/ExcelDataReader) (MIT), [ExcelNumberFormat](https://github.com/andersnm/ExcelNumberFormat) (MIT), [Markdig](https://github.com/xoofx/markdig) (BSD-2-Clause) and [Microsoft.Web.WebView2](https://www.nuget.org/packages/Microsoft.Web.WebView2) (BSD-3-Clause), which prints through the Edge WebView2 Runtime already present in Windows 10/11.
 
 Built with [.NET 8](https://dotnet.microsoft.com) and WPF; notifications via [Microsoft.Toolkit.Uwp.Notifications](https://github.com/CommunityToolkit/WindowsCommunityToolkit) (MIT). Artwork lettering is set in [Inter](https://rsms.me/inter/) (SIL OFL 1.1).
 

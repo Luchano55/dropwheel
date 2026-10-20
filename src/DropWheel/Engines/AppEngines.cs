@@ -1,5 +1,7 @@
+using System.Windows.Threading;
 using DropWheel.Engines;
 using DropWheel.Logging;
+using DropWheel.Settings;
 
 namespace DropWheel.AppEngines;
 
@@ -9,11 +11,14 @@ namespace DropWheel.AppEngines;
 /// </summary>
 internal static class EngineRegistry
 {
-    public static IReadOnlyList<IInternalEngine> Create(FileLog log) =>
+    /// <param name="dispatcher">Поток интерфейса: там живёт Edge для печати в PDF.</param>
+    public static IReadOnlyList<IInternalEngine> Create(FileLog log, Dispatcher dispatcher) =>
     [
         new ZipEngine(),
         new TextEngine(),
         new OcrEngine(log.Write),
         new OfficeEngine(log.Write),
+        new DocLibsEngine(),
+        new WebPdfEngine(dispatcher, AppPaths.WebView2Dir, log.Write),
     ];
 }

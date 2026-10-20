@@ -226,4 +226,60 @@ public class CatalogTests
     {
         Assert.All(OperationCatalog.All, o => Assert.True(o.Label.Length <= 16, o.Label));
     }
+
+    // --- Документы без Office (DOCLIBS) ---
+
+    [Theory]
+    [InlineData("word-to-html", "HTML", MediaKind.Document, EngineKind.DocLibs, "html")]
+    [InlineData("word-to-md", "Markdown", MediaKind.Document, EngineKind.DocLibs, "md")]
+    [InlineData("csv-to-xlsx", "XLSX", MediaKind.Document, EngineKind.DocLibs, "xlsx")]
+    [InlineData("md-to-html", "HTML", MediaKind.Text, EngineKind.DocLibs, "html")]
+    [InlineData("text-to-pdf", "PDF", MediaKind.Text, EngineKind.WebPdf, "pdf")]
+    public void Doclibs_operations_shape(string id, string label, MediaKind kind, EngineKind engine, string output)
+    {
+        var op = OperationCatalog.Find(id)!;
+        Assert.Equal((label, OperationMode.Convert, kind, engine, output, ResultKind.File, InputMode.PerFile),
+            (op.Label, op.Mode, op.Kind, op.Engine, op.Output.Fallback, op.Result, op.Inputs));
+        Assert.True(op.Label.Length <= 16, op.Label);
+    }
+
+    [Fact]
+    public void Docx_gets_html_and_markdown_but_old_doc_does_not()
+    {
+        var docx = Ids(OperationCatalog.ForFile("отчёт.DOCX")).ToList();
+        Assert.Contains("word-to-html", docx);
+        Assert.Contains("word-to-md", docx);
+        foreach (var file in new[] { "old.doc", "letter.rtf", "text.odt" })
+            Assert.DoesNotContain("word-to-md", Ids(OperationCatalog.ForFile(file)));
+    }
+
+    [Fact]
+    public void Only_csv_gets_xlsx_from_csv()
+    {
+        Assert.Contains("csv-to-xlsx", Ids(OperationCatalog.ForFile("data.csv")));
+        Assert.DoesNotContain("csv-to-xlsx", Ids(OperationCatalog.ForFile("data.xlsx")));
+        // Один сектор «XLSX» для CSV, даже когда есть Office (его excel-to-xlsx CSV не берёт).
+        Assert.Single(OperationCatalog.ForFile("data.csv"), o => o.Label == "XLSX");
+    }
+
+    [Theory]
+    [InlineData("readme.md", new[] { "md-to-html", "text-to-pdf" })]
+    [InlineData("readme.markdown", new[] { "md-to-html", "text-to-pdf" })]
+    [InlineData("notes.txt", new[] { "text-to-pdf" })]
+    [InlineData("page.html", new[] { "text-to-pdf" })]
+    [InlineData("page.HTM", new[] { "text-to-pdf" })]
+    public void Text_files_get_html_and_pdf(string file, string[] expected)
+    {
+        Assert.Equal(expected, Ids(OperationCatalog.ForFile(file).Where(o => o.Mode == OperationMode.Convert)));
+    }
+
+    [Fact]
+    public void Pdf_from_text_is_hidden_without_edge()
+    {
+        // Конвертер без WebPdf (Linux, CLI): «PDF» для Markdown не предлагается, «HTML» — да.
+        var converter = new Jobs.Converter(new Engines.ToolLocator(), ConversionSettings.Default, [new Engines.DocLibsEngine()]);
+        var ids = Ids(OperationCatalog.ForFile("readme.md", converter.CanRun)).ToList();
+        Assert.Contains("md-to-html", ids);
+        Assert.DoesNotContain("text-to-pdf", ids);
+    }
 }

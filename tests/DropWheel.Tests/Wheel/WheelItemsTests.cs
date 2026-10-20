@@ -38,7 +38,7 @@ public class WheelItemsTests
     public void Empty_when_nothing_fits()
     {
         Assert.Empty(WheelItems.For([], OperationMode.Convert));
-        Assert.Empty(WheelItems.For(OperationCatalog.ForFile("readme.txt"), OperationMode.Convert));
+        Assert.Empty(WheelItems.For(OperationCatalog.ForFile("data.bin"), OperationMode.Convert)); // только «В ZIP/7Z» — инструменты
         Assert.Empty(WheelItems.For([Op("c1", OperationMode.Convert)], OperationMode.Tool));
     }
 }
