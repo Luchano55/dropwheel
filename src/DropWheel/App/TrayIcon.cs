@@ -46,6 +46,10 @@ internal sealed partial class TrayIcon : IDisposable
         };
     }
 
+    public void ShowStartHint() => _icon.ShowBalloonTip(5000, "DropWheel работает",
+        "Значок — здесь, в трее. Нажмите правой кнопкой на фото, видео или музыку → «Конвертировать…».",
+        ToolTipIcon.Info);
+
     public void Update(IReadOnlyList<Job> jobs)
     {
         var active = jobs.Count(j => j.State is JobState.Queued or JobState.Running);

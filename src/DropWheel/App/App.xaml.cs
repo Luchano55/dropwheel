@@ -74,10 +74,12 @@ public partial class App : Application
         if (Settings.ContextMenuEnabled) ContextMenuInstaller.TryInstall(Log);
 
         _batcher = new InvocationBatcher(BatchQuiet, paths => Dispatcher.BeginInvoke(() => ShowChooser(paths)));
-        _pipe = new PipeServer(pipeName, message => HandleArgs(CommandLine.Parse(message)));
+        _pipe = new PipeServer(pipeName, message => HandleArgs(CommandLine.Parse(message), fromPipe: true));
         _pipe.Start();
 
-        HandleArgs(args);
+        // Запуск двойным кликом: окна нет — подскажем, где искать программу.
+        if (args.ConvertPaths.Count == 0) _tray.ShowStartHint();
+        HandleArgs(args, fromPipe: false);
     }
 
     private static void SendToFirstInstance(string pipeName, string[] args)
@@ -90,9 +92,11 @@ public partial class App : Application
         }
     }
 
-    private void HandleArgs(CommandLine args)
+    private void HandleArgs(CommandLine args, bool fromPipe)
     {
         if (args.ConvertPaths.Count > 0) _batcher?.Add(args.ConvertPaths);
+        // Повторный запуск DropWheel.exe без файлов — показать окно задач.
+        else if (fromPipe) Dispatcher.BeginInvoke(ShowJobs);
     }
 
     /// <summary>Меню у курсора для путей из проводника; выбор — в очередь.</summary>
