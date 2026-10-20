@@ -26,7 +26,8 @@ public static class Extensions
     public static readonly IReadOnlyList<string> PowerPoint = ["ppt", "pptx", "pptm", "odp"];
     public static readonly IReadOnlyList<string> Document = [.. Word, .. Excel, .. PowerPoint];
 
-    public static readonly IReadOnlyList<string> Archive = ["zip"];
+    /// <summary>ZIP — встроенный ZipEngine; остальные архивы распаковывает 7-Zip (tgz = tar.gz).</summary>
+    public static readonly IReadOnlyList<string> Archive = ["zip", "7z", "rar", "tar", "gz", "tgz", "bz2", "xz"];
 
     /// <summary>Текстовые файлы: Markdown/HTML/TXT → PDF через Edge, перекодировка.</summary>
     public static readonly IReadOnlyList<string> Text = ["txt", "md", "markdown", "html", "htm"];

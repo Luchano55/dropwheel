@@ -68,9 +68,10 @@
 | Фото (JPG, PNG, WebP, HEIC, AVIF, BMP, TIFF, GIF; на вход также SVG, PSD и RAW фотокамер — CR2, CR3, NEF, ARW, DNG, RAF, ORF, RW2) | `to-jpg` `to-png` `to-webp` `to-avif` `to-pdf` · `img-ico` значок ICO (256…16 px, прозрачный фон) · `img-ocr` текст с картинки в .txt (распознавание Windows, только в приложении; JPG, PNG, BMP, TIFF) · для GIF: `gif-to-mp4` `gif-to-webm` анимация → видео | `img-compress` сжать · `img-half` уменьшить ×2 · `img-1920` до 1920 px · `img-strip` убрать метаданные · `images-to-pdf` несколько фото в один PDF |
 | Видео (MP4, MOV, MKV, WebM, AVI) | `to-mp4` `to-webm` `to-gif` `video-to-mp3` | `video-compress` сжать · `video-720p` · `video-mute` убрать звук · `video-subs` субтитры в `фильм.srt` |
 | Звук (MP3, M4A, WAV, FLAC, OGG, Opus) | `to-mp3` `to-m4a` `to-wav` `to-flac` `to-ogg` | `audio-normalize` выровнять громкость |
-| PDF | `pdf-to-png` `pdf-to-jpg` — каждая страница картинкой, в папку `документ (страницы)` | `pdf-merge` склеить несколько PDF · `pdf-split` разбить по страницам · `pdf-optimize` оптимизировать без потери качества |
+| PDF | `pdf-to-png` `pdf-to-jpg` — каждая страница картинкой, в папку `документ (страницы)` · `pdf-to-txt` текст (у сканов текста нет — будет понятная ошибка) | `pdf-merge` склеить несколько PDF · `pdf-split` разбить по страницам · `pdf-optimize` оптимизировать без потери качества · `pdf-rotate` повернуть все страницы на 90° по часовой |
 | Текст (TXT, CSV, SRT, MD, INI, LOG, XML, JSON) | — | `text-to-utf8` перекодировать в UTF-8 (из Windows-1251, DOS-866, UTF-16): `заметки (UTF-8).txt` |
-| Любые файлы, ZIP | — | `zip-pack` упаковать в ZIP (несколько файлов — в один архив) · `zip-extract` распаковать ZIP в папку |
+| Любые файлы, ZIP | — | `zip-pack` упаковать в ZIP (несколько файлов — в один архив) · `pack-7z` то же в 7Z · `zip-extract` распаковать ZIP в папку |
+| Архивы (7Z, RAR, TAR, GZ, TGZ, BZ2, XZ) | — | `archive-extract` распаковать в папку с именем архива (`.tar.gz` — сразу файлы); архивы с паролем не поддерживаются |
 
 Исходный файл никогда не меняется и не удаляется. Если имя занято — `photo (1).jpg`. Инструменты добавляют пометку: `photo (сжато).jpg`.
 
@@ -236,7 +237,8 @@ dotnet test
 - **ffmpeg** — GPL-сборка [BtbN/FFmpeg-Builds](https://github.com/BtbN/FFmpeg-Builds) (лицензия GPL v3, исходный код — там же и на [ffmpeg.org](https://ffmpeg.org)); текст лицензии — `tools/ffmpeg/LICENSE.txt`.
 - **ImageMagick** — portable-сборка с [imagemagick.org](https://imagemagick.org) (лицензия ImageMagick, Apache-2.0-совместимая).
 - **qpdf** — официальная сборка [qpdf/qpdf](https://github.com/qpdf/qpdf) (лицензия Apache-2.0).
-- **poppler** (`pdftoppm`) — сборка [oschwartz10612/poppler-windows](https://github.com/oschwartz10612/poppler-windows) (лицензия GPL-2.0 или новее, исходный код — на [poppler.freedesktop.org](https://poppler.freedesktop.org)).
+- **poppler** (`pdftoppm`, `pdftotext`) — сборка [oschwartz10612/poppler-windows](https://github.com/oschwartz10612/poppler-windows) (лицензия GPL-2.0 или новее, исходный код — на [poppler.freedesktop.org](https://poppler.freedesktop.org)).
+- **7-Zip** (`7z.exe`, `7z.dll`) — официальная сборка Игоря Павлова ([7-zip.org](https://www.7-zip.org), релизы [ip7z/7zip](https://github.com/ip7z/7zip)): лицензия GNU LGPL-2.1 или новее, часть кода — BSD-3-Clause; код распаковки RAR — под лицензией unRAR с ограничением: его нельзя использовать, чтобы воссоздать алгоритм сжатия RAR (DropWheel RAR только распаковывает). Текст лицензии — `tools/7zip/License.txt`, исходный код — на 7-zip.org.
 
 DropWheel запускает их как отдельные программы и не изменяет.
 

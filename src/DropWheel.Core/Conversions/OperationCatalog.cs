@@ -72,7 +72,7 @@ public static class OperationCatalog
         new(Engines.ZipEngine.PackId, "В ZIP", Tool, Any, Zip, "", OutputRule.Fixed("zip"))
             { Inputs = InputMode.Combine, ResultStem = Engines.ZipEngine.ArchiveName },
         new(Engines.ZipEngine.ExtractId, "Распаковать", Tool, Archive, Zip, "", OutputRule.Fixed("zip"))
-            { Result = ResultKind.Folder },
+            { Result = ResultKind.Folder, InputExtensions = ["zip"] },
 
         // EXTRAS
         // Значок: картинка вписывается в прозрачный квадрат 256×256, в ICO — размеры 256…16.
@@ -96,6 +96,18 @@ public static class OperationCatalog
         new(Engines.TextEngine.ToUtf8Id, "В UTF-8", Tool, Any, EngineKind.Text, "",
             OutputRule.Same("txt", [.. Engines.TextEngine.InputExtensions]), " (UTF-8)")
             { InputExtensions = Engines.TextEngine.InputExtensions },
+
+        // 7ZIP-PDFX
+        // 7-Zip: распаковать 7z/RAR/TAR/GZ/BZ2/XZ в папку с именем архива (.tar.gz — сразу файлы, см. SevenZip);
+        // -p с выдуманным паролем — чтобы 7-Zip не ждал ввода пароля, а сразу сообщил «Wrong password».
+        new(Engines.SevenZip.ExtractId, "Распаковать", Tool, Archive, SevenZip, "x -y -bso0 -bsp1 -sccUTF-8 -o{out} -pnopassword -- {in}", OutputRule.Fixed("7z"))
+            { Result = ResultKind.Folder, InputExtensions = [.. Extensions.Archive.Except(["zip"])], ResultStem = Engines.SevenZip.FolderName },
+        // В 7Z: записи — по именам файлов (без папок), имя архива — как у «В ZIP».
+        new(Engines.SevenZip.PackId, "В 7Z", Tool, Any, SevenZip, "a -t7z -mx=7 -bso0 -bsp1 -sccUTF-8 -spd -sse {out} -- {ins}", OutputRule.Fixed("7z"))
+            { Inputs = InputMode.Combine, ResultStem = Engines.ZipEngine.ArchiveName },
+        // PDF: текст (poppler pdftotext; у скана текста нет — ошибка, см. PdfText), повернуть все страницы (qpdf).
+        new("pdf-to-txt", "TXT (текст)", Conv, Pdf, Pdftotext, "-layout -enc UTF-8 {in} {out}", OutputRule.Fixed("txt")),
+        new("pdf-rotate", "Повернуть ↻", Tool, Pdf, Qpdf, "--rotate=+90 {in} {out}", OutputRule.Fixed("pdf"), " (повёрнуто)"),
     ];
 
     /// <summary>Id операции OCR: движок живёт в WPF-приложении (Windows.Media.Ocr), каталог — здесь.</summary>

@@ -18,7 +18,7 @@ jobs:
       - name: Утилиты
         run: |
           sudo apt-get update
-          sudo apt-get install -y ffmpeg imagemagick libheif-plugin-libde265 libheif-plugin-aomenc librsvg2-bin qpdf poppler-utils
+          sudo apt-get install -y ffmpeg imagemagick libheif-plugin-libde265 libheif-plugin-aomenc librsvg2-bin qpdf poppler-utils 7zip
       - name: Тесты
         run: dotnet test -c Release
 
@@ -29,7 +29,7 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
-      - name: Скачать ffmpeg, ImageMagick, qpdf и poppler
+      - name: Скачать ffmpeg, ImageMagick, qpdf, poppler и 7-Zip
         shell: pwsh
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -41,6 +41,8 @@ jobs:
           $env:DROPWHEEL_MAGICK = "$PWD\tools\imagemagick\magick.exe"
           $env:DROPWHEEL_QPDF = "$PWD\tools\qpdf\qpdf.exe"
           $env:DROPWHEEL_PDFTOPPM = "$PWD\tools\poppler\pdftoppm.exe"
+          $env:DROPWHEEL_PDFTOTEXT = "$PWD\tools\poppler\pdftotext.exe"
+          $env:DROPWHEEL_7Z = "$PWD\tools\7zip\7z.exe"
           dotnet test -c Release --logger "console;verbosity=normal"
       - name: Windows-тесты и скриншоты интерфейса
         shell: pwsh

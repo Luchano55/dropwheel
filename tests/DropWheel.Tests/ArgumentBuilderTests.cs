@@ -30,6 +30,7 @@ public class ArgumentBuilderTests
         MediaKind.Image => "/data/Мои фото/тест 1.heic",
         MediaKind.Video => "/data/Мои фото/тест 1.mkv",
         MediaKind.Pdf => "/data/Мои фото/тест 1.pdf",
+        MediaKind.Archive => "/data/Мои фото/тест 1.7z",
         _ => "/data/Мои фото/тест 1.wav",
     };
 
@@ -49,7 +50,11 @@ public class ArgumentBuilderTests
         var input = SampleInput(opId);
         var args = Build(opId, input);
         Assert.Contains(args, a => a == input || a == input + "[0]");
-        Assert.StartsWith("/data/Мои фото/out.", args[^1]);
+        // Результат — обычно последним; у 7-Zip — «-o<папка>» или архив перед списком файлов.
+        if (OperationCatalog.Find(opId)!.Engine == EngineKind.SevenZip)
+            Assert.Contains(args, a => a.StartsWith("/data/Мои фото/out.") || a.StartsWith("-o/data/Мои фото/out."));
+        else
+            Assert.StartsWith("/data/Мои фото/out.", args[^1]);
     }
 
     [Fact]
@@ -185,8 +190,45 @@ public class ArgumentBuilderTests
     [InlineData(EngineKind.Pdftoppm, 3, false)]
     [InlineData(EngineKind.FFmpeg, 3, false)]
     [InlineData(EngineKind.ImageMagick, 1, false)]
+    [InlineData(EngineKind.SevenZip, 0, true)]
+    [InlineData(EngineKind.SevenZip, 1, false)]  // предупреждения: архив мог выйти неполным
+    [InlineData(EngineKind.SevenZip, 2, false)]
+    [InlineData(EngineKind.Pdftotext, 3, false)] // автор PDF запретил копировать текст
     public void Exit_codes(EngineKind engine, int code, bool success)
     {
         Assert.Equal(success, EngineRunner.Succeeded(engine, code));
+    }
+
+    // --- 7-Zip, PDF → TXT, поворот ---
+
+    private const string Arc = "/data/Мои документы/архив 1.tar.gz";
+
+    [Fact]
+    public void Archive_extract_into_temp_folder_without_password_prompt()
+    {
+        Assert.Equal(["x", "-y", "-bso0", "-bsp1", "-sccUTF-8", "-o" + OutDir, "-pnopassword", "--", Arc],
+            BuildMany("archive-extract", [Arc], OutDir));
+    }
+
+    [Fact]
+    public void Pack_7z_puts_archive_before_all_inputs()
+    {
+        const string output = "/data/Мои документы/.dropwheel-abc.7z";
+        Assert.Equal(["a", "-t7z", "-mx=7", "-bso0", "-bsp1", "-sccUTF-8", "-spd", "-sse", output, "--", Pdf1, Pdf2, Arc],
+            BuildMany("pack-7z", [Pdf1, Pdf2, Arc], output));
+    }
+
+    [Fact]
+    public void Pdf_to_txt_is_utf8_with_layout()
+    {
+        const string output = "/data/Мои документы/.dropwheel-abc.txt";
+        Assert.Equal(["-layout", "-enc", "UTF-8", Pdf1, output], BuildMany("pdf-to-txt", [Pdf1], output));
+    }
+
+    [Fact]
+    public void Pdf_rotate_turns_all_pages_clockwise()
+    {
+        const string output = "/data/Мои документы/.dropwheel-abc.pdf";
+        Assert.Equal(["--rotate=+90", Pdf1, output], BuildMany("pdf-rotate", [Pdf1], output));
     }
 }

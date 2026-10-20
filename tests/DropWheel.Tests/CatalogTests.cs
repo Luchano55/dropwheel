@@ -74,7 +74,7 @@ public class CatalogTests
     [InlineData(".gitignore")]
     public void Unknown_file_gets_only_zip(string file)
     {
-        Assert.Equal(["zip-pack"], Ids(OperationCatalog.ForFile(file)));
+        Assert.Equal(["zip-pack", "pack-7z"], Ids(OperationCatalog.ForFile(file)));
     }
 
     [Fact]
@@ -110,7 +110,7 @@ public class CatalogTests
     [Fact]
     public void Mixed_types_have_only_zip_in_common()
     {
-        Assert.Equal(["zip-pack"], Ids(OperationCatalog.ForFiles(["a.png", "b.mp4", "c.txt"])));
+        Assert.Equal(["zip-pack", "pack-7z"], Ids(OperationCatalog.ForFiles(["a.png", "b.mp4", "c.txt"])));
         Assert.Empty(OperationCatalog.ForFiles(Array.Empty<string>()));
     }
 
@@ -142,14 +142,14 @@ public class CatalogTests
     public void Single_pdf_gets_pages_split_optimize_but_not_merge()
     {
         var ids = Ids(OperationCatalog.ForFiles(["/docs/отчёт 1.PDF"])).ToList();
-        Assert.Equal(["pdf-to-png", "pdf-to-jpg", "pdf-split", "pdf-optimize", "zip-pack"], ids);
+        Assert.Equal(["pdf-to-png", "pdf-to-jpg", "pdf-split", "pdf-optimize", "zip-pack", "pack-7z", "pdf-to-txt", "pdf-rotate"], ids);
     }
 
     [Fact]
     public void Two_pdfs_can_be_merged()
     {
         Assert.Contains("pdf-merge", Ids(OperationCatalog.ForFiles(["a.pdf", "b.pdf"])));
-        Assert.Equal(["zip-pack"], Ids(OperationCatalog.ForFiles(["a.pdf", "b.png"])));
+        Assert.Equal(["zip-pack", "pack-7z"], Ids(OperationCatalog.ForFiles(["a.pdf", "b.png"])));
     }
 
     [Fact]
@@ -167,6 +167,8 @@ public class CatalogTests
     [InlineData("pdf-merge", OperationMode.Tool, ResultKind.File, InputMode.Combine, 2, " (объединено)")]
     [InlineData("pdf-optimize", OperationMode.Tool, ResultKind.File, InputMode.PerFile, 1, " (оптим.)")]
     [InlineData("images-to-pdf", OperationMode.Tool, ResultKind.File, InputMode.Combine, 2, " (все)")]
+    [InlineData("pdf-to-txt", OperationMode.Convert, ResultKind.File, InputMode.PerFile, 1, "")]
+    [InlineData("pdf-rotate", OperationMode.Tool, ResultKind.File, InputMode.PerFile, 1, " (повёрнуто)")]
     public void Pdf_operations_shape(string id, OperationMode mode, ResultKind result, InputMode inputs, int minFiles, string suffix)
     {
         var op = OperationCatalog.Find(id)!;
@@ -176,5 +178,52 @@ public class CatalogTests
         Assert.Equal(minFiles, op.MinFiles);
         Assert.Equal(suffix, op.Suffix);
         Assert.True(op.Label.Length <= 16, op.Label); // помещается в сектор колеса
+    }
+
+    // --- 7-Zip ---
+
+    [Theory]
+    [InlineData("архив.7z")]
+    [InlineData("архив.RAR")]
+    [InlineData("архив.tar")]
+    [InlineData("архив.tar.gz")]
+    [InlineData("архив.tgz")]
+    [InlineData("архив.tar.bz2")]
+    [InlineData("архив.tar.xz")]
+    public void Archives_are_extracted_by_7zip_not_zip(string file)
+    {
+        var ids = Ids(OperationCatalog.ForFile(file)).ToList();
+        Assert.Equal(["zip-pack", "archive-extract", "pack-7z"], ids);
+    }
+
+    [Fact]
+    public void Zip_is_still_extracted_by_zip_engine()
+    {
+        var ops = OperationCatalog.ForFile("photos.zip");
+        Assert.Contains(ops, o => o.Id == "zip-extract" && o.Engine == EngineKind.Zip);
+        Assert.DoesNotContain(ops, o => o.Id == "archive-extract");
+    }
+
+    [Fact]
+    public void Seven_zip_operations_shape()
+    {
+        var extract = OperationCatalog.Find("archive-extract")!;
+        Assert.Equal((OperationMode.Tool, MediaKind.Archive, EngineKind.SevenZip, InputMode.PerFile, ResultKind.Folder, ""),
+            (extract.Mode, extract.Kind, extract.Engine, extract.Inputs, extract.Result, extract.Suffix));
+        Assert.Equal(["7z", "rar", "tar", "gz", "tgz", "bz2", "xz"], extract.InputExtensions!);
+
+        var pack = OperationCatalog.Find("pack-7z")!;
+        Assert.Equal((OperationMode.Tool, MediaKind.Any, EngineKind.SevenZip, InputMode.Combine, ResultKind.File, 1),
+            (pack.Mode, pack.Kind, pack.Engine, pack.Inputs, pack.Result, pack.MinFiles));
+        Assert.Equal("7z", pack.Output.Resolve(".txt"));
+        // Имя архива — как у «В ZIP»: несколько файлов → по папке.
+        Assert.Equal("Отпуск", pack.ResultStem!(["/фото/Отпуск/1.jpg", "/фото/Отпуск/2.jpg"]));
+        Assert.Equal("1", pack.ResultStem!(["/фото/Отпуск/1.jpg"]));
+    }
+
+    [Fact]
+    public void Labels_fit_the_wheel_sector()
+    {
+        Assert.All(OperationCatalog.All, o => Assert.True(o.Label.Length <= 16, o.Label));
     }
 }

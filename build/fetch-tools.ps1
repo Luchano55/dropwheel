@@ -1,10 +1,12 @@
 # Скачивает в папку tools/: ffmpeg (GPL-сборка BtbN, свежая release-ветка), ImageMagick 7 portable,
-# qpdf (официальная сборка MSVC) и poppler (pdftoppm, сборка oschwartz10612/poppler-windows).
+# qpdf (официальная сборка MSVC), poppler (pdftoppm и pdftotext, сборка oschwartz10612/poppler-windows)
+# и 7-Zip (официальная сборка с GitHub ip7z/7zip).
 # Результат:
 #   tools/ffmpeg/ffmpeg.exe, tools/ffmpeg/ffprobe.exe
 #   tools/imagemagick/magick.exe (+ его dll)
 #   tools/qpdf/qpdf.exe (+ его dll)
-#   tools/poppler/pdftoppm.exe (+ его dll)
+#   tools/poppler/pdftoppm.exe, tools/poppler/pdftotext.exe (+ их dll)
+#   tools/7zip/7z.exe, tools/7zip/7z.dll, tools/7zip/License.txt
 param([string]$Destination = "tools")
 
 $ErrorActionPreference = "Stop"
@@ -93,6 +95,50 @@ $qpdfExe = Copy-ToolBin $qpdfExtract "qpdf.exe" "qpdf"
 # --- poppler: pdftoppm (страницы PDF → PNG/JPG) ---
 $popplerExtract = Get-GitHubAsset "oschwartz10612/poppler-windows" '^Release-.*\.zip$' "poppler"
 $pdftoppmExe = Copy-ToolBin $popplerExtract "pdftoppm.exe" "poppler"
+# pdftotext (PDF → TXT) лежит в той же папке bin — его dll уже скопированы вместе с pdftoppm.
+$pdftotextSrc = Get-ChildItem $popplerExtract -Recurse -Filter pdftotext.exe | Select-Object -First 1
+if (-not $pdftotextSrc) { throw "В архиве poppler нет pdftotext.exe" }
+Copy-Item $pdftotextSrc.FullName (Split-Path $pdftoppmExe)
+$pdftotextExe = Join-Path (Split-Path $pdftoppmExe) "pdftotext.exe"
+
+# --- 7-Zip (распаковать 7z/RAR/TAR/GZ/BZ2/XZ, упаковать в 7z) ---
+# Нужна полная версия: 7z.exe + 7z.dll (в ней и RAR). Урезанные 7za.exe/7zr.exe RAR не умеют.
+# В релизе ip7z/7zip (официальный GitHub автора 7-Zip) есть 7zr.exe и установщик 7zNNNN-x64.exe;
+# установщик — это 7z-архив с SFX-заголовком: не запускаем его, а распаковываем через 7zr.exe.
+$szRelease = Invoke-RestMethod -Headers $headers "https://api.github.com/repos/ip7z/7zip/releases/latest"
+$szNames = ($szRelease.assets | ForEach-Object { $_.name }) -join ", "
+$szSetupAsset = $szRelease.assets | Where-Object { $_.name -match '^7z\d{4}-x64\.exe$' } | Select-Object -First 1
+$sz7zrAsset = $szRelease.assets | Where-Object { $_.name -eq "7zr.exe" } | Select-Object -First 1
+if (-not $szSetupAsset -or -not $sz7zrAsset) {
+    throw "В релизе ip7z/7zip $($szRelease.tag_name) нет 7zr.exe или установщика 7zNNNN-x64.exe. Есть: $szNames"
+}
+Write-Host "7-Zip: $($szSetupAsset.name) ($($szRelease.tag_name))"
+$szWork = Join-Path $work "7zip"
+if (Test-Path $szWork) { Remove-Item $szWork -Recurse -Force }
+$szWork = New-Item -ItemType Directory -Force -Path $szWork
+$szSetup = Join-Path $szWork $szSetupAsset.name
+$sz7zr = Join-Path $szWork "7zr.exe"
+Invoke-WebRequest -Headers $headers $szSetupAsset.browser_download_url -OutFile $szSetup
+Invoke-WebRequest -Headers $headers $sz7zrAsset.browser_download_url -OutFile $sz7zr
+$szExtract = Join-Path $szWork "files"
+& $sz7zr x $szSetup "-o$szExtract" -y | Out-Null
+if ($LASTEXITCODE -ne 0) {
+    # Запасной путь — 7-Zip, установленный в системе (на раннерах GitHub Actions он есть).
+    $system7z = Get-Command 7z -ErrorAction SilentlyContinue
+    if (-not $system7z) { throw "7zr.exe не смог распаковать $($szSetupAsset.name) (код $LASTEXITCODE), а 7z в системе нет" }
+    Write-Host "7zr.exe не справился (код $LASTEXITCODE), распаковываю системным 7z: $($system7z.Source)"
+    & $system7z.Source x $szSetup "-o$szExtract" -y | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw "Не удалось распаковать $($szSetupAsset.name) (код $LASTEXITCODE)" }
+}
+$szDest = Join-Path $dest "7zip"
+if (Test-Path $szDest) { Remove-Item $szDest -Recurse -Force }
+$szDest = New-Item -ItemType Directory -Force -Path $szDest
+foreach ($name in "7z.exe", "7z.dll", "License.txt") {
+    $file = Get-ChildItem $szExtract -Recurse -File | Where-Object { $_.Name -eq $name } | Select-Object -First 1
+    if (-not $file) { throw "В установщике 7-Zip нет $name. Есть: $((Get-ChildItem $szExtract -Recurse -File | ForEach-Object { $_.Name }) -join ', ')" }
+    Copy-Item $file.FullName $szDest
+}
+$szExe = Join-Path $szDest "7z.exe"
 
 & (Join-Path $ffDest "ffmpeg.exe") -hide_banner -version | Select-Object -First 1
 & (Join-Path $imDest "magick.exe") -version | Select-Object -First 1
@@ -100,3 +146,6 @@ $pdftoppmExe = Copy-ToolBin $popplerExtract "pdftoppm.exe" "poppler"
 # pdftoppm печатает версию в stderr.
 $ErrorActionPreference = "Continue"
 & $pdftoppmExe -v 2>&1 | ForEach-Object { "$_" } | Select-Object -First 1
+& $pdftotextExe -v 2>&1 | ForEach-Object { "$_" } | Select-Object -First 1
+# 7z без команды печатает строку версии и справку (код выхода 0).
+& $szExe | Where-Object { $_ -match '^7-Zip' } | Select-Object -First 1
