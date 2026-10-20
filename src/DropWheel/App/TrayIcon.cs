@@ -13,6 +13,7 @@ internal sealed partial class TrayIcon : IDisposable
     private readonly NotifyIcon _icon;
     private readonly Icon _idle;
     private readonly ToolStripMenuItem _contextMenuItem;
+    private readonly ToolStripMenuItem _updateItem;
     private Icon? _busy;
     private int _busyCount = -1;
 
@@ -26,10 +27,15 @@ internal sealed partial class TrayIcon : IDisposable
         };
         _contextMenuItem.CheckedChanged += (_, _) => app.SetContextMenuEnabled(_contextMenuItem.Checked);
 
+        _updateItem = new ToolStripMenuItem { Visible = false, Font = new Font(SystemFonts.MenuFont ?? SystemFonts.DefaultFont, System.Drawing.FontStyle.Bold) };
+        _updateItem.Click += (_, _) => app.InstallUpdate();
+
         var menu = new ContextMenuStrip();
+        menu.Items.Add(_updateItem);
         menu.Items.Add("Задачи", null, (_, _) => app.ShowJobs());
         menu.Items.Add(_contextMenuItem);
         menu.Items.Add("Открыть журнал", null, (_, _) => OpenFolder(AppPaths.LogsDir));
+        menu.Items.Add("Проверить обновления", null, (_, _) => app.CheckUpdatesManually());
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("Выход", null, (_, _) => app.Quit());
 
@@ -45,6 +51,16 @@ internal sealed partial class TrayIcon : IDisposable
             if (e.Button == MouseButtons.Left) app.ShowJobs();
         };
     }
+
+    /// <summary>Показать пункт «Обновить до сборки N» и подсказку.</summary>
+    public void SetUpdateAvailable(int build)
+    {
+        _updateItem.Text = $"Обновить до сборки {build}";
+        _updateItem.Visible = true;
+        ShowInfo("Есть новая версия DropWheel", "Правый клик по значку → «Обновить».");
+    }
+
+    public void ShowInfo(string title, string text) => _icon.ShowBalloonTip(5000, title, text, ToolTipIcon.Info);
 
     public void ShowStartHint() => _icon.ShowBalloonTip(5000, "DropWheel работает",
         "Значок — здесь, в трее. Нажмите правой кнопкой на фото, видео или музыку → «Конвертировать…».",

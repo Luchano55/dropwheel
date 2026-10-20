@@ -16,6 +16,8 @@ public sealed record AppSettings
     /// <summary>null — искать в tools/ рядом с exe.</summary>
     public string? MagickPath { get; init; }
     public ConversionSettings Conversion { get; init; } = new();
+    /// <summary>Раз в сутки проверять на GitHub, нет ли новой сборки. Единственное обращение программы в сеть.</summary>
+    public bool CheckForUpdates { get; init; } = true;
 
     private static readonly JsonSerializerOptions Json = new()
     {

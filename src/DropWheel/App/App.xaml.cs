@@ -6,6 +6,7 @@ using DropWheel.Jobs;
 using DropWheel.Logging;
 using DropWheel.Settings;
 using DropWheel.Shell;
+using DropWheel.Updates;
 using DropWheel.Wheel;
 using Microsoft.Toolkit.Uwp.Notifications;
 
@@ -26,6 +27,7 @@ public partial class App : Application
     private Notifier? _notifier;
     private JobsWindow? _jobsWindow;
     private DragWheelController? _dragWheel;
+    private Updater? _updater;
 
     internal static FileLog Log { get; private set; } = null!;
     internal AppSettings Settings { get; private set; } = new();
@@ -46,6 +48,12 @@ public partial class App : Application
 
         var pipeName = PipeNames.ForCurrentUser("DropWheel");
         _instance = SingleInstance.TryAcquire(pipeName);
+        // После обновления старый экземпляр ещё закрывается — подождём его, а не отдадим ему аргументы.
+        for (var i = 0; _instance is null && args.AfterUpdate is not null && i < 50; i++)
+        {
+            Thread.Sleep(200);
+            _instance = SingleInstance.TryAcquire(pipeName);
+        }
         if (_instance is null)
         {
             // Разрешаем первому экземпляру вывести меню поверх проводника.
@@ -76,6 +84,7 @@ public partial class App : Application
         if (Settings.ContextMenuEnabled) ContextMenuInstaller.TryInstall(Log);
 
         StartDragWheel();
+        StartUpdater(args.AfterUpdate);
 
         _batcher = new InvocationBatcher(BatchQuiet, paths => Dispatcher.BeginInvoke(() => ShowChooser(paths)));
         _pipe = new PipeServer(pipeName, message => HandleArgs(CommandLine.Parse(message), fromPipe: true));
@@ -100,6 +109,65 @@ public partial class App : Application
             _dragWheel?.Dispose();
             _dragWheel = null;
         }
+    }
+
+    private void StartUpdater(int? afterUpdate)
+    {
+        var removed = UpdateApplier.CleanupOld(Updater.AppDir);
+        if (afterUpdate is { } build)
+        {
+            Log.Write($"Запуск после обновления до сборки {build}, удалено старых файлов: {removed}");
+            _tray?.ShowInfo("DropWheel обновлён", $"Сборка {build}. Всё готово к работе.");
+        }
+
+        _updater = new Updater(Dispatcher, Queue, Log,
+            onAvailable: m => Dispatcher.BeginInvoke(() => _tray?.SetUpdateAvailable(m.Build)),
+            beforeRestart: ReleaseForRestart);
+        if (Settings.CheckForUpdates) _updater.Start();
+    }
+
+    /// <summary>Пункт трея «Проверить обновления».</summary>
+    internal async void CheckUpdatesManually()
+    {
+        if (_updater is null) return;
+        try
+        {
+            if (!await _updater.CheckAsync(manual: true))
+                _tray?.ShowInfo("Обновлений нет", $"У вас последняя сборка ({AppVersion.CurrentBuild}).");
+        }
+        catch (Exception ex)
+        {
+            _tray?.ShowInfo("Не удалось проверить обновления", ex.Message);
+        }
+    }
+
+    /// <summary>Пункт трея «Обновить до сборки N».</summary>
+    internal async void InstallUpdate()
+    {
+        if (_updater?.Available is not { } manifest) return;
+        try
+        {
+            _tray?.ShowInfo("Обновление", $"Скачиваю сборку {manifest.Build}… Программа перезапустится сама.");
+            await _updater.InstallAsync(manifest);
+        }
+        catch (Exception ex)
+        {
+            Log.Write("Обновление не удалось: " + ex);
+            _tray?.ShowInfo("Обновление не удалось", ex.Message);
+        }
+    }
+
+    /// <summary>Перед перезапуском: отпустить Mutex, канал, хуки и значок, чтобы новый экземпляр стал первым.</summary>
+    private void ReleaseForRestart()
+    {
+        _dragWheel?.Dispose();
+        _dragWheel = null;
+        _pipe?.Dispose();
+        _pipe = null;
+        _instance?.Dispose();
+        _instance = null;
+        _tray?.Dispose();
+        _tray = null;
     }
 
     private static void SendToFirstInstance(string pipeName, string[] args)
@@ -170,6 +238,7 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        _updater?.Dispose();
         _dragWheel?.Dispose();
         _pipe?.Dispose();
         _batcher?.Dispose();

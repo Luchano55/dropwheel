@@ -57,19 +57,49 @@ jobs:
       - name: Сборка
         shell: pwsh
         run: |
+          # Номер сборки = номер запуска CI: по нему программа понимает, что есть обновление.
           $common = @("-c", "Release", "-r", "win-x64", "--self-contained",
             "-p:PublishSingleFile=true", "-p:IncludeNativeLibrariesForSelfExtract=true",
-            "-p:EnableCompressionInSingleFile=true", "-p:DebugType=None", "-o", "out/DropWheel")
+            "-p:EnableCompressionInSingleFile=true", "-p:DebugType=None",
+            "-p:Version=0.2.$env:GITHUB_RUN_NUMBER", "-p:SourceRevisionId=$env:GITHUB_SHA",
+            "-o", "out/DropWheel")
           dotnet publish src/DropWheel @common
           dotnet publish src/DropWheel.Cli @common
           Copy-Item tools out/DropWheel/tools -Recurse
           # ffprobe нужен только тестам.
           Remove-Item out/DropWheel/tools/ffmpeg/ffprobe.exe -ErrorAction SilentlyContinue
           Copy-Item packaging/* out/DropWheel/
+
+          # Версия набора утилит = хэш всех их файлов: обновление перекачивает утилиты, только если она сменилась.
+          $root = (Resolve-Path out/DropWheel/tools).Path
+          $sig = Get-ChildItem $root -Recurse -File | Sort-Object FullName |
+            ForEach-Object { (Get-FileHash $_.FullName -Algorithm SHA256).Hash + " " + $_.FullName.Substring($root.Length) }
+          $toolsVersion = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes($sig -join "`n"))).Substring(0, 16)
+          Set-Content out/DropWheel/tools/tools-version.txt $toolsVersion -NoNewline
+
           Get-ChildItem out/DropWheel -Recurse -File | Sort-Object Length -Descending | Select-Object -First 8 |
             ForEach-Object { "{0,8:N1} MB  {1}" -f ($_.Length / 1MB), $_.FullName }
+
+          # Три архива: полный (первая установка), программа и утилиты (обновления). Внутри всегда папка DropWheel/.
+          New-Item -ItemType Directory out/app/DropWheel, out/tools/DropWheel | Out-Null
+          Get-ChildItem out/DropWheel | Where-Object Name -ne "tools" | Copy-Item -Destination out/app/DropWheel -Recurse
+          Copy-Item out/DropWheel/tools out/tools/DropWheel/tools -Recurse
           Compress-Archive out/DropWheel DropWheel-win-x64.zip
-          "{0:N1} MB zip" -f ((Get-Item DropWheel-win-x64.zip).Length / 1MB)
+          Compress-Archive out/app/DropWheel DropWheel-app-win-x64.zip
+          Compress-Archive out/tools/DropWheel DropWheel-tools-win-x64.zip
+
+          $manifest = [ordered]@{
+            build = [int]$env:GITHUB_RUN_NUMBER
+            commit = $env:GITHUB_SHA
+            toolsVersion = $toolsVersion
+            appZip = "DropWheel-app-win-x64.zip"
+            appSha256 = (Get-FileHash DropWheel-app-win-x64.zip -Algorithm SHA256).Hash
+            toolsZip = "DropWheel-tools-win-x64.zip"
+            toolsSha256 = (Get-FileHash DropWheel-tools-win-x64.zip -Algorithm SHA256).Hash
+          }
+          $manifest | ConvertTo-Json | Set-Content version.json -Encoding utf8NoBOM
+          Get-Content version.json
+          Get-ChildItem *.zip | ForEach-Object { "{0,8:N1} MB  {1}" -f ($_.Length / 1MB), $_.Name }
       - uses: actions/upload-artifact@v4
         with:
           name: DropWheel-win-x64
@@ -82,6 +112,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release delete dev-build --yes --cleanup-tag 2>$null
-          gh release create dev-build DropWheel-win-x64.zip --prerelease --target $env:GITHUB_SHA `
-            --title "Тестовая сборка ($env:GITHUB_REF_NAME)" `
-            --notes "Свежая сборка из ветки $env:GITHUB_REF_NAME, коммит $env:GITHUB_SHA. Инструкция — в README."
+          gh release create dev-build DropWheel-win-x64.zip DropWheel-app-win-x64.zip DropWheel-tools-win-x64.zip version.json `
+            --prerelease --target $env:GITHUB_SHA `
+            --title "Тестовая сборка $env:GITHUB_RUN_NUMBER" `
+            --notes "Первая установка — DropWheel-win-x64.zip (всё сразу). Дальше программа обновляется сама (трей → «Обновить»). Сборка $env:GITHUB_RUN_NUMBER, ветка $env:GITHUB_REF_NAME, коммит $env:GITHUB_SHA."
