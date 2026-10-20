@@ -28,6 +28,13 @@ public static class ErrorTranslator
     {
         foreach (var (needle, message) in Known)
             if (stderr.Contains(needle, StringComparison.OrdinalIgnoreCase)) return message;
-        return engine == EngineKind.FFmpeg ? "ffmpeg не смог обработать файл" : "ImageMagick не смог обработать файл";
+        return engine switch
+        {
+            EngineKind.FFmpeg => "ffmpeg не смог обработать файл",
+            EngineKind.ImageMagick => "ImageMagick не смог обработать файл",
+            EngineKind.Qpdf => "qpdf не смог обработать PDF",
+            EngineKind.Pdftoppm => "Не удалось прочитать PDF",
+            _ => "Не удалось обработать файл",
+        };
     }
 }

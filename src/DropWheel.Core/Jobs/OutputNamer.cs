@@ -11,15 +11,24 @@ public static class OutputNamer
         return Path.Combine(dir, name);
     }
 
+    /// <summary>Желаемая папка-результат: photo.pdf + « (страницы)» → «photo (страницы)».</summary>
+    public static string DesiredFolder(string input, string suffix, string? outputFolder = null)
+    {
+        var dir = outputFolder ?? Path.GetDirectoryName(Path.GetFullPath(input))!;
+        var name = Path.GetFileNameWithoutExtension(input) + suffix;
+        return Path.Combine(dir, name);
+    }
+
     /// <summary>Первый свободный вариант пути. Занятым считается и сам исходник.</summary>
-    public static string FirstFree(string desired, Func<string, bool>? exists = null)
+    /// <param name="folder">Папка: точки в имени — не расширение («my.photo (страницы) (1)»).</param>
+    public static string FirstFree(string desired, Func<string, bool>? exists = null, bool folder = false)
     {
         exists ??= p => File.Exists(p) || Directory.Exists(p);
         if (!exists(desired)) return desired;
 
         var dir = Path.GetDirectoryName(desired)!;
-        var stem = Path.GetFileNameWithoutExtension(desired);
-        var ext = Path.GetExtension(desired);
+        var stem = folder ? Path.GetFileName(desired) : Path.GetFileNameWithoutExtension(desired);
+        var ext = folder ? "" : Path.GetExtension(desired);
         for (var i = 1; ; i++)
         {
             var candidate = Path.Combine(dir, $"{stem} ({i}){ext}");

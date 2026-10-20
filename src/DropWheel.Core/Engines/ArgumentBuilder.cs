@@ -8,8 +8,13 @@ namespace DropWheel.Engines;
 /// </summary>
 public static class ArgumentBuilder
 {
-    public static IReadOnlyList<string> Build(Operation op, string input, string output, ConversionSettings settings)
+    public static IReadOnlyList<string> Build(Operation op, string input, string output, ConversionSettings settings) =>
+        Build(op, [input], output, settings);
+
+    /// <param name="output">Путь файла-результата или папки (ResultKind.Folder) — временный, его выбирает Converter.</param>
+    public static IReadOnlyList<string> Build(Operation op, IReadOnlyList<string> inputs, string output, ConversionSettings settings)
     {
+        var input = inputs[0];
         var outExt = Extensions.Normalize(Path.GetExtension(output));
         var middle = Expand(op.Args, outExt, settings);
 
@@ -30,8 +35,25 @@ public static class ArgumentBuilder
                 .. (outExt is "jpg" or "jpeg" or "pdf" ? FlattenOnWhite : []),
                 output,
             ],
-            _ => throw new ArgumentOutOfRangeException(nameof(op)),
+            // Остальные внешние утилиты: шаблон целиком, с явными {in} / {ins} / {out}.
+            EngineKind.Qpdf or EngineKind.Pdftoppm => Explicit(middle, inputs, output),
+            _ => throw new ArgumentOutOfRangeException(nameof(op), op.Engine, "Встроенный движок — не процесс"),
         };
+    }
+
+    /// <summary>
+    /// {in} — первый вход, {ins} — отдельный токен, заменяется всеми входами по одному аргументу,
+    /// {out} — результат (файл или папка; допускается «{out}/стр» внутри токена).
+    /// </summary>
+    private static List<string> Explicit(string[] template, IReadOnlyList<string> inputs, string output)
+    {
+        var args = new List<string>(template.Length + inputs.Count);
+        foreach (var token in template)
+        {
+            if (token == "{ins}") args.AddRange(inputs);
+            else args.Add(token.Replace("{in}", inputs[0]).Replace("{out}", output));
+        }
+        return args;
     }
 
     /// <summary>JPEG (и PDF с JPEG-сжатием) не умеет прозрачность — подкладываем белый фон.</summary>

@@ -65,15 +65,19 @@ public static class OperationCatalog
     public static IReadOnlyList<Operation> ForFile(string path) =>
         All.Where(o => o.AppliesTo(Path.GetExtension(path))).ToList();
 
-    /// <summary>Операции, общие для всех файлов. Пустой список — «Нечего предложить».</summary>
+    /// <summary>
+    /// Операции, общие для всех файлов (с учётом MinFiles). Пустой список — «Нечего предложить».
+    /// </summary>
     public static IReadOnlyList<Operation> ForFiles(IEnumerable<string> paths)
     {
         IEnumerable<Operation>? common = null;
+        var count = 0;
         foreach (var path in paths)
         {
+            count++;
             var ops = ForFile(path);
             common = common is null ? ops : common.Intersect(ops);
         }
-        return common?.ToList() ?? [];
+        return common?.Where(o => count >= o.MinFiles).ToList() ?? [];
     }
 }

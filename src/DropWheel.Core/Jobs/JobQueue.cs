@@ -9,13 +9,16 @@ public sealed class Job
 {
     private readonly CancellationTokenSource _cts = new();
 
-    internal Job(string input, Operation operation)
+    internal Job(IReadOnlyList<string> inputs, Operation operation)
     {
-        Input = input;
+        Inputs = inputs;
         Operation = operation;
     }
 
-    public string Input { get; }
+    /// <summary>Первый (для PerFile — единственный) входной файл.</summary>
+    public string Input => Inputs[0];
+    /// <summary>Все входы: больше одного — у Combine-операций (склеить PDF, ZIP).</summary>
+    public IReadOnlyList<string> Inputs { get; }
     public Operation Operation { get; }
     public JobState State { get; internal set; }
     /// <summary>0..1; для ImageMagick прогресса нет — скачок с 0 до 1.</summary>
@@ -40,11 +43,18 @@ public sealed class JobQueue(Converter converter, int maxParallel = 2, Action<st
     /// <summary>Любое изменение задачи: состояние или прогресс. Вызывается из фонового потока.</summary>
     public event Action<Job>? Changed;
 
+    /// <summary>Поставить в очередь выбор пользователя: Combine — одной задачей, иначе — по задаче на файл.</summary>
+    public IReadOnlyList<Job> EnqueueSelection(IReadOnlyList<string> paths, Operation op) =>
+        op.Inputs == InputMode.Combine ? [Enqueue(paths, op)] : paths.Select(p => Enqueue(p, op)).ToList();
+
     public IReadOnlyList<Job> Jobs { get { lock (_jobs) return _jobs.ToList(); } }
 
-    public Job Enqueue(string input, Operation op)
+    public Job Enqueue(string input, Operation op) => Enqueue([input], op);
+
+    /// <summary>Одна задача на все входы — для Combine-операций.</summary>
+    public Job Enqueue(IReadOnlyList<string> inputs, Operation op)
     {
-        var job = new Job(input, op);
+        var job = new Job(inputs.ToList(), op);
         lock (_jobs) _jobs.Add(job);
         Changed?.Invoke(job);
         _ = Task.Run(() => RunAsync(job));
@@ -60,7 +70,7 @@ public sealed class JobQueue(Converter converter, int maxParallel = 2, Action<st
             {
                 Set(job, JobState.Running);
                 var progress = new Progress(p => { job.Progress = p; Changed?.Invoke(job); });
-                job.OutputPath = await converter.ConvertAsync(job.Input, job.Operation, progress, log, job.Token);
+                job.OutputPath = await converter.ConvertAsync(job.Inputs, job.Operation, progress, log, job.Token);
                 job.Progress = 1;
                 Set(job, JobState.Done);
             }
@@ -94,7 +104,8 @@ public sealed class JobQueue(Converter converter, int maxParallel = 2, Action<st
     private void Set(Job job, JobState state)
     {
         job.State = state;
-        log?.Invoke($"[{state}] {job.Operation.Id} {job.Input}{(job.Error is null ? "" : " — " + job.Error)}");
+        var what = job.Inputs.Count == 1 ? job.Input : $"{job.Input} (+{job.Inputs.Count - 1})";
+        log?.Invoke($"[{state}] {job.Operation.Id} {what}{(job.Error is null ? "" : " — " + job.Error)}");
         Changed?.Invoke(job);
     }
 

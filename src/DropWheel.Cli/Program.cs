@@ -79,7 +79,7 @@ public static class Program
             return 1;
         }
         foreach (var op in ops)
-            stdout.WriteLine($"{op.Id,-16} {op.Kind,-6} {(op.Mode == OperationMode.Convert ? "→ " : "")}{op.Label}");
+            stdout.WriteLine($"{op.Id,-16} {op.Kind,-8} {(op.Mode == OperationMode.Convert ? "→ " : "")}{op.Label}");
         return 0;
     }
 
@@ -98,7 +98,7 @@ public static class Program
         Action<string>? log = verbose ? line => { lock (stderr) stderr.WriteLine(line); } : null;
         var queue = new JobQueue(new Converter(tools, settings), maxParallel: 2, log);
 
-        var jobs = files.Select(f => queue.Enqueue(f, op)).ToList();
+        var jobs = queue.EnqueueSelection(files, op);
         await Task.WhenAll(jobs.Select(j => j.Completion));
 
         var failed = 0;

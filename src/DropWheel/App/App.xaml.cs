@@ -127,10 +127,7 @@ public partial class App : Application
         ChooserMenu.Show(paths, ops, op => Enqueue(paths, op));
     }
 
-    internal void Enqueue(IEnumerable<string> paths, Operation op)
-    {
-        foreach (var path in paths) Queue.Enqueue(path, op);
-    }
+    internal void Enqueue(IReadOnlyList<string> paths, Operation op) => Queue.EnqueueSelection(paths, op);
 
     private void OnJobChanged(Job job)
     {

@@ -4,13 +4,15 @@ namespace DropWheel.Engines;
 
 /// <summary>
 /// Где лежат ffmpeg и magick. Порядок: явный путь → переменная окружения
-/// (DROPWHEEL_FFMPEG / DROPWHEEL_MAGICK) → папка tools/ рядом с exe → PATH.
+/// (DROPWHEEL_FFMPEG / _MAGICK / _QPDF / _PDFTOPPM) → папка tools/ рядом с exe → PATH.
 /// На Linux без ImageMagick 7 используется convert из ImageMagick 6 (синтаксис совместим).
 /// </summary>
 public sealed class ToolLocator
 {
     public string? FfmpegPath { get; init; }
     public string? MagickPath { get; init; }
+    public string? QpdfPath { get; init; }
+    public string? PdftoppmPath { get; init; }
     public string ToolsDirectory { get; init; } = Path.Combine(AppContext.BaseDirectory, "tools");
 
     public string Resolve(EngineKind engine) => engine switch
@@ -19,6 +21,10 @@ public sealed class ToolLocator
             ?? throw new ConversionException("Не найден ffmpeg. Положите ffmpeg.exe в папку tools рядом с программой."),
         EngineKind.ImageMagick => Find(MagickPath, "DROPWHEEL_MAGICK", ["magick", "convert"])
             ?? throw new ConversionException("Не найден ImageMagick. Положите magick.exe в папку tools рядом с программой."),
+        EngineKind.Qpdf => Find(QpdfPath, "DROPWHEEL_QPDF", ["qpdf"])
+            ?? throw new ConversionException("Не найден qpdf. Положите qpdf.exe в папку tools рядом с программой."),
+        EngineKind.Pdftoppm => Find(PdftoppmPath, "DROPWHEEL_PDFTOPPM", ["pdftoppm"])
+            ?? throw new ConversionException("Не найден pdftoppm (poppler). Положите его в папку tools рядом с программой."),
         _ => throw new ArgumentOutOfRangeException(nameof(engine)),
     };
 
