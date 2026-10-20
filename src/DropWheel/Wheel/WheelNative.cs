@@ -2,7 +2,7 @@ using System.Runtime.InteropServices;
 
 namespace DropWheel.Wheel;
 
-/// <summary>Win32 для размещения колеса: монитор под точкой, его DPI и рабочая область.</summary>
+/// <summary>Win32 для окон колеса и окна задач: монитор под точкой, его DPI и рабочая область, стили окон.</summary>
 internal static class WheelNative
 {
     public static readonly IntPtr HwndTopmost = new(-1);
@@ -12,8 +12,14 @@ internal static class WheelNative
 
     private const uint MonitorDefaultToNearest = 2;
     private const int MdtEffectiveDpi = 0;
+    private const int GwlStyle = -16;
     private const int GwlExStyle = -20;
     private const long WsExToolWindow = 0x00000080;
+    private const long WsExTransparent = 0x00000020;
+    private const long WsExNoActivate = 0x08000000;
+    private const long WsSysMenu = 0x00080000;
+    private const long WsMinimizeBox = 0x00020000;
+    private const long WsMaximizeBox = 0x00010000;
 
     [StructLayout(LayoutKind.Sequential)]
     private struct NativePoint(int x, int y)
@@ -74,10 +80,38 @@ internal static class WheelNative
     }
 
     /// <summary>Убрать окно из Alt+Tab.</summary>
-    public static void MakeToolWindow(IntPtr hwnd)
+    public static void MakeToolWindow(IntPtr hwnd) => AddExStyle(hwnd, WsExToolWindow);
+
+    /// <summary>
+    /// Окно-«картинка»: не в Alt+Tab, не активируется, мышь и перетаскивание проходят сквозь него
+    /// (WS_EX_TRANSPARENT у слоистого окна).
+    /// </summary>
+    public static void MakeClickThrough(IntPtr hwnd) =>
+        AddExStyle(hwnd, WsExToolWindow | WsExTransparent | WsExNoActivate);
+
+    /// <summary>Убрать у окна системное меню и кнопки свернуть/развернуть (их не рисует DWM на «стекле»).</summary>
+    public static void RemoveSystemMenu(IntPtr hwnd)
     {
-        var style = GetWindowLongPtr(hwnd, GwlExStyle).ToInt64();
-        SetWindowLongPtr(hwnd, GwlExStyle, new IntPtr(style | WsExToolWindow));
+        try
+        {
+            var style = GetWindowLongPtr(hwnd, GwlStyle).ToInt64();
+            SetWindowLongPtr(hwnd, GwlStyle, new IntPtr(style & ~(WsSysMenu | WsMinimizeBox | WsMaximizeBox)));
+        }
+        catch (Exception)
+        {
+        }
+    }
+
+    private static void AddExStyle(IntPtr hwnd, long add)
+    {
+        try
+        {
+            var style = GetWindowLongPtr(hwnd, GwlExStyle).ToInt64();
+            SetWindowLongPtr(hwnd, GwlExStyle, new IntPtr(style | add));
+        }
+        catch (Exception)
+        {
+        }
     }
 
     [DllImport("user32.dll", SetLastError = true)]

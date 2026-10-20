@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
+using DropWheel.Text;
 using DropWheel.Ui;
 
 namespace DropWheel.Wheel;
@@ -14,20 +15,24 @@ namespace DropWheel.Wheel;
 /// Прятать колесо снаружи — через Cancel(), а не Hide(): так сбрасывается состояние.
 /// <para>
 /// Вид: круглое окно (SetWindowRgn) с системным акриловым размытием под ним, если Windows это умеет
-/// и «Эффекты прозрачности» включены; иначе — почти непрозрачный диск с мягкой тенью.
-/// Открытие — увеличение 0.85→1 с проявлением (140 мс), закрытие — 90 мс, при броске на сектор —
-/// короткая вспышка сектора перед закрытием. Без анимаций Windows всё мгновенно.
+/// и «Эффекты прозрачности» включены; мягкую тень тогда рисует отдельное прозрачное для мыши окно
+/// под колесом (круглая форма обрезала бы её). Без размытия — плотный диск с тенью в том же окне.
+/// Открытие — «вырастает» из точки курсора: 0.3 → 1.03 → 1 с проявлением (~270 мс); закрытие — 110 мс;
+/// при броске на лепесток — короткая вспышка перед закрытием. Без анимаций Windows всё мгновенно.
 /// </para>
 /// </summary>
 public sealed class WheelWindow : Window
 {
-    /// <summary>Сторона окна в DIP.</summary>
-    public const double DipSize = 300;
+    /// <summary>Сторона окна в DIP: диск 288 + место для тени.</summary>
+    public const double DipSize = 312;
 
-    private const double OpenMs = 140;
-    private const double CloseMs = 90;
+    private const double OpenMs = 270;
+    private const double CloseMs = 110;
     private const double AcceptMs = 110;
-    private const double OpenScale = 0.85;
+    private const double OpenScale = 0.3;
+    private const double CloseScale = 0.85;
+    /// <summary>Отступ диска от края окна, DIP.</summary>
+    private const double DiscInset = DipSize / 2 - WheelControl.DiscRadius;
 
     private readonly WheelControl _wheel = new();
     private readonly WheelState _state = new();
@@ -36,8 +41,12 @@ public sealed class WheelWindow : Window
 
     private IntPtr _hwnd;
     private int _sizePx;               // сторона окна в физических пикселях
+    private int _leftPx, _topPx;       // левый верхний угол окна
     private uint _dpi = 96;
     private bool _blur;                // под окном системное размытие, окно круглое
+    private Point _origin = new(DipSize / 2, DipSize / 2); // откуда «вырастает» колесо (DIP окна)
+    private WheelShadowWindow? _shadow;
+    private bool _shadowFailed;
 
     private string[]? _files;          // пути текущего перетаскивания
     private Point? _lastPoint;         // последняя позиция курсора над колесом
@@ -90,7 +99,6 @@ public sealed class WheelWindow : Window
         _wheel.HorizontalAlignment = HorizontalAlignment.Center;
         _wheel.VerticalAlignment = VerticalAlignment.Center;
         _wheel.IsPending = true;
-        _wheel.RenderTransformOrigin = new Point(0.5, 0.5);
         _wheel.RenderTransform = _scale;
         Content = _wheel;
 
@@ -132,18 +140,21 @@ public sealed class WheelWindow : Window
         ApplyTheme();
 
         var appearing = !IsVisible;
-        if (appearing && Motion.Enabled) SetAppearance(OpenScale, 0);
-
         // Дважды: первый SetWindowPos может перенести окно на монитор с другим DPI,
         // и WPF пересчитает размер; второй ставит точные координаты и размер.
         Place(screenX, screenY);
         Place(screenX, screenY);
-        if (appearing) Show();
+        if (appearing && Motion.Enabled) SetAppearance(OpenScale, 0);
+        if (appearing)
+        {
+            if (_blur) ShowShadow();
+            Show();
+        }
         Place(screenX, screenY);
         _open = true;
 
         if (appearing)
-            _tween.Run(OpenMs, Motion.EaseOutCubic, t => SetAppearance(OpenScale + (1 - OpenScale) * t, t));
+            _tween.Run(OpenMs, t => t, t => SetAppearance(OpenScale + (1 - OpenScale) * OpenEase(t), Math.Min(1, t / 0.55)));
 
         if (activate)
         {
@@ -154,6 +165,17 @@ public sealed class WheelWindow : Window
             // не дала окну стать активным (тогда Deactivated не придёт).
             Mouse.Capture(this, CaptureMode.SubTree);
         }
+    }
+
+    /// <summary>
+    /// Наборы секторов и файлы (для размера в центре — режим клика из меню проводника).
+    /// Режим — «Конвертация» (или «Инструменты», если конвертировать нечего).
+    /// </summary>
+    public void SetItems(IReadOnlyList<WheelItem> convertItems, IReadOnlyList<WheelItem> toolItems, IReadOnlyList<string>? paths)
+    {
+        FinishClose();
+        _wheel.IdleText = SizeText(paths);
+        SetItems(convertItems, toolItems);
     }
 
     /// <summary>Наборы секторов; режим — «Конвертация» (или «Инструменты», если конвертировать нечего).</summary>
@@ -188,6 +210,7 @@ public sealed class WheelWindow : Window
     {
         SystemTheme.Changed -= OnThemeChanged;
         _tween.Stop(complete: false);
+        _shadow?.Close();
         base.OnClosed(e);
     }
 
@@ -337,7 +360,11 @@ public sealed class WheelWindow : Window
             // Вернулись с теми же файлами — сектора и выбранный режим уже есть.
             var same = _files is not null && !_wheel.IsPending && _files.SequenceEqual(files);
             _files = files;
-            if (!same) FilesEntered?.Invoke(files);
+            if (!same)
+            {
+                _wheel.IdleText = SizeText(files);
+                FilesEntered?.Invoke(files);
+            }
         }
         else
         {
@@ -460,10 +487,14 @@ public sealed class WheelWindow : Window
         if (!blur && _blur)
         {
             NativeEffects.SetAcrylic(_hwnd, false);
-            NativeEffects.SetCircleRegion(_hwnd, _sizePx, 0);
+            NativeEffects.SetCircleRegion(_hwnd, 0, 0, 0);
         }
         _blur = blur;
         _wheel.Backdrop = blur ? WheelBackdrop.Translucent : WheelBackdrop.Solid;
+        // С размытием окно круглое и тень обрезалась бы — её рисует окно под колесом.
+        _wheel.DrawShadow = !blur;
+        if (blur) _shadow?.SetColor(palette.Shadow);
+        else _shadow?.Hide();
         UpdateRegion();
     }
 
@@ -472,25 +503,87 @@ public sealed class WheelWindow : Window
         if (IsVisible) ApplyTheme();
     }
 
+    /// <summary>Открытие: быстрый рост с небольшим «перелётом» (пик ~1.03 на 65 % времени) и успокоение.</summary>
+    private static double OpenEase(double t)
+    {
+        const double c1 = 1.07, c3 = c1 + 1;
+        var u = t - 1;
+        return 1 + c3 * u * u * u + c1 * u * u;
+    }
+
+    /// <summary>Масштаб и прозрачность колеса (и тени) относительно точки «роста» _origin.</summary>
     private void SetAppearance(double scale, double opacity)
     {
+        _scale.CenterX = _origin.X - DiscInset;
+        _scale.CenterY = _origin.Y - DiscInset;
         _scale.ScaleX = _scale.ScaleY = scale;
         _wheel.Opacity = opacity;
+        _shadow?.SetAppearance(_origin, scale, opacity);
         UpdateRegion();
     }
 
-    /// <summary>Круглая форма окна по текущему размеру диска — только при размытии (оно рисуется на всё окно).</summary>
+    /// <summary>Круглая форма окна по текущему положению и размеру диска — только при размытии (оно рисуется на всё окно).</summary>
     private void UpdateRegion()
     {
         if (!_blur || _sizePx <= 0) return;
-        var diameter = (int)Math.Round(2 * WheelControl.DiscRadius * _dpi / 96.0 * _scale.ScaleX);
-        if (!NativeEffects.SetCircleRegion(_hwnd, _sizePx, Math.Max(2, diameter)))
+        var s = _scale.ScaleX;
+        var k = _dpi / 96.0;
+        var c = DipSize / 2;
+        var cx = (_origin.X + (c - _origin.X) * s) * k;
+        var cy = (_origin.Y + (c - _origin.Y) * s) * k;
+        var r = Math.Max(1, WheelControl.DiscRadius * s * k);
+        if (!NativeEffects.SetCircleRegion(_hwnd, cx, cy, r))
         {
             // Форма не встала — без неё размытие было бы квадратным. Остаёмся на плотном диске.
             NativeEffects.SetAcrylic(_hwnd, false);
             _blur = false;
             _wheel.Backdrop = WheelBackdrop.Solid;
+            _wheel.DrawShadow = true;
+            _shadow?.Hide();
         }
+    }
+
+    /// <summary>Окно тени под колесом (только при размытии). Не получилось создать — колесо просто без тени.</summary>
+    private void ShowShadow()
+    {
+        if (_shadowFailed) return;
+        try
+        {
+            _shadow ??= new WheelShadowWindow();
+            _shadow.SetColor(_wheel.Palette?.Shadow ?? WheelPalette.FromSystem().Shadow);
+            _shadow.SetAppearance(_origin, _scale.ScaleX, _wheel.Opacity);
+            _shadow.PlaceBelow(_hwnd, _leftPx, _topPx, _sizePx);
+            _shadow.Show();
+            _shadow.PlaceBelow(_hwnd, _leftPx, _topPx, _sizePx);
+        }
+        catch (Exception)
+        {
+            _shadowFailed = true;
+            _shadow = null;
+        }
+    }
+
+    /// <summary>Общий размер файлов для пилюли в центре («1,1 МБ»); null — неизвестен.</summary>
+    private static string? SizeText(IReadOnlyList<string>? paths)
+    {
+        if (paths is null || paths.Count == 0) return null;
+        long total = 0;
+        var any = false;
+        foreach (var path in paths.Take(1000))
+        {
+            try
+            {
+                var info = new FileInfo(path);
+                if (!info.Exists) continue;
+                total += info.Length;
+                any = true;
+            }
+            catch (Exception)
+            {
+                // Нет доступа — просто не считаем этот файл.
+            }
+        }
+        return any ? Russian.FileSize(total) : null;
     }
 
     /// <summary>Закрыть с анимацией; accepted — номер принятого сектора (сначала вспышка).</summary>
@@ -512,7 +605,7 @@ public sealed class WheelWindow : Window
     }
 
     private void StartClosing() =>
-        _tween.Run(CloseMs, Motion.EaseInQuad, t => SetAppearance(1 - 0.06 * t, 1 - t), FinishClose);
+        _tween.Run(CloseMs, Motion.EaseInQuad, t => SetAppearance(1 - (1 - CloseScale) * t, 1 - t), FinishClose);
 
     /// <summary>Если колесо закрывается — спрятать сразу и сбросить (перед новым показом).</summary>
     private void FinishClose()
@@ -523,6 +616,7 @@ public sealed class WheelWindow : Window
         _hiding = true;
         try { Hide(); }
         finally { _hiding = false; }
+        _shadow?.Hide();
         SetAppearance(1, 1);
         Reset();
     }
@@ -535,6 +629,7 @@ public sealed class WheelWindow : Window
         _anchor = null;
         _keyboard = false;
         _state.SetItems([], []);
+        _wheel.IdleText = null;
         _wheel.IsPending = true;
         ApplyState();
         UpdateHover(null);
@@ -551,11 +646,14 @@ public sealed class WheelWindow : Window
         var (left, top) = WheelGeometry.PlaceInside(x, y, size, work.Left, work.Top, work.Right, work.Bottom);
         WheelNative.SetWindowPos(hwnd, WheelNative.HwndTopmost, left, top, size, size,
             WheelNative.SwpNoActivate | WheelNative.SwpNoOwnerZOrder);
-        if (size != _sizePx || dpi != _dpi)
-        {
-            _sizePx = size;
-            _dpi = dpi;
-            UpdateRegion();
-        }
+        _leftPx = left;
+        _topPx = top;
+        _sizePx = size;
+        _dpi = dpi;
+        // Колесо «растёт» из точки курсора (у края экрана окно сдвинуто — точка не в центре).
+        var k = dpi / 96.0;
+        _origin = new Point(Math.Clamp((x - left) / k, 0, DipSize), Math.Clamp((y - top) / k, 0, DipSize));
+        SetAppearance(_scale.ScaleX, _wheel.Opacity);
+        if (_shadow is { IsVisible: true }) _shadow.PlaceBelow(hwnd, left, top, size);
     }
 }

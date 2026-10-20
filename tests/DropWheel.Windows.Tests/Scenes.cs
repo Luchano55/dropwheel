@@ -29,9 +29,10 @@ internal static class Scenes
     public static FrameworkElement Wallpaper(double width, double height, bool light)
     {
         var canvas = new Canvas { Width = width, Height = height, ClipToBounds = true };
+        // Светлая тема — тёплые оранжевые обои (как в образце Tangerine), тёмная — сине-фиолетовые.
         canvas.Background = new LinearGradientBrush(
-            light ? Color.FromRgb(0xB9, 0xD4, 0xF5) : Color.FromRgb(0x10, 0x2A, 0x4F),
-            light ? Color.FromRgb(0xF3, 0xC9, 0xD9) : Color.FromRgb(0x4A, 0x1E, 0x4D), 35);
+            light ? Color.FromRgb(0xFF, 0x7E, 0x45) : Color.FromRgb(0x10, 0x2A, 0x4F),
+            light ? Color.FromRgb(0xFF, 0xC8, 0x7A) : Color.FromRgb(0x4A, 0x1E, 0x4D), 35);
 
         void Blob(double x, double y, double r, Color c)
         {
@@ -46,8 +47,8 @@ internal static class Scenes
         }
 
         Blob(width * 0.2, height * 0.25, width * 0.35, light ? Color.FromArgb(0xC0, 0xFF, 0xE0, 0x8A) : Color.FromArgb(0xB0, 0x1F, 0x8E, 0xD8));
-        Blob(width * 0.85, height * 0.7, width * 0.4, light ? Color.FromArgb(0xB0, 0x7C, 0xB8, 0xFF) : Color.FromArgb(0xB0, 0xC2, 0x3A, 0x8E));
-        Blob(width * 0.6, height * 0.05, width * 0.25, light ? Color.FromArgb(0x90, 0xFF, 0x9E, 0xB5) : Color.FromArgb(0x90, 0xF5, 0x9E, 0x2D));
+        Blob(width * 0.85, height * 0.7, width * 0.4, light ? Color.FromArgb(0xB0, 0xE8, 0x4A, 0x2A) : Color.FromArgb(0xB0, 0xC2, 0x3A, 0x8E));
+        Blob(width * 0.6, height * 0.05, width * 0.25, light ? Color.FromArgb(0x90, 0xFF, 0xF0, 0xC0) : Color.FromArgb(0x90, 0xF5, 0x9E, 0x2D));
 
         // «Значки на рабочем столе» — чтобы размытие было заметно.
         var names = new[] { "Отпуск", "IMG_2041.HEIC", "Договор.pdf", "Видео", "song.flac", "Скриншот" };
@@ -81,7 +82,7 @@ internal static class Scenes
     /// Колесо поверх обоев. Translucent — под диском размытая копия обоев (так выглядит системный акрил),
     /// Solid — просто обои (так колесо выглядит без эффектов прозрачности).
     /// </summary>
-    public static FrameworkElement Wheel(WheelControl wheel, bool light, double size = 300)
+    public static FrameworkElement Wheel(WheelControl wheel, bool light, double size = WheelWindow.DipSize)
     {
         var grid = new Grid { Width = size, Height = size };
         grid.Children.Add(Wallpaper(size, size, light));

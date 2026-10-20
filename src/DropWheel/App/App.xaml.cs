@@ -139,7 +139,7 @@ public partial class App : Application
             var (x, y) = WheelNative.CursorPosition() ?? throw new InvalidOperationException("Не удалось узнать позицию курсора");
             _chooserPaths = paths;
             wheel.CloseOnDeactivate = true;
-            wheel.SetItems(WheelItems.For(ops, OperationMode.Convert), WheelItems.For(ops, OperationMode.Tool));
+            wheel.SetItems(WheelItems.For(ops, OperationMode.Convert), WheelItems.For(ops, OperationMode.Tool), paths);
             wheel.ShowAt(x, y, activate: true);
         }
         catch (Exception ex)

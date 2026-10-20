@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Media;
 using DropWheel.Conversions;
@@ -7,31 +8,38 @@ using DropWheel.Ui;
 namespace DropWheel.Wheel;
 
 /// <summary>
-/// Круговое меню: кольцо «плиток»-секторов (значок + подпись), «Отмена» в центре, точки режима.
+/// Круговое меню в духе Tangerine (macOS), по-виндовому: матовый диск, отдельные скруглённые «лепестки»
+/// с зазорами, в центре круг с «пилюлей». Пилюля показывает размер файлов, имя формата под курсором
+/// или «Отмена». Конвертация — крупные названия форматов ПРОПИСНЫМИ без значков; инструменты — значок над подписью.
 /// Рисуется целиком в OnRender; центр колеса — центр элемента.
-/// Наведение, смена режима и «приём» файла анимируются (если анимации Windows включены
-/// и элемент показан на экране); иначе состояние сразу конечное — так снимаются скриншоты.
+/// Наведение, смена режима и «приём» файла анимируются (если анимации Windows включены и элемент
+/// показан на экране); иначе состояние сразу конечное — так снимаются скриншоты.
 /// </summary>
-public sealed class WheelControl : FrameworkElement
+public sealed partial class WheelControl : FrameworkElement
 {
-    /// <summary>Радиус центрального круга («Отмена») для попадания курсора, DIP.</summary>
-    public const double InnerRadius = 55;
-    /// <summary>Внешний радиус кольца секторов для попадания курсора, DIP.</summary>
-    public const double OuterRadius = 130;
-    /// <summary>Радиус диска (фон колеса), DIP. Окно делает свою форму по нему.</summary>
-    public const double DiscRadius = 136;
+    /// <summary>Радиус центра («Отмена») для попадания курсора, DIP.</summary>
+    public const double InnerRadius = 62;
+    /// <summary>Внешний радиус кольца лепестков для попадания курсора, DIP.</summary>
+    public const double OuterRadius = DiscRadius;
+    /// <summary>Радиус диска (фон колеса), DIP: диаметр 288.</summary>
+    public const double DiscRadius = 144;
+    /// <summary>Насколько тень выходит за диск, DIP.</summary>
+    public const double ShadowSpread = 12;
 
-    private const double CenterRadius = 50;
-    private const double TileInner = 58;
-    private const double TileOuter = 127;
-    private const double TileGap = 4;
-    private const double TileCorner = 7;
-    private const double Lift = 4;
-    private const double ContentRadius = (TileInner + TileOuter) / 2;
-    private const double DotsOffset = 33;
-    private const double ShadowSpread = 10;
+    private const double CenterRadius = 60;      // ~42 % диаметра
+    private const double PetalGap = 5;
+    private const double PetalInner = CenterRadius + PetalGap;
+    private const double PetalOuter = DiscRadius - PetalGap;
+    private const double PetalCorner = 10;
+    private const double Lift = 2.5;
+    private const double ContentRadius = (PetalInner + PetalOuter) / 2;
+    private const double PillHeight = 28;
+    private const double PillMinWidth = 72;
+    private const double CaptionOffset = 30;
+    private const double DotsOffset = 29;
 
-    private const double HoverMs = 120;
+    private const double HoverInMs = 90;
+    private const double HoverOutMs = 120;
     private const double SwitchMs = 190;
     private const double PulseMs = 150;
     private const double SwitchAngle = 14;
@@ -68,6 +76,10 @@ public sealed class WheelControl : FrameworkElement
         nameof(ShowModeDots), typeof(bool), typeof(WheelControl),
         new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.AffectsRender));
 
+    public static readonly DependencyProperty IdleTextProperty = DependencyProperty.Register(
+        nameof(IdleText), typeof(string), typeof(WheelControl),
+        new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
+
     public static readonly DependencyProperty EmptyHintProperty = DependencyProperty.Register(
         nameof(EmptyHint), typeof(string), typeof(WheelControl),
         new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
@@ -80,18 +92,23 @@ public sealed class WheelControl : FrameworkElement
         nameof(Backdrop), typeof(WheelBackdrop), typeof(WheelControl),
         new FrameworkPropertyMetadata(WheelBackdrop.Solid, FrameworkPropertyMetadataOptions.AffectsRender));
 
-    private readonly FrameTicker _ticker;
-    private readonly Dictionary<int, Geometry[]> _tiles = [];
+    public static readonly DependencyProperty DrawShadowProperty = DependencyProperty.Register(
+        nameof(DrawShadow), typeof(bool), typeof(WheelControl),
+        new FrameworkPropertyMetadata(true, FrameworkPropertyMetadataOptions.AffectsRender));
 
-    // Анимация: 0..1 по каждому сектору (наведение), центру и точкам режима.
+    private readonly FrameTicker _ticker;
+    private readonly Dictionary<int, Geometry[]> _petals = [];
+
+    // Анимация: 0..1 по каждому лепестку (наведение), центру и точкам режима.
     private double[] _hover = [];
     private double _center;
     private double _dots;
-    // Смена набора секторов (режим, первые сектора после DragEnter): старый набор уходит, новый приходит.
+    // Смена набора (режим, первые сектора после DragEnter): старый набор уходит, новый приходит.
     private IReadOnlyList<WheelItem> _oldItems = [];
     private double[] _oldHover = [];
+    private OperationMode _oldMode;
     private double _switch = 1;
-    // «Приём» файла: короткая вспышка сектора.
+    // «Приём» файла: короткая вспышка лепестка.
     private int _pulseIndex = -1;
     private double _pulse = 1;
 
@@ -111,7 +128,7 @@ public sealed class WheelControl : FrameworkElement
         set => SetValue(ItemsProperty, value ?? Array.Empty<WheelItem>());
     }
 
-    /// <summary>Режим — для подписи «Конвертация» / «Инструменты» и точек.</summary>
+    /// <summary>Режим: «Конвертация» — названия форматов прописными, «Инструменты» — значок и подпись.</summary>
     public OperationMode Mode
     {
         get => (OperationMode)GetValue(ModeProperty);
@@ -125,7 +142,7 @@ public sealed class WheelControl : FrameworkElement
         set => SetValue(HoverIndexProperty, value is < 0 ? null : value);
     }
 
-    /// <summary>Курсор над центром — «Отмена» ярче.</summary>
+    /// <summary>Курсор над центром — в пилюле «Отмена».</summary>
     public bool IsCenterHovered
     {
         get => (bool)GetValue(IsCenterHoveredProperty);
@@ -141,7 +158,7 @@ public sealed class WheelControl : FrameworkElement
 
     /// <summary>
     /// Сектора ещё не известны (колесо показано, DragEnter ещё не пришёл):
-    /// при пустых Items рисуется только «Отмена», без «Нечего предложить».
+    /// при пустых Items рисуется пустое кольцо и центр, без «Нечего предложить».
     /// </summary>
     public bool IsPending
     {
@@ -149,11 +166,18 @@ public sealed class WheelControl : FrameworkElement
         set => SetValue(IsPendingProperty, value);
     }
 
-    /// <summary>Есть оба режима — внизу центра две точки (текущий режим ярче).</summary>
+    /// <summary>Есть оба режима — под пилюлей две точки (текущий режим ярче).</summary>
     public bool ShowModeDots
     {
         get => (bool)GetValue(ShowModeDotsProperty);
         set => SetValue(ShowModeDotsProperty, value);
+    }
+
+    /// <summary>Текст пилюли, когда ни на что не наведено — общий размер файлов («1,1 МБ»). null — «Отмена».</summary>
+    public string? IdleText
+    {
+        get => (string?)GetValue(IdleTextProperty);
+        set => SetValue(IdleTextProperty, value);
     }
 
     /// <summary>Мелкая подсказка под «Нечего предложить».</summary>
@@ -176,6 +200,13 @@ public sealed class WheelControl : FrameworkElement
         set => SetValue(BackdropProperty, value);
     }
 
+    /// <summary>Рисовать тень вокруг диска. Окно с размытием выключает её: там тень рисует отдельное окно под колесом.</summary>
+    public bool DrawShadow
+    {
+        get => (bool)GetValue(DrawShadowProperty);
+        set => SetValue(DrawShadowProperty, value);
+    }
+
     /// <summary>Сектор под точкой (в координатах элемента); null — центр, вне кольца или пусто.</summary>
     public int? HitTest(Point p)
     {
@@ -195,7 +226,7 @@ public sealed class WheelControl : FrameworkElement
     {
         if (!ShowModeDots || Items.Count == 0) return false;
         var (dx, dy) = Offset(p);
-        return Math.Abs(dx) <= 22 && Math.Abs(dy - DotsOffset) <= 11;
+        return Math.Abs(dx) <= 22 && Math.Abs(dy - DotsOffset) <= 9;
     }
 
     /// <summary>Точка на диске колеса (вне диска — прозрачный угол окна).</summary>
@@ -205,7 +236,7 @@ public sealed class WheelControl : FrameworkElement
         return dx * dx + dy * dy <= DiscRadius * DiscRadius;
     }
 
-    /// <summary>Вспышка сектора: файл принят.</summary>
+    /// <summary>Вспышка лепестка: файл принят.</summary>
     public void Pulse(int index)
     {
         if (index < 0 || index >= Items.Count) return;
@@ -231,6 +262,27 @@ public sealed class WheelControl : FrameworkElement
         InvalidateVisual();
     }
 
+    /// <summary>Мягкая тень вокруг диска радиуса discRadius с центром c (общая с окном тени).</summary>
+    public static void DrawDiscShadow(DrawingContext dc, Point c, double discRadius, Color shadow)
+    {
+        Color A(double k) => Color.FromArgb((byte)Math.Round(shadow.A * k), shadow.R, shadow.G, shadow.B);
+        var r = discRadius + ShadowSpread;
+        var edge = (discRadius - 2) / r;
+        var brush = new RadialGradientBrush
+        {
+            GradientStops =
+            {
+                new GradientStop(A(0), 0),
+                new GradientStop(A(0), edge),
+                new GradientStop(A(1), edge + 0.012),
+                new GradientStop(A(0.35), edge + (1 - edge) * 0.45),
+                new GradientStop(A(0), 1),
+            },
+        };
+        brush.Freeze();
+        dc.DrawEllipse(brush, null, new Point(c.X, c.Y + 3), r, r);
+    }
+
     protected override Size MeasureOverride(Size availableSize) => new(DiscRadius * 2, DiscRadius * 2);
 
     protected override void OnDpiChanged(DpiScale oldDpi, DpiScale newDpi) => InvalidateVisual();
@@ -251,6 +303,8 @@ public sealed class WheelControl : FrameworkElement
         {
             _oldItems = oldItems;
             _oldHover = _hover.Length == oldItems.Count ? _hover : new double[oldItems.Count];
+            // WheelWindow меняет Mode после Items: режим старого набора — ещё текущий.
+            _oldMode = Mode;
             _switch = 0;
         }
         else
@@ -276,6 +330,10 @@ public sealed class WheelControl : FrameworkElement
         _ticker.Start();
     }
 
+    /// <summary>Наведение проявляется за 90 мс, гаснет за 120 мс.</summary>
+    private static double Step(double value, double target, double dt) =>
+        Motion.Approach(value, target, dt, target > value ? HoverInMs : HoverOutMs);
+
     private bool Tick(double dt)
     {
         var busy = false;
@@ -284,13 +342,15 @@ public sealed class WheelControl : FrameworkElement
         for (var i = 0; i < _hover.Length; i++)
         {
             var target = i == hover ? 1.0 : 0.0;
-            _hover[i] = Motion.Approach(_hover[i], target, dt, HoverMs);
+            _hover[i] = Step(_hover[i], target, dt);
             busy |= _hover[i] != target;
         }
-        _center = Motion.Approach(_center, IsCenterHovered ? 1 : 0, dt, HoverMs);
-        busy |= _center != (IsCenterHovered ? 1 : 0);
-        _dots = Motion.Approach(_dots, IsDotsHovered ? 1 : 0, dt, HoverMs);
-        busy |= _dots != (IsDotsHovered ? 1 : 0);
+        var centerTarget = IsCenterHovered ? 1.0 : 0.0;
+        _center = Step(_center, centerTarget, dt);
+        busy |= _center != centerTarget;
+        var dotsTarget = IsDotsHovered ? 1.0 : 0.0;
+        _dots = Step(_dots, dotsTarget, dt);
+        busy |= _dots != dotsTarget;
         if (_switch < 1)
         {
             _switch = Math.Min(1, _switch + dt / SwitchMs);
@@ -337,12 +397,12 @@ public sealed class WheelControl : FrameworkElement
 
         var t = Motion.EaseOutCubic(_switch);
         if (_switch < 1 && _oldItems.Count > 0)
-            DrawTiles(dc, p, c, _oldItems, _oldHover, 1 - t, SwitchAngle * t, pulse: false, dpi);
+            DrawPetals(dc, p, c, _oldItems, _oldMode, _oldHover, 1 - t, SwitchAngle * t, pulse: false, dpi);
 
         if (items.Count > 0)
         {
             var fresh = _switch < 1;
-            DrawTiles(dc, p, c, items, _hover, fresh ? t : 1, fresh ? -SwitchAngle * (1 - t) : 0, pulse: true, dpi);
+            DrawPetals(dc, p, c, items, Mode, _hover, fresh ? t : 1, fresh ? -SwitchAngle * (1 - t) : 0, pulse: true, dpi);
             DrawCenter(dc, p, c, items, _hover, dpi);
         }
         else
@@ -355,41 +415,24 @@ public sealed class WheelControl : FrameworkElement
 
     private void DrawDisc(DrawingContext dc, WheelPalette p, Point c)
     {
-        if (Backdrop == WheelBackdrop.Solid)
-        {
-            // Мягкая тень: кольцо градиента за краем диска, чуть вниз.
-            var r = DiscRadius + ShadowSpread;
-            var edge = (DiscRadius - 2) / r;
-            var shadow = new RadialGradientBrush
-            {
-                GradientStops =
-                {
-                    new GradientStop(Colors.Transparent, 0),
-                    new GradientStop(Colors.Transparent, edge),
-                    new GradientStop(p.Shadow, edge + 0.01),
-                    new GradientStop(Color.FromArgb(0, p.Shadow.R, p.Shadow.G, p.Shadow.B), 1),
-                },
-            };
-            shadow.Freeze();
-            dc.DrawEllipse(shadow, null, new Point(c.X, c.Y + 3), r, r);
-        }
+        if (DrawShadow) DrawDiscShadow(dc, c, DiscRadius, p.Shadow);
         dc.DrawEllipse(Backdrop == WheelBackdrop.Solid ? p.DiscSolid : p.DiscTint, null, c, DiscRadius, DiscRadius);
         dc.DrawEllipse(null, p.RimOuter, c, DiscRadius - 0.5, DiscRadius - 0.5);
-        dc.DrawEllipse(null, p.RimInner, c, DiscRadius - 1.5, DiscRadius - 1.5);
+        dc.DrawEllipse(null, p.RimHighlight, c, DiscRadius - 1.5, DiscRadius - 1.5);
     }
 
-    /// <summary>Пока сектора неизвестны — пустая «дорожка» кольца.</summary>
+    /// <summary>Пока сектора неизвестны — пустое кольцо на месте лепестков.</summary>
     private static void DrawTrack(DrawingContext dc, WheelPalette p, Point c)
     {
         var ring = new GeometryGroup { FillRule = FillRule.EvenOdd };
-        ring.Children.Add(new EllipseGeometry(c, TileOuter, TileOuter));
-        ring.Children.Add(new EllipseGeometry(c, TileInner, TileInner));
+        ring.Children.Add(new EllipseGeometry(c, PetalOuter, PetalOuter));
+        ring.Children.Add(new EllipseGeometry(c, PetalInner, PetalInner));
         ring.Freeze();
         dc.DrawGeometry(p.Track, null, ring);
     }
 
-    private void DrawTiles(DrawingContext dc, WheelPalette p, Point c, IReadOnlyList<WheelItem> items, double[] hover,
-        double opacity, double rotation, bool pulse, double dpi)
+    private void DrawPetals(DrawingContext dc, WheelPalette p, Point c, IReadOnlyList<WheelItem> items, OperationMode mode,
+        double[] hover, double opacity, double rotation, bool pulse, double dpi)
     {
         if (opacity <= 0.001) return;
         var pops = 0;
@@ -397,21 +440,21 @@ public sealed class WheelControl : FrameworkElement
         if (rotation != 0) { dc.PushTransform(new RotateTransform(rotation, c.X, c.Y)); pops++; }
 
         var count = items.Count;
-        var geometries = TileGeometries(count);
+        var petals = PetalGeometries(count);
         for (var i = 0; i < count; i++)
         {
             var h = i < hover.Length ? Motion.EaseOutCubic(hover[i]) : 0;
             var mid = WheelGeometry.MidAngle(i, count);
-            // Сектор под курсором чуть «приподнимается» наружу (у единственного сектора-кольца — нет).
+            // Лепесток под курсором чуть «приподнимается» наружу (у единственного лепестка-кольца — нет).
             var (lx, ly) = count == 1 ? (0.0, 0.0) : WheelGeometry.PointAt(mid, Lift * h);
             var (cx, cy) = count == 1 ? (0.0, -ContentRadius) : WheelGeometry.PointAt(mid, ContentRadius);
             var k = pulse && i == _pulseIndex && _pulse < 1 ? Math.Sin(Math.PI * _pulse) : 0;
 
             dc.PushTransform(new TranslateTransform(c.X + lx, c.Y + ly));
-            if (k > 0) dc.PushTransform(new ScaleTransform(1 + 0.06 * k, 1 + 0.06 * k, cx, cy));
+            if (k > 0) dc.PushTransform(new ScaleTransform(1 + 0.05 * k, 1 + 0.05 * k, cx, cy));
 
-            var g = geometries[i];
-            dc.DrawGeometry(p.Tile, null, g);
+            var g = petals[i];
+            dc.DrawGeometry(p.Petal, null, g);
             if (h > 0.001)
             {
                 dc.PushOpacity(h);
@@ -421,11 +464,13 @@ public sealed class WheelControl : FrameworkElement
             if (k > 0)
             {
                 dc.PushOpacity(k);
-                dc.DrawGeometry(p.AccentGlow, null, g);
+                dc.DrawGeometry(p.Pulse, null, g);
                 dc.Pop();
             }
 
-            DrawTileContent(dc, p, new Point(cx, cy), items[i], h, LabelWidth(mid, count), dpi);
+            var width = LabelWidth(mid, count);
+            if (mode == OperationMode.Convert) DrawFormatLabel(dc, p, new Point(cx, cy), items[i], h, width, dpi);
+            else DrawToolLabel(dc, p, new Point(cx, cy), items[i], h, width, dpi);
 
             if (k > 0) dc.Pop();
             dc.Pop();
@@ -434,96 +479,128 @@ public sealed class WheelControl : FrameworkElement
         for (var i = 0; i < pops; i++) dc.Pop();
     }
 
-    /// <summary>Значок над подписью; при наведении цвета плавно переходят в «текст на акценте».</summary>
-    private static void DrawTileContent(DrawingContext dc, WheelPalette p, Point at, WheelItem item, double h,
-        double width, double dpi)
+    /// <summary>Рисует содержимое дважды с перекрёстным проявлением: обычные цвета → «текст на акценте».</summary>
+    private static void CrossFade(DrawingContext dc, double h, Action<bool> draw)
     {
-        var glyph = OperationGlyphs.For(item.Id);
-        var glyphFace = UiFonts.Face(UiFonts.Icons, FontWeights.Normal);
-        var labelFace = UiFonts.Face(UiFonts.Text, FontWeights.Normal);
-
-        var labelSize = FitSize(item.Label, labelFace, 12.5, width, 10.5, dpi);
-        void Draw(Brush glyphBrush, Brush labelBrush)
-        {
-            var g = Text(glyph, glyphFace, 20, glyphBrush, 40, 1, dpi);
-            var l = Text(item.Label, labelFace, labelSize, labelBrush, width, 2, dpi);
-            var total = g.Height + 3 + l.Height;
-            var top = at.Y - total / 2;
-            dc.DrawText(g, new Point(at.X - 20, top));
-            dc.DrawText(l, new Point(at.X - width / 2, top + g.Height + 3));
-        }
-
         if (h < 0.999)
         {
             if (h > 0.001) dc.PushOpacity(1 - h);
-            Draw(p.TextSecondary, p.Text);
+            draw(false);
             if (h > 0.001) dc.Pop();
         }
         if (h > 0.001)
         {
             if (h < 0.999) dc.PushOpacity(h);
-            Draw(p.OnAccent, p.OnAccent);
+            draw(true);
             if (h < 0.999) dc.Pop();
         }
     }
 
-    /// <summary>Центр: подпись режима, «Отмена» или крупная подпись сектора под курсором, точки режима.</summary>
+    /// <summary>Конвертация: «PNG» крупно прописными, уточнение из скобок — мелко под ним («страницы»).</summary>
+    private static void DrawFormatLabel(DrawingContext dc, WheelPalette p, Point at, WheelItem item, double h,
+        double width, double dpi)
+    {
+        var (main, sub) = SplitLabel(item.Label);
+        var mainFace = UiFonts.Face(UiFonts.Display, FontWeights.SemiBold);
+        var mainSize = FitSize(main, mainFace, 15, width, 10.5, dpi);
+        var subFace = UiFonts.Face(UiFonts.Text, FontWeights.Normal);
+        CrossFade(dc, h, accent =>
+        {
+            var m = Text(main, mainFace, mainSize, accent ? p.OnAccent : p.PetalText, width, 2, dpi);
+            var s = sub is null ? null : Text(sub, subFace, 11, accent ? p.OnAccent : p.PetalSubtext, width, 1, dpi);
+            var total = m.Height + (s?.Height ?? 0);
+            var top = at.Y - total / 2;
+            dc.DrawText(m, new Point(at.X - width / 2, top));
+            if (s is not null) dc.DrawText(s, new Point(at.X - width / 2, top + m.Height));
+        });
+    }
+
+    /// <summary>Инструменты: значок над подписью, подпись как есть («Без метаданных»).</summary>
+    private static void DrawToolLabel(DrawingContext dc, WheelPalette p, Point at, WheelItem item, double h,
+        double width, double dpi)
+    {
+        var glyph = OperationGlyphs.For(item.Id);
+        var glyphFace = UiFonts.Face(UiFonts.Icons, FontWeights.Normal);
+        var labelFace = UiFonts.Face(UiFonts.Text, FontWeights.SemiBold);
+        var labelSize = FitSize(item.Label, labelFace, 12, width, 10, dpi);
+        CrossFade(dc, h, accent =>
+        {
+            var g = Text(glyph, glyphFace, 18, accent ? p.OnAccent : p.PetalIcon, 40, 1, dpi);
+            var l = Text(item.Label, labelFace, labelSize, accent ? p.OnAccent : p.PetalText, width, 2, dpi);
+            var total = g.Height + 4 + l.Height;
+            var top = at.Y - total / 2;
+            dc.DrawText(g, new Point(at.X - 20, top));
+            dc.DrawText(l, new Point(at.X - width / 2, top + g.Height + 4));
+        });
+    }
+
+    /// <summary>
+    /// Центр: круг с «пилюлей». В пилюле — размер файлов, имя лепестка под курсором (жирно) или «Отмена»;
+    /// тексты плавно сменяют друг друга, ширина пилюли подстраивается. Над ней — режим, под ней — точки режима.
+    /// </summary>
     private void DrawCenter(DrawingContext dc, WheelPalette p, Point c, IReadOnlyList<WheelItem> items, double[] hover, double dpi)
     {
-        var center = Motion.EaseOutCubic(_center);
         dc.DrawEllipse(p.Center, p.CenterRim, c, CenterRadius, CenterRadius);
-        if (center > 0.001)
-        {
-            dc.PushOpacity(center);
-            dc.DrawEllipse(p.CenterHover, null, c, CenterRadius, CenterRadius);
-            dc.Pop();
-        }
 
-        var text = UiFonts.Face(UiFonts.Text, FontWeights.Normal);
+        var regular = UiFonts.Face(UiFonts.Text, FontWeights.Normal);
+        var bold = UiFonts.Face(UiFonts.Text, FontWeights.SemiBold);
         if (items.Count > 0)
         {
             var caption = Mode == OperationMode.Convert ? "Конвертация" : "Инструменты";
-            var ft = Text(caption, text, 10.5, p.TextTertiary, 2 * CenterRadius - 14, 1, dpi);
-            dc.DrawText(ft, new Point(c.X - ft.MaxTextWidth / 2, c.Y - 31 - ft.Height / 2));
+            var ft = Text(caption, regular, 10, p.TextTertiary, 2 * CenterRadius - 20, 1, dpi);
+            dc.DrawText(ft, new Point(c.X - ft.MaxTextWidth / 2, c.Y - CaptionOffset - ft.Height / 2));
         }
 
-        // «Отмена» и подписи секторов плавно сменяют друг друга по мере наведения.
-        var shown = 0.0;
+        // Кандидаты в пилюлю с весами: лепестки под курсором, «Отмена» над центром, иначе — размер файлов.
+        var center = Motion.EaseOutCubic(_center);
+        var entries = new List<(string Text, Typeface Face, double Weight)>();
+        var used = center;
         for (var i = 0; i < items.Count && i < hover.Length; i++)
         {
             var h = Motion.EaseOutCubic(hover[i]);
             if (h <= 0.001) continue;
-            shown = Math.Max(shown, h);
-            dc.PushOpacity(h);
-            var face = UiFonts.Face(UiFonts.Display, FontWeights.SemiBold);
-            var width = 2 * CenterRadius - 12;
-            var big = Text(items[i].Label, face, FitSize(items[i].Label, face, 17, width, 12, dpi), p.Text, width, 2, dpi);
-            dc.DrawText(big, new Point(c.X - big.MaxTextWidth / 2, c.Y - big.Height / 2));
+            entries.Add((PillName(items[i], Mode), bold, h));
+            used = Math.Max(used, h);
+        }
+        if (center > 0.001) entries.Add((CancelText, bold, center));
+        if (used < 0.999) entries.Add((IdleText is { Length: > 0 } idle ? idle : CancelText, regular, 1 - used));
+
+        var maxWidth = 2 * Math.Sqrt(CenterRadius * CenterRadius - PillHeight * PillHeight / 4) - 10;
+        var texts = new List<(FormattedText Text, double Weight)>();
+        double pillWidth = 0, weightSum = 0;
+        foreach (var (text, face, weight) in entries)
+        {
+            var size = FitSize(text, face, 13, maxWidth - 20, 10, dpi);
+            texts.Add((Text(text, face, size, p.Text, maxWidth - 16, 1, dpi), weight));
+            pillWidth += Math.Min(maxWidth, Math.Max(PillMinWidth, Measure(text, face, size, dpi) + 24)) * weight;
+            weightSum += weight;
+        }
+        pillWidth = weightSum > 0 ? pillWidth / weightSum : PillMinWidth;
+
+        var pill = new Rect(c.X - pillWidth / 2, c.Y - PillHeight / 2, pillWidth, PillHeight);
+        dc.DrawRoundedRectangle(p.Pill, p.PillRim, pill, PillHeight / 2, PillHeight / 2);
+        if (center > 0.001)
+        {
+            dc.PushOpacity(center);
+            dc.DrawRoundedRectangle(p.PillHover, null, pill, PillHeight / 2, PillHeight / 2);
             dc.Pop();
         }
-
-        if (shown < 0.999)
+        foreach (var (ft, weight) in texts)
         {
-            dc.PushOpacity(1 - shown);
-            var cancelBrush = center > 0.5 ? p.Text : p.TextSecondary;
-            var glyph = Text(Glyphs.Cancel, UiFonts.Face(UiFonts.Icons, FontWeights.Normal), 12, cancelBrush, 30, 1, dpi);
-            var label = Text(CancelText, text, 13, cancelBrush, 2 * CenterRadius - 14, 1, dpi);
-            var total = glyph.Height + 2 + label.Height;
-            var top = c.Y - total / 2;
-            dc.DrawText(glyph, new Point(c.X - 15, top));
-            dc.DrawText(label, new Point(c.X - label.MaxTextWidth / 2, top + glyph.Height + 2));
+            dc.PushOpacity(Math.Min(1, weight));
+            dc.DrawText(ft, new Point(c.X - ft.MaxTextWidth / 2, c.Y - ft.Height / 2));
             dc.Pop();
         }
 
         if (ShowModeDots && items.Count > 0)
         {
             var dots = Motion.EaseOutCubic(_dots);
-            var r = 2.75 + 0.75 * dots;
+            var r = 2.5 + 0.75 * dots;
             var active = Mode == OperationMode.Convert ? 0 : 1;
             for (var i = 0; i < 2; i++)
             {
                 var brush = i == active ? p.Text : p.TextTertiary;
-                dc.DrawEllipse(brush, null, new Point(c.X + (i == 0 ? -6 : 6) * (1 + 0.2 * dots), c.Y + DotsOffset), r, r);
+                dc.DrawEllipse(brush, null, new Point(c.X + (i == 0 ? -5.5 : 5.5) * (1 + 0.2 * dots), c.Y + DotsOffset), r, r);
             }
         }
     }
@@ -543,79 +620,58 @@ public sealed class WheelControl : FrameworkElement
         if (hint is not null) dc.DrawText(hint, new Point(c.X - 95, top + title.Height + 4));
     }
 
-    // ---- геометрия плиток ----
+    // ---- подписи ----
 
-    /// <summary>Ширина подписи сектора: у верхних/нижних — по дуге, у боковых — по толщине кольца.</summary>
-    private static double LabelWidth(double midDeg, int count)
+    [GeneratedRegex(@"^(?<main>.+?)\s*\((?<sub>.+)\)$")]
+    private static partial Regex LabelWithNote();
+
+    /// <summary>«PNG (страницы)» → («PNG», «страницы»); «WebP» → («WEBP», null).</summary>
+    public static (string Main, string? Sub) SplitLabel(string label)
     {
-        if (count == 1) return 150;
-        var arc = 2 * Math.PI * ContentRadius / count - TileGap - 12;
-        var radial = TileOuter - TileInner - 10;
-        var s = Math.Abs(Math.Sin(midDeg * Math.PI / 180));
-        return Math.Clamp(arc * (1 - s) + radial * s, 58, 140);
+        var m = LabelWithNote().Match(label);
+        return m.Success
+            ? (m.Groups["main"].Value.ToUpperInvariant(), m.Groups["sub"].Value)
+            : (label.ToUpperInvariant(), null);
     }
 
-    /// <summary>Плитки секторов с центром в (0, 0): кольцевые секторы с зазором и скруглёнными углами.</summary>
-    private Geometry[] TileGeometries(int count)
+    /// <summary>Имя в пилюле: формат прописными (уточнение — через точку), инструмент — как есть.</summary>
+    private static string PillName(WheelItem item, OperationMode mode)
     {
-        if (_tiles.TryGetValue(count, out var cached)) return cached;
+        if (mode != OperationMode.Convert) return item.Label;
+        var (main, sub) = SplitLabel(item.Label);
+        return sub is null ? main : $"{main} · {sub}";
+    }
+
+    /// <summary>Ширина подписи лепестка: у верхних/нижних — по дуге, у боковых — по толщине кольца.</summary>
+    private static double LabelWidth(double midDeg, int count)
+    {
+        if (count == 1) return 160;
+        var arc = 2 * Math.PI * ContentRadius / count - PetalGap - 16;
+        var radial = PetalOuter - PetalInner - 12;
+        var s = Math.Abs(Math.Sin(midDeg * Math.PI / 180));
+        return Math.Clamp(arc * (1 - s) + radial * s, 56, 150);
+    }
+
+    // ---- геометрия ----
+
+    /// <summary>Лепестки с центром в (0, 0): кольцевые секторы с зазорами и скруглёнными углами.</summary>
+    private Geometry[] PetalGeometries(int count)
+    {
+        if (_petals.TryGetValue(count, out var cached)) return cached;
         var result = new Geometry[count];
-        for (var i = 0; i < count; i++) result[i] = BuildTile(i, count);
-        _tiles[count] = result;
+        for (var i = 0; i < count; i++)
+            result[i] = TileGeometry.Build(i, count, PetalInner, PetalOuter, PetalGap, PetalCorner);
+        _petals[count] = result;
         return result;
     }
 
-    private static Geometry BuildTile(int index, int count)
-    {
-        if (count == 1)
-        {
-            var ring = new GeometryGroup { FillRule = FillRule.EvenOdd };
-            ring.Children.Add(new EllipseGeometry(new Point(), TileOuter, TileOuter));
-            ring.Children.Add(new EllipseGeometry(new Point(), TileInner, TileInner));
-            ring.Freeze();
-            return ring;
-        }
-
-        // Скругление: строим плитку меньше на радиус скругления и обводим пером такой же толщины ×2
-        // с круглыми углами; объединение — плитка нужного размера со скруглёнными углами.
-        var k = TileCorner;
-        var core = Sector(index, count, TileInner + k, TileOuter - k, TileGap / 2 + k);
-        var pen = new Pen(Brushes.Black, 2 * k) { LineJoin = PenLineJoin.Round };
-        var widened = core.GetWidenedPathGeometry(pen);
-        var tile = Geometry.Combine(core, widened, GeometryCombineMode.Union, null);
-        tile.Freeze();
-        return tile;
-    }
-
-    /// <summary>Кольцевой сектор между радиусами ri и ro; боковые края параллельны границе сектора на расстоянии halfGap.</summary>
-    private static Geometry Sector(int index, int count, double ri, double ro, double halfGap)
-    {
-        var (start, end) = WheelGeometry.SectorAngles(index, count);
-        double Offset(double r) => Math.Asin(Math.Min(1, halfGap / r)) * 180 / Math.PI;
-        var so = start + Offset(ro);
-        var eo = end - Offset(ro);
-        var si = start + Offset(ri);
-        var ei = end - Offset(ri);
-
-        Point At(double deg, double r)
-        {
-            var (x, y) = WheelGeometry.PointAt(deg, r);
-            return new Point(x, y);
-        }
-
-        var g = new StreamGeometry();
-        using (var ctx = g.Open())
-        {
-            ctx.BeginFigure(At(so, ro), isFilled: true, isClosed: true);
-            ctx.ArcTo(At(eo, ro), new Size(ro, ro), 0, eo - so > 180, SweepDirection.Clockwise, true, true);
-            ctx.LineTo(At(ei, ri), true, true);
-            ctx.ArcTo(At(si, ri), new Size(ri, ri), 0, ei - si > 180, SweepDirection.Counterclockwise, true, true);
-        }
-        g.Freeze();
-        return g;
-    }
-
     // ---- текст ----
+
+    private (double Dx, double Dy) Offset(Point p) => (p.X - ActualWidth / 2, p.Y - ActualHeight / 2);
+
+    private static double Measure(string text, Typeface face, double size, double dpi) =>
+        new FormattedText(text, CultureInfo.CurrentUICulture, FlowDirection.LeftToRight, face, size,
+            Brushes.Black, null, TextFormattingMode.Ideal, dpi).WidthIncludingTrailingWhitespace;
 
     /// <summary>
     /// Размер шрифта, при котором самое длинное слово помещается в ширину (не меньше min):
@@ -625,15 +681,9 @@ public sealed class WheelControl : FrameworkElement
     {
         var widest = 0.0;
         foreach (var word in text.Split(' ', StringSplitOptions.RemoveEmptyEntries))
-        {
-            var ft = new FormattedText(word, CultureInfo.CurrentUICulture, FlowDirection.LeftToRight, face, size,
-                Brushes.Black, null, TextFormattingMode.Ideal, dpi);
-            widest = Math.Max(widest, ft.WidthIncludingTrailingWhitespace);
-        }
+            widest = Math.Max(widest, Measure(word, face, size, dpi));
         return widest <= width - 2 ? size : Math.Max(min, size * (width - 2) / widest);
     }
-
-    private (double Dx, double Dy) Offset(Point p) => (p.X - ActualWidth / 2, p.Y - ActualHeight / 2);
 
     /// <summary>Текст по центру ширины maxWidth; переносится по словам, лишнее — многоточие.</summary>
     private static FormattedText Text(string text, Typeface face, double size, Brush brush, double maxWidth,

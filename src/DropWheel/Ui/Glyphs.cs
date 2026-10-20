@@ -8,31 +8,31 @@ namespace DropWheel.Ui;
 /// </summary>
 public static class Glyphs
 {
-    public const string Photo = "";
-    public const string Video = "";
-    public const string Audio = "";
-    public const string Document = "";
-    public const string Text = "";
-    public const string Package = "";
-    public const string FolderOpen = "";
-    public const string Folder = "";
-    public const string Convert = "";
-    public const string Tool = "";
-    public const string Compress = "";
-    public const string Shrink = "";
-    public const string Tag = "";
-    public const string Mute = "";
-    public const string Volume = "";
-    public const string Merge = "";
-    public const string Split = "";
-    public const string Rotate = "";
-    public const string Cancel = "";
-    public const string Info = "";
-    public const string Check = "";
-    public const string Error = "";
-    public const string OpenFile = "";
-    public const string Open = "";
-    public const string Clock = "";
+    public const string Photo = "\uE91B";
+    public const string Video = "\uE714";
+    public const string Audio = "\uE8D6";
+    public const string Document = "\uE8A5";
+    public const string Text = "\uE8D2";
+    public const string Package = "\uE7B8";
+    public const string FolderOpen = "\uE838";
+    public const string Folder = "\uE8B7";
+    public const string Convert = "\uE8AB";
+    public const string Tool = "\uE90F";
+    public const string Compress = "\uE73F";
+    public const string Shrink = "\uE71F";
+    public const string Tag = "\uE8EC";
+    public const string Mute = "\uE74F";
+    public const string Volume = "\uE767";
+    public const string Merge = "\uE8C8";
+    public const string Split = "\uE8C6";
+    public const string Rotate = "\uE7AD";
+    public const string Cancel = "\uE711";
+    public const string Info = "\uE946";
+    public const string Check = "\uE73E";
+    public const string Error = "\uE783";
+    public const string OpenFile = "\uE8E5";
+    public const string Open = "\uE8A7";
+    public const string Clock = "\uE823";
 }
 
 /// <summary>

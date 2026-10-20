@@ -80,15 +80,15 @@ internal static class NativeEffects
         }
     }
 
-    /// <summary>Форма окна — круг диаметром diameter по центру окна size×size (физические пиксели); 0 — снять форму.</summary>
-    public static bool SetCircleRegion(IntPtr hwnd, int size, int diameter)
+    /// <summary>Форма окна — круг с центром (cx, cy) и радиусом r в физических пикселях окна; r ≤ 0 — снять форму.</summary>
+    public static bool SetCircleRegion(IntPtr hwnd, double cx, double cy, double r)
     {
         if (hwnd == IntPtr.Zero) return false;
         try
         {
-            if (diameter <= 0) return SetWindowRgn(hwnd, IntPtr.Zero, true) != 0;
-            var left = (size - diameter) / 2;
-            var rgn = CreateEllipticRgn(left, left, left + diameter + 1, left + diameter + 1);
+            if (r <= 0) return SetWindowRgn(hwnd, IntPtr.Zero, true) != 0;
+            var rgn = CreateEllipticRgn((int)Math.Round(cx - r), (int)Math.Round(cy - r),
+                (int)Math.Round(cx + r) + 1, (int)Math.Round(cy + r) + 1);
             if (rgn == IntPtr.Zero) return false;
             // Успешный SetWindowRgn забирает регион себе — удалять его нельзя.
             if (SetWindowRgn(hwnd, rgn, true) != 0) return true;
