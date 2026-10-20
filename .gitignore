@@ -6,3 +6,4 @@ tools/
 *.user
 .vs/
 TestResults/
+.claude/

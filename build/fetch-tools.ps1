@@ -1,4 +1,4 @@
-# Скачивает ffmpeg (GPL-сборка BtbN, ветка 7.1) и ImageMagick 7 portable в папку tools/.
+# Скачивает ffmpeg (GPL-сборка BtbN, свежая release-ветка) и ImageMagick 7 portable в папку tools/.
 # Результат:
 #   tools/ffmpeg/ffmpeg.exe, tools/ffmpeg/ffprobe.exe
 #   tools/imagemagick/magick.exe (+ его dll)
@@ -14,10 +14,9 @@ $work = New-Item -ItemType Directory -Force -Path (Join-Path ([IO.Path]::GetTemp
 
 # --- ffmpeg ---
 $ffRelease = Invoke-RestMethod -Headers $headers "https://api.github.com/repos/BtbN/FFmpeg-Builds/releases/latest"
-$ffAsset = $ffRelease.assets | Where-Object { $_.name -match '^ffmpeg-n7\.1-latest-win64-gpl-7\.1\.zip$' } | Select-Object -First 1
-if (-not $ffAsset) {
-    $ffAsset = $ffRelease.assets | Where-Object { $_.name -match '^ffmpeg-n[\d.]+-latest-win64-gpl-[\d.]+\.zip$' } | Sort-Object name -Descending | Select-Object -First 1
-}
+# Самая новая release-ветка (не master): ffmpeg-nX.Y-latest-win64-gpl-X.Y.zip
+$ffAsset = $ffRelease.assets | Where-Object { $_.name -match '^ffmpeg-n[\d.]+-latest-win64-gpl-[\d.]+\.zip$' } |
+    Sort-Object { [version]($_.name -replace '^ffmpeg-n([\d.]+)-.*$', '$1') } -Descending | Select-Object -First 1
 if (-not $ffAsset) { throw "Не найдена сборка ffmpeg win64-gpl" }
 Write-Host "ffmpeg: $($ffAsset.name)"
 $ffZip = Join-Path $work "ffmpeg.zip"

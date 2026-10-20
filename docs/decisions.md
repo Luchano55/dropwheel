@@ -48,7 +48,7 @@
 - Качество по умолчанию: JPG 90, WebP 85, AVIF 70, CRF 23 (сжатие — 28), MP3 192k.
 
 ## D14. Как Роман получает сборку — принято
-Из облачной сессии нельзя скачать ffmpeg/ImageMagick для Windows (сеть закрыта). Сборку делает GitHub Actions (`.github/workflows/build.yml`): тесты на Linux и на Windows с настоящими утилитами, затем архив `DropWheel-win-x64.zip` (self-contained exe + `tools/`) выкладывается в релиз `dev-build`, который перезаписывается при каждом пуше. Утилиты качает `build/fetch-tools.ps1`: ffmpeg — GPL-сборка BtbN 7.1 (см. D4), ImageMagick 7 portable Q16.
+Из облачной сессии нельзя скачать ffmpeg/ImageMagick для Windows (сеть закрыта). Сборку делает GitHub Actions (`.github/workflows/build.yml`): тесты на Linux и на Windows с настоящими утилитами, затем архив `DropWheel-win-x64.zip` (self-contained exe + `tools/`) выкладывается в релиз `dev-build`, который перезаписывается при каждом пуше. Утилиты качает `build/fetch-tools.ps1`: ffmpeg — GPL-сборка BtbN, самая новая release-ветка (сейчас 9.0; см. D4), ImageMagick 7 portable Q16.
 
 ## D15. Тесты на Linux — принято
 В облаке стоит ImageMagick 6 (`convert`), ImageMagick 7 недоступен. ToolLocator при отсутствии `magick` берёт `convert` — синтаксис используемых команд совпадает. Эталонный HEIC (`tests/.../Fixtures/sample.heic`) лежит в репозитории, остальные исходники тесты генерируют через ffmpeg. Без утилит интеграционные тесты пропускаются.
