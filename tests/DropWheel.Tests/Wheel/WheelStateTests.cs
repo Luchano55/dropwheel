@@ -66,6 +66,19 @@ public class WheelStateTests
     }
 
     [Fact]
+    public void Both_modes_only_when_each_has_items()
+    {
+        var s = new WheelState();
+        Assert.False(s.HasBothModes);
+        s.SetItems(Conv, Tools);
+        Assert.True(s.HasBothModes);
+        s.SetItems(Conv, []);
+        Assert.False(s.HasBothModes);
+        s.SetItems([], Tools);
+        Assert.False(s.HasBothModes);
+    }
+
+    [Fact]
     public void More_than_8_items_are_cut()
     {
         var many = Enumerable.Range(0, 10).Select(i => new WheelItem($"op{i}", $"{i}")).ToList();

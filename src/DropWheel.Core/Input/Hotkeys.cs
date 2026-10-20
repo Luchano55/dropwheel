@@ -25,6 +25,15 @@ public static class Hotkeys
     public static int? ToVirtualKey(string? name) =>
         name is not null && ByName.TryGetValue(name, out var vk) ? vk : null;
 
+    /// <summary>Как назвать клавишу человеку: «Пробел», «Ё», «Caps Lock», «F8».</summary>
+    public static string DisplayName(string? name) => name?.ToLowerInvariant() switch
+    {
+        null or "" or "space" => "Пробел",
+        "backquote" => "Ё",
+        "capslock" => "Caps Lock",
+        _ => name,
+    };
+
     private static (string, int)[] BuildTable()
     {
         var list = new List<(string, int)>

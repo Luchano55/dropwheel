@@ -37,17 +37,14 @@ internal sealed class DragWheelController : IDisposable
 
         _wheel.FilesEntered += OnFilesEntered;
         _wheel.FilesDropped += OnFilesDropped;
+        // Колесо закрывается с короткой анимацией, поэтому «закрыто» — по событиям, а не по IsVisible.
         _wheel.Canceled += () => _detector.WheelOpen = false;
-        _wheel.IsVisibleChanged += (_, _) =>
-        {
-            if (!_wheel.IsVisible) _detector.WheelOpen = false;
-        };
 
         _releaseTimer = new DispatcherTimer(DispatcherPriority.Normal, ui) { Interval = ReleaseGrace };
         _releaseTimer.Tick += (_, _) =>
         {
             _releaseTimer.Stop();
-            if (_wheel.IsVisible && !_wheel.CloseOnDeactivate) _wheel.Cancel();
+            if (_wheel.IsOpen && !_wheel.CloseOnDeactivate) _wheel.Cancel();
         };
 
         _hooks = new LowLevelHooks(_detector, ui, OnAction);
@@ -81,13 +78,13 @@ internal sealed class DragWheelController : IDisposable
                 CursorNudge.NudgeWithInput();
                 break;
             case DragAction.ToggleMode:
-                if (_wheel.IsVisible) _wheel.ToggleMode();
+                if (_wheel.IsOpen) _wheel.ToggleMode();
                 break;
             case DragAction.CloseWheel:
                 _wheel.Cancel();
                 break;
             case DragAction.MouseReleased:
-                if (_wheel.IsVisible && !_wheel.CloseOnDeactivate) _releaseTimer.Start();
+                if (_wheel.IsOpen && !_wheel.CloseOnDeactivate) _releaseTimer.Start();
                 break;
         }
     }
@@ -102,6 +99,7 @@ internal sealed class DragWheelController : IDisposable
     private void OnFilesDropped(string[] files, string operationId)
     {
         _releaseTimer.Stop();
+        _detector.WheelOpen = false;
         if (OperationCatalog.Find(operationId) is not { } op) return;
         _log.Write($"Колесо: {op.Id} для {files.Length} файл(ов)");
         _enqueue(files, op);

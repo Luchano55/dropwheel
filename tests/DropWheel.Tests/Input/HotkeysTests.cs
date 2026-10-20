@@ -54,4 +54,14 @@ public class HotkeysTests
 
     [Fact]
     public void Escape_code() => Assert.Equal(0x1B, Hotkeys.Escape);
+
+    [Theory]
+    [InlineData("Space", "Пробел")]
+    [InlineData("space", "Пробел")]
+    [InlineData(null, "Пробел")]
+    [InlineData("Backquote", "Ё")]
+    [InlineData("CapsLock", "Caps Lock")]
+    [InlineData("F8", "F8")]
+    public void Display_names_for_people(string? name, string expected) =>
+        Assert.Equal(expected, Hotkeys.DisplayName(name));
 }

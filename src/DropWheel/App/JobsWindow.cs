@@ -1,135 +1,308 @@
-using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
-using System.Windows.Data;
+using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
+using System.Windows.Shell;
+using System.Windows.Threading;
+using DropWheel.Conversions;
 using DropWheel.Jobs;
+using DropWheel.Logging;
 using DropWheel.Shell;
+using DropWheel.Ui;
+using DropWheel.Wheel;
 
 namespace DropWheel.App;
 
-/// <summary>Мини-окно со списком задач и прогрессом (раздел 8 ТЗ). Открывается у трея.</summary>
+/// <summary>
+/// Окно задач у трея (раздел 8 ТЗ) в виде всплывающего окна Windows 11: без рамки, со скруглёнными углами
+/// (Windows 11), системной акриловой подложкой (Windows 11 22H2+; иначе — сплошной фон темы),
+/// над областью уведомлений на мониторе с курсором (панель задач — у любого края).
+/// Появляется с «выездом» от панели задач, прячется, когда уходит фокус или по Esc.
+/// </summary>
 internal sealed class JobsWindow : Window
 {
-    private readonly ObservableCollection<JobRow> _rows = [];
+    private const double EdgeMargin = 12;
+    private const double SlideDistance = 16;
+    private const double ShowMs = 220;
+    private const int ThumbPx = 96;
+    /// <summary>Клик по значку в трее сначала снимает фокус с окна (оно прячется) — не открывать его тут же снова.</summary>
+    private const long ReopenGuardMs = 350;
 
-    public JobsWindow(JobQueue queue)
+    private readonly JobQueue _queue;
+    private readonly FileLog _log;
+    private readonly JobsFlyoutView _view;
+    private readonly Tween _tween = new();
+    private readonly HashSet<Job> _cleared = [];
+    private readonly Dictionary<Job, Thumb> _thumbs = [];
+    private IntPtr _hwnd;
+    private bool _backdrop;
+    private string _paletteKey = "";
+    private bool _refreshQueued;
+    private long _hiddenAt;
+    private (int X, int Y) _anchor;
+    private TaskbarEdge _edge;
+    private int _heightPx;
+
+    private sealed record Thumb(string Path, ImageSource? Image, bool IsIcon);
+
+    public JobsWindow(JobQueue queue, FileLog log, string hotkeyName)
     {
+        _queue = queue;
+        _log = log;
         Title = "DropWheel — задачи";
-        Width = 420;
-        Height = 360;
-        ResizeMode = ResizeMode.CanResizeWithGrip;
+        ResizeMode = ResizeMode.NoResize;
         ShowInTaskbar = false;
         Topmost = true;
-        WindowStyle = WindowStyle.ToolWindow;
+        ShowActivated = true;
+        WindowStartupLocation = WindowStartupLocation.Manual;
+        SizeToContent = SizeToContent.Manual;
+        Width = JobsFlyoutView.FlyoutWidth;
+        Height = 240;
+        UseLayoutRounding = true;
 
-        foreach (var job in queue.Jobs.Reverse()) _rows.Add(new JobRow(job));
-
-        var list = new ItemsControl { ItemsSource = _rows, ItemTemplate = RowTemplate(), Margin = new Thickness(8) };
-        var empty = new TextBlock
+        // Рамки нет (клиентская область — всё окно), но окно остаётся «настоящим»: тень и скругление от Windows.
+        // «Стекло» на всё окно нужно только для системной подложки Windows 11 22H2+.
+        var glass = NativeEffects.SupportsSystemBackdrop && NativeEffects.EffectsAllowed;
+        WindowChrome.SetWindowChrome(this, new WindowChrome
         {
-            Text = "Задач пока нет. Нажмите правой кнопкой на файл → «Конвертировать…».",
-            TextWrapping = TextWrapping.Wrap,
-            Foreground = Brushes.Gray,
-            Margin = new Thickness(12),
-        };
-        var panel = new Grid();
-        panel.Children.Add(new ScrollViewer { Content = list, VerticalScrollBarVisibility = ScrollBarVisibility.Auto });
-        panel.Children.Add(empty);
-        empty.Visibility = _rows.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
-        _rows.CollectionChanged += (_, _) => empty.Visibility = _rows.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
-        Content = panel;
+            CaptionHeight = 0,
+            ResizeBorderThickness = new Thickness(0),
+            GlassFrameThickness = glass ? new Thickness(-1) : new Thickness(1),
+            CornerRadius = new CornerRadius(0),
+            UseAeroCaptionButtons = false,
+            NonClientFrameEdges = NonClientFrameEdges.None,
+        });
 
-        Deactivated += (_, _) => Hide();
+        _view = new JobsFlyoutView(FlyoutPalette.Light(), hotkeyName);
+        _view.OpenRequested += key => Act(key, job => Notifier.Open(job.OutputPath));
+        _view.RevealRequested += key => Act(key, job => Notifier.RevealInExplorer(job.OutputPath ?? job.Input));
+        _view.CancelRequested += key => Act(key, job => job.Cancel());
+        _view.DetailsRequested += _ => Notifier.OpenLog(_log);
+        _view.ClearRequested += () =>
+        {
+            foreach (var job in _queue.Jobs.Where(j => j.State is JobState.Done or JobState.Failed or JobState.Canceled))
+                _cleared.Add(job);
+            RefreshNow();
+        };
+        Content = _view;
+
+        SourceInitialized += (_, _) =>
+        {
+            _hwnd = new WindowInteropHelper(this).Handle;
+            WheelNative.RemoveSystemMenu(_hwnd);
+            WheelNative.MakeToolWindow(_hwnd);
+            ApplyTheme();
+        };
+        Deactivated += (_, _) => HideFlyout();
+        SystemTheme.Changed += OnThemeChanged;
     }
 
+    /// <summary>Показать у трея (повторный запуск программы, пункт меню «Задачи»).</summary>
+    public void ShowNearTray() => ShowFlyout();
+
+    /// <summary>Клик по значку в трее: открыть или спрятать.</summary>
+    public void Toggle()
+    {
+        if (IsVisible) HideFlyout();
+        else if (Environment.TickCount64 - _hiddenAt > ReopenGuardMs) ShowFlyout();
+    }
+
+    /// <summary>Задача изменилась. Пока окно спрятано — ничего не делаем, обновим при показе.</summary>
     public void Refresh(Job job)
     {
-        var row = _rows.FirstOrDefault(r => r.Job == job);
-        if (row is null) _rows.Insert(0, new JobRow(job));
-        else row.Update();
+        if (!IsVisible || _refreshQueued) return;
+        // Прогресс ffmpeg приходит часто — обновляем не чаще одного раза за проход диспетчера.
+        _refreshQueued = true;
+        Dispatcher.BeginInvoke(DispatcherPriority.Background, () =>
+        {
+            _refreshQueued = false;
+            if (IsVisible) RefreshNow();
+        });
     }
 
-    public void ShowNearTray()
+    protected override void OnPreviewKeyDown(KeyEventArgs e)
     {
-        var area = SystemParameters.WorkArea;
-        Left = area.Right - Width - 8;
-        Top = area.Bottom - Height - 8;
-        Show();
+        base.OnPreviewKeyDown(e);
+        if (e.Key != Key.Escape) return;
+        e.Handled = true;
+        HideFlyout();
+    }
+
+    protected override void OnClosed(EventArgs e)
+    {
+        SystemTheme.Changed -= OnThemeChanged;
+        base.OnClosed(e);
+    }
+
+    private void ShowFlyout()
+    {
+        new WindowInteropHelper(this).EnsureHandle();
+        ApplyTheme();
+        RefreshNow(place: false);
+        _anchor = WheelNative.CursorPosition() ?? (0, 0);
+
+        var appearing = !IsVisible;
+        Place();
+        Place();
+        if (appearing && Motion.Enabled) SetAppearance(0);
+        if (appearing) Show();
+        Place();
+        WheelNative.TrySetForeground(_hwnd);
         Activate();
+
+        if (appearing) _tween.Run(ShowMs, Motion.EaseOutCubic, SetAppearance);
     }
 
-    private static DataTemplate RowTemplate()
+    private void HideFlyout()
     {
-        var root = new FrameworkElementFactory(typeof(StackPanel));
-        root.SetValue(MarginProperty, new Thickness(0, 0, 0, 10));
-
-        var name = new FrameworkElementFactory(typeof(TextBlock));
-        name.SetBinding(TextBlock.TextProperty, new Binding(nameof(JobRow.Title)));
-        name.SetValue(TextBlock.FontWeightProperty, FontWeights.SemiBold);
-        name.SetValue(TextBlock.TextTrimmingProperty, TextTrimming.CharacterEllipsis);
-        root.AppendChild(name);
-
-        var bar = new FrameworkElementFactory(typeof(ProgressBar));
-        bar.SetValue(HeightProperty, 6.0);
-        bar.SetValue(RangeBase.MaximumProperty, 1.0);
-        bar.SetBinding(RangeBase.ValueProperty, new Binding(nameof(JobRow.Progress)));
-        bar.SetBinding(ProgressBar.IsIndeterminateProperty, new Binding(nameof(JobRow.Indeterminate)));
-        bar.SetBinding(VisibilityProperty, new Binding(nameof(JobRow.BarVisibility)));
-        bar.SetValue(MarginProperty, new Thickness(0, 3, 0, 3));
-        root.AppendChild(bar);
-
-        var line = new FrameworkElementFactory(typeof(DockPanel));
-        var status = new FrameworkElementFactory(typeof(TextBlock));
-        status.SetBinding(TextBlock.TextProperty, new Binding(nameof(JobRow.Status)));
-        status.SetValue(TextBlock.ForegroundProperty, Brushes.DimGray);
-        status.SetValue(TextBlock.TextWrappingProperty, TextWrapping.Wrap);
-
-        var action = new FrameworkElementFactory(typeof(Button));
-        action.SetValue(DockPanel.DockProperty, Dock.Right);
-        action.SetValue(PaddingProperty, new Thickness(8, 0, 8, 0));
-        action.SetBinding(ContentControl.ContentProperty, new Binding(nameof(JobRow.ActionText)));
-        action.SetBinding(VisibilityProperty, new Binding(nameof(JobRow.ActionVisibility)));
-        action.AddHandler(System.Windows.Controls.Primitives.ButtonBase.ClickEvent,
-            new RoutedEventHandler((s, _) => ((JobRow)((FrameworkElement)s).DataContext).DoAction()));
-        line.AppendChild(action);
-        line.AppendChild(status);
-        root.AppendChild(line);
-
-        return new DataTemplate { VisualTree = root };
+        if (!IsVisible) return;
+        _tween.Stop(complete: false);
+        Hide();
+        SetAppearance(1);
+        _hiddenAt = Environment.TickCount64;
     }
 
-    private sealed class JobRow(Job job) : INotifyPropertyChanged
+    /// <summary>Появление: содержимое проявляется и «выезжает» от панели задач.</summary>
+    private void SetAppearance(double t)
     {
-        public Job Job { get; } = job;
-        public string Title => $"{Path.GetFileName(Job.Input)} → {Job.Operation.Label}";
-        public double Progress => Job.Progress;
-        // У ImageMagick нет прогресса — «бегущая» полоса.
-        public bool Indeterminate => Job.State == JobState.Running && Job.Operation.Engine == Conversions.EngineKind.ImageMagick;
-        public Visibility BarVisibility => Job.State is JobState.Queued or JobState.Running ? Visibility.Visible : Visibility.Collapsed;
-
-        public string Status => Job.State switch
+        _view.Opacity = t;
+        var d = SlideDistance * (1 - t);
+        (_view.Slide.X, _view.Slide.Y) = _edge switch
         {
-            JobState.Queued => "В очереди",
-            JobState.Running => Job.Progress > 0 ? $"{Job.Progress:P0}" : "Выполняется…",
-            JobState.Done => "Готово: " + Path.GetFileName(Job.OutputPath),
-            JobState.Failed => "Ошибка: " + Job.Error,
-            _ => "Отменено",
+            TaskbarEdge.Top => (0.0, -d),
+            TaskbarEdge.Left => (-d, 0.0),
+            TaskbarEdge.Right => (d, 0.0),
+            _ => (0.0, d),
         };
+    }
 
-        public string ActionText => Job.State == JobState.Done ? "Показать" : "Отмена";
-        public Visibility ActionVisibility => Job.State is JobState.Failed or JobState.Canceled ? Visibility.Collapsed : Visibility.Visible;
+    private void RefreshNow(bool place = true)
+    {
+        var jobs = _queue.Jobs.Where(j => !_cleared.Contains(j)).Reverse().ToList();
+        foreach (var job in jobs) EnsureThumbnail(job);
+        _view.SetRows(jobs.Select(ModelFor).ToList());
+        if (place && IsVisible) Place(onlyIfHeightChanged: true);
+    }
 
-        public void DoAction()
+    private JobRowModel ModelFor(Job job)
+    {
+        var name = Path.GetFileName(job.Input);
+        if (job.Inputs.Count > 1) name += $" и ещё {job.Inputs.Count - 1}";
+        var operation = job.Operation.Mode == OperationMode.Convert ? "→ " + job.Operation.Label : job.Operation.Label;
+        _thumbs.TryGetValue(job, out var thumb);
+        return new JobRowModel(job, name, operation, job.State)
         {
-            if (Job.State == JobState.Done && Job.OutputPath is not null) Notifier.RevealInExplorer(Job.OutputPath);
-            else Job.Cancel();
+            Progress = job.Progress,
+            Error = job.Error,
+            ResultName = job.OutputPath is { } output ? Path.GetFileName(output.TrimEnd('\\', '/')) : null,
+            Glyph = OperationGlyphs.For(job.Operation),
+            Thumbnail = thumb?.Image,
+            ThumbnailIsIcon = thumb?.IsIcon ?? false,
+        };
+    }
+
+    /// <summary>Миниатюра: у готовой задачи — результата, иначе — исходника. Грузится в фоне.</summary>
+    private void EnsureThumbnail(Job job)
+    {
+        var path = job.State == JobState.Done && job.OutputPath is not null ? job.OutputPath : job.Input;
+        if (_thumbs.TryGetValue(job, out var current) && current.Path == path) return;
+        // Пока грузится новая — показываем старую.
+        _thumbs[job] = new Thumb(path, current?.Image, current?.IsIcon ?? false);
+        _ = LoadThumbnailAsync(job, path);
+    }
+
+    private async Task LoadThumbnailAsync(Job job, string path)
+    {
+        try
+        {
+            var image = await ShellThumbnails.GetAsync(path, ThumbPx, thumbnailOnly: true);
+            var isIcon = false;
+            if (image is null)
+            {
+                image = await ShellThumbnails.GetAsync(path, 64);
+                isIcon = true;
+            }
+            if (image is null || !_thumbs.TryGetValue(job, out var current) || current.Path != path) return;
+            _thumbs[job] = new Thumb(path, image, isIcon);
+            if (IsVisible) RefreshNow();
+        }
+        catch (Exception ex)
+        {
+            _log.Write("Миниатюра не получилась: " + ex.Message);
+        }
+    }
+
+    private void Act(object key, Action<Job> action)
+    {
+        if (key is not Job job) return;
+        try { action(job); }
+        catch (Exception ex) { _log.Write("Действие в окне задач не выполнено: " + ex.Message); }
+    }
+
+    // ---- вид: тема, подложка, место ----
+
+    private void OnThemeChanged()
+    {
+        if (!IsVisible) return;
+        ApplyTheme();
+        Place();
+    }
+
+    private void ApplyTheme()
+    {
+        if (_hwnd == IntPtr.Zero) return;
+        var light = SystemTheme.ShellLight;
+        NativeEffects.SetDarkMode(_hwnd, !light);
+        NativeEffects.SetCorners(_hwnd, NativeEffects.CornerRound);
+
+        var wantBackdrop = SystemTheme.TransparencyEnabled && NativeEffects.SupportsSystemBackdrop && NativeEffects.EffectsAllowed;
+        _backdrop = wantBackdrop && NativeEffects.SetSystemBackdrop(_hwnd, NativeEffects.BackdropTransient);
+        if (!_backdrop && NativeEffects.SupportsSystemBackdrop) NativeEffects.SetSystemBackdrop(_hwnd, NativeEffects.BackdropNone);
+
+        var accent = SystemTheme.Accent;
+        var key = $"{light}|{_backdrop}|{accent.Base}";
+        if (key != _paletteKey)
+        {
+            _paletteKey = key;
+            _view.Palette = light ? FlyoutPalette.Light(accent, _backdrop) : FlyoutPalette.Dark(accent, _backdrop);
         }
 
-        public void Update() => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
-
-        public event PropertyChangedEventHandler? PropertyChanged;
+        if (_backdrop)
+        {
+            // Под прозрачным фоном WPF видна подложка Windows.
+            Background = Brushes.Transparent;
+            if (HwndSource.FromHwnd(_hwnd)?.CompositionTarget is { } target) target.BackgroundColor = Colors.Transparent;
+        }
+        else
+        {
+            var solid = new SolidColorBrush(_view.Palette.Solid);
+            solid.Freeze();
+            Background = solid;
+        }
     }
+
+    /// <summary>
+    /// Размер по содержимому (ширина 380 DIP, высота — по строкам) и место у трея на мониторе, где был курсор.
+    /// Всё в физических пикселях монитора (Per-Monitor DPI).
+    /// </summary>
+    private void Place(bool onlyIfHeightChanged = false)
+    {
+        if (_hwnd == IntPtr.Zero) return;
+        var (work, bounds, dpi) = WheelNative.MonitorAreasAt(_anchor.X, _anchor.Y);
+        var k = dpi / 96.0;
+        _view.Measure(new Size(JobsFlyoutView.FlyoutWidth, double.PositiveInfinity));
+        var width = (int)Math.Round(JobsFlyoutView.FlyoutWidth * k);
+        var height = (int)Math.Ceiling(_view.DesiredSize.Height * k);
+        if (onlyIfHeightChanged && height == _heightPx) return;
+        _heightPx = height;
+
+        var taskbar = WheelNative.TaskbarRect() is { } t ? ToPixels(t) : (PixelRect?)null;
+        var (x, y, edge) = TrayFlyoutPlacement.Place(ToPixels(bounds), ToPixels(work), taskbar, width, height,
+            (int)Math.Round(EdgeMargin * k));
+        _edge = edge;
+        WheelNative.SetWindowPos(_hwnd, WheelNative.HwndTopmost, x, y, width, height,
+            WheelNative.SwpNoActivate | WheelNative.SwpNoOwnerZOrder);
+    }
+
+    private static PixelRect ToPixels(WheelNative.Rect r) => new(r.Left, r.Top, r.Right, r.Bottom);
 }
