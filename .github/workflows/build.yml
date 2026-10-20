@@ -49,9 +49,8 @@ jobs:
           dotnet publish src/DropWheel @common
           dotnet publish src/DropWheel.Cli @common
           Copy-Item tools out/DropWheel/tools -Recurse
-          # Приложению не нужны: ffprobe (только для тестов) и ffmpeg, вложенный в ImageMagick portable.
+          # ffprobe нужен только тестам.
           Remove-Item out/DropWheel/tools/ffmpeg/ffprobe.exe -ErrorAction SilentlyContinue
-          Remove-Item out/DropWheel/tools/imagemagick/ffmpeg.exe -ErrorAction SilentlyContinue
           Copy-Item packaging/* out/DropWheel/
           Get-ChildItem out/DropWheel -Recurse -File | Sort-Object Length -Descending | Select-Object -First 8 |
             ForEach-Object { "{0,8:N1} MB  {1}" -f ($_.Length / 1MB), $_.FullName }

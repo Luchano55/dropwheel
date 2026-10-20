@@ -51,6 +51,9 @@ if (-not $magick) { throw "В архиве ImageMagick нет magick.exe" }
 $imDest = Join-Path $dest "imagemagick"
 if (Test-Path $imDest) { Remove-Item $imDest -Recurse -Force }
 Copy-Item $magick.DirectoryName $imDest -Recurse
+# В portable-сборке каждая утилита (montage, mogrify, stream…) — отдельная копия по ~30 МБ.
+# DropWheel вызывает только magick.exe (а ffmpeg.exe у нас свой).
+Get-ChildItem $imDest -Filter *.exe | Where-Object { $_.Name -ne "magick.exe" } | Remove-Item -Force
 
 & (Join-Path $ffDest "ffmpeg.exe") -hide_banner -version | Select-Object -First 1
 & (Join-Path $imDest "magick.exe") -version | Select-Object -First 1
