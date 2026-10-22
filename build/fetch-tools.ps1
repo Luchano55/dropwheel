@@ -18,10 +18,16 @@ $dest = New-Item -ItemType Directory -Force -Path $Destination
 $work = New-Item -ItemType Directory -Force -Path (Join-Path ([IO.Path]::GetTempPath()) "dropwheel-tools")
 
 # --- ffmpeg ---
-$ffRelease = Invoke-RestMethod -Headers $headers "https://api.github.com/repos/BtbN/FFmpeg-Builds/releases/latest"
-# Самая новая release-ветка (не master): ffmpeg-nX.Y-latest-win64-gpl-X.Y.zip
-$ffAsset = $ffRelease.assets | Where-Object { $_.name -match '^ffmpeg-n[\d.]+-latest-win64-gpl-[\d.]+\.zip$' } |
-    Sort-Object { [version]($_.name -replace '^ffmpeg-n([\d.]+)-.*$', '$1') } -Descending | Select-Object -First 1
+# Самая новая release-ветка (не master): ffmpeg-nX.Y-latest-win64-gpl-X.Y.zip. Сборки выкладываются ежедневно,
+# и в только что созданном релизе файлов ещё может не быть — тогда берём предыдущий релиз.
+$ffAsset = $null
+$ffReleases = Invoke-RestMethod -Headers $headers "https://api.github.com/repos/BtbN/FFmpeg-Builds/releases?per_page=5"
+foreach ($ffRelease in $ffReleases) {
+    $ffAsset = $ffRelease.assets | Where-Object { $_.name -match '^ffmpeg-n[\d.]+-latest-win64-gpl-[\d.]+\.zip$' } |
+        Sort-Object { [version]($_.name -replace '^ffmpeg-n([\d.]+)-.*$', '$1') } -Descending | Select-Object -First 1
+    if ($ffAsset) { break }
+    Write-Warning "В релизе ffmpeg $($ffRelease.tag_name) нет сборки win64-gpl — пробую предыдущий"
+}
 if (-not $ffAsset) { throw "Не найдена сборка ffmpeg win64-gpl" }
 Write-Host "ffmpeg: $($ffAsset.name)"
 $ffZip = Join-Path $work "ffmpeg.zip"
