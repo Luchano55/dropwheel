@@ -1,3 +1,4 @@
+using DropWheel.Localization;
 using DropWheel.Conversions;
 
 namespace DropWheel.Engines;
@@ -82,7 +83,8 @@ public static class ArgumentBuilder
             .Replace("{webpq}", s.WebpQuality.ToString())
             .Replace("{crf}", s.VideoCrf.ToString())
             .Replace("{crfsmall}", s.CompressCrf.ToString())
-            .Replace("{mp3k}", s.Mp3BitrateKbps.ToString());
+            .Replace("{mp3k}", s.Mp3BitrateKbps.ToString())
+            .Replace("{page}", Loc.T.PageFile);
         return text.Split(' ', StringSplitOptions.RemoveEmptyEntries);
     }
 }

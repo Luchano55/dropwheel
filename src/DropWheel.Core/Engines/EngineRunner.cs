@@ -1,3 +1,4 @@
+using DropWheel.Localization;
 using System.Diagnostics;
 using System.Text;
 using DropWheel.Conversions;
@@ -53,7 +54,7 @@ public sealed class EngineRunner(ToolLocator tools)
         }
         catch (Exception ex)
         {
-            throw new ConversionException($"Не удалось запустить {Path.GetFileName(exe)}", ex.ToString(), ex);
+            throw new ConversionException(Loc.F(Loc.T.ErrCantStart, Path.GetFileName(exe)), ex.ToString(), ex);
         }
         process.BeginErrorReadLine();
         // 7-Zip пишет прогресс без перевода строки (стирает его \b) — читаем stdout кусками, а не строками.

@@ -1,3 +1,4 @@
+using DropWheel.Localization;
 using System.IO.Compression;
 using System.Text;
 using DropWheel.Conversions;
@@ -28,7 +29,7 @@ public sealed class ZipEngine : IInternalEngine
     {
         PackId => PackAsync(inputs, output, progress, ct),
         ExtractId => ExtractAsync(inputs[0], output, progress, ct),
-        _ => throw new ConversionException($"ZIP не умеет «{op.Label}»", op.Id),
+        _ => throw new ConversionException(Loc.F(Loc.T.ErrCantDo, "ZIP", Loc.Label(op)), op.Id),
     };
 
     /// <summary>
@@ -124,14 +125,14 @@ public sealed class ZipEngine : IInternalEngine
                 {
                     var written = await CopyAsync(source, dest, entry.Length, report, ct);
                     if (written != entry.Length)
-                        throw new ConversionException("Архив повреждён", $"{entry.FullName}: {written} из {entry.Length} байт");
+                        throw new ConversionException(Loc.T.ErrArchiveBroken, $"{entry.FullName}: {written} из {entry.Length} байт");
                 }
                 try { File.SetLastWriteTime(path, entry.LastWriteTime.DateTime); } catch { /* не критично */ }
             }
         }
         catch (InvalidDataException ex)
         {
-            throw new ConversionException("Архив повреждён или сжат неподдерживаемым способом", ex.Message, ex);
+            throw new ConversionException(Loc.T.ErrArchiveBrokenOrMethod, ex.Message, ex);
         }
     }
 
@@ -139,9 +140,9 @@ public sealed class ZipEngine : IInternalEngine
     private static List<(ZipArchiveEntry Entry, string Target)> Plan(ZipArchive zip, string output)
     {
         if (zip.Entries.Count > MaxEntries)
-            throw new ConversionException("В архиве слишком много файлов", $"{zip.Entries.Count} > {MaxEntries}");
+            throw new ConversionException(Loc.T.ErrArchiveTooManyFiles, $"{zip.Entries.Count} > {MaxEntries}");
         if (zip.Entries.Count == 0)
-            throw new ConversionException("Архив пуст");
+            throw new ConversionException(Loc.T.ErrArchiveEmpty);
 
         var root = Path.GetFullPath(output);
         if (!root.EndsWith(Path.DirectorySeparatorChar)) root += Path.DirectorySeparatorChar;
@@ -151,7 +152,7 @@ public sealed class ZipEngine : IInternalEngine
         foreach (var entry in zip.Entries)
         {
             if (entry.IsEncrypted)
-                throw new ConversionException("Архив с паролем не поддерживается", entry.FullName);
+                throw new ConversionException(Loc.T.ErrArchivePassword, entry.FullName);
 
             var relative = SafeRelativePath(entry.FullName);
             if (relative is null) continue; // «./» и т. п. — сама папка
@@ -163,7 +164,7 @@ public sealed class ZipEngine : IInternalEngine
 
             total += entry.Length;
             if (total > MaxExtractedBytes)
-                throw new ConversionException("Архив слишком большой: больше 20 ГБ после распаковки", entry.FullName);
+                throw new ConversionException(Loc.T.ErrArchiveTooBig, entry.FullName);
             plan.Add((entry, target));
         }
         return plan;
@@ -205,7 +206,7 @@ public sealed class ZipEngine : IInternalEngine
     }
 
     private static ConversionException Unsafe(string entryName) =>
-        new("Архив небезопасен: в нём пути за пределы папки", entryName);
+        new(Loc.T.ErrArchiveUnsafePaths, entryName);
 
     // ---------- Общее ----------
 
@@ -220,7 +221,7 @@ public sealed class ZipEngine : IInternalEngine
         {
             copied += read;
             if (copied > limit)
-                throw new ConversionException("Архив повреждён: файл больше заявленного размера");
+                throw new ConversionException(Loc.T.ErrArchiveEntryTooBig);
             await target.WriteAsync(buffer.AsMemory(0, read), ct);
             report.Add(read);
         }

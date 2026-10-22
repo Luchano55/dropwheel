@@ -1,3 +1,4 @@
+using DropWheel.Localization;
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -27,9 +28,9 @@ public static partial class CsvToXlsx
         var separator = DetectSeparator(text);
         var rows = Parse(text, separator, ct);
         if (rows.Count > MaxRows)
-            throw new ConversionException("В CSV больше строк, чем помещается на лист Excel (1 048 576)");
+            throw new ConversionException(Loc.T.ErrCsvTooManyRows);
         if (rows.Count > 0 && rows.Max(r => r.Length) > MaxColumns)
-            throw new ConversionException("В CSV больше столбцов, чем помещается на лист Excel (16 384)");
+            throw new ConversionException(Loc.T.ErrCsvTooManyColumns);
         Write(rows, output, SheetName(Path.GetFileNameWithoutExtension(input)), commaDecimal: separator != ',', ct);
     }
 
@@ -187,7 +188,7 @@ public static partial class CsvToXlsx
     {
         var name = new string(stem.Where(c => c is not ('[' or ']' or ':' or '*' or '?' or '/' or '\\')).ToArray()).Trim().Trim('\'');
         if (name.Length > 31) name = name[..31];
-        return name.Length == 0 ? "Лист1" : name;
+        return name.Length == 0 ? Loc.T.SheetName : name;
     }
 
     private const uint StyleDate = 1, StyleDateTime = 2, StylePercent = 3, StylePercentDecimals = 4;

@@ -1,3 +1,4 @@
+using DropWheel.Localization;
 namespace DropWheel.Input;
 
 /// <summary>
@@ -28,8 +29,8 @@ public static class Hotkeys
     /// <summary>Как назвать клавишу человеку: «Пробел», «Ё», «Caps Lock», «F8».</summary>
     public static string DisplayName(string? name) => name?.ToLowerInvariant() switch
     {
-        null or "" or "space" => "Пробел",
-        "backquote" => "Ё",
+        null or "" or "space" => Loc.T.KeySpace,
+        "backquote" => Loc.T.KeyBackquote,
         "capslock" => "Caps Lock",
         _ => name,
     };

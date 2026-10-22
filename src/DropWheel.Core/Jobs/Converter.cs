@@ -1,3 +1,4 @@
+using DropWheel.Localization;
 using DropWheel.Conversions;
 using DropWheel.Engines;
 
@@ -80,14 +81,14 @@ public sealed class Converter(ToolLocator tools, ConversionSettings settings, IE
         if (op.Inputs == InputMode.PerFile && inputs.Count != 1)
             throw new ArgumentException("Операция обрабатывает файлы по одному", nameof(inputs));
         if (inputs.Count < op.MinFiles)
-            throw new ConversionException($"Для «{op.Label}» нужно файлов: не меньше {op.MinFiles}");
+            throw new ConversionException(Loc.F(Loc.T.ErrMinFiles, Loc.Label(op), op.MinFiles));
 
         var full = inputs.Select(Path.GetFullPath).ToList();
         foreach (var input in full)
         {
-            if (!File.Exists(input)) throw new ConversionException("Файл не найден", input);
+            if (!File.Exists(input)) throw new ConversionException(Loc.T.ErrFileNotFound, input);
             if (!op.AppliesTo(Path.GetExtension(input)))
-                throw new ConversionException($"Операция «{op.Label}» не подходит для этого файла", $"{op.Id}: {input}");
+                throw new ConversionException(Loc.F(Loc.T.ErrNotApplicable, Loc.Label(op)), $"{op.Id}: {input}");
         }
 
         var settings = Settings;
@@ -95,9 +96,10 @@ public sealed class Converter(ToolLocator tools, ConversionSettings settings, IE
         var folder = op.Result == ResultKind.Folder;
         var outExt = folder ? "" : op.Output.Resolve(Path.GetExtension(first));
         var stem = op.ResultStem?.Invoke(full);
+        var suffix = Loc.Suffix(op);
         var desired = folder
-            ? OutputNamer.DesiredFolder(first, op.Suffix, settings.OutputFolder, stem)
-            : OutputNamer.DesiredPath(first, outExt, op.Suffix, settings.OutputFolder, stem);
+            ? OutputNamer.DesiredFolder(first, suffix, settings.OutputFolder, stem)
+            : OutputNamer.DesiredPath(first, outExt, suffix, settings.OutputFolder, stem);
         var dir = Path.GetDirectoryName(desired)!;
         Directory.CreateDirectory(dir);
 
@@ -113,13 +115,13 @@ public sealed class Converter(ToolLocator tools, ConversionSettings settings, IE
             if (folder)
             {
                 if (!Directory.EnumerateFileSystemEntries(temp).Any())
-                    throw new ConversionException("Утилита ничего не создала", temp);
+                    throw new ConversionException(Loc.T.ErrToolMadeNothing, temp);
             }
             else
             {
                 var info = new FileInfo(temp);
                 if (!info.Exists || info.Length == 0)
-                    throw new ConversionException("Утилита не создала файл", temp);
+                    throw new ConversionException(Loc.T.ErrToolMadeNoFile, temp);
             }
 
             return MoveToFreeName(temp, desired, folder);
@@ -172,8 +174,8 @@ public sealed class Converter(ToolLocator tools, ConversionSettings settings, IE
         ConversionSettings settings, IProgress<double>? progress, Action<string>? log, CancellationToken ct)
     {
         var kind = EngineFor(op, Path.GetExtension(inputs[0])) ?? throw new ConversionException(op.Engine == EngineKind.Office
-            ? "Не найден Microsoft Office"
-            : $"На этом компьютере нечем выполнить «{op.Label}»");
+            ? Loc.T.ErrNoOffice
+            : Loc.F(Loc.T.ErrNoEngine, Loc.Label(op)));
 
         if (_internal.TryGetValue(kind, out var engine))
         {

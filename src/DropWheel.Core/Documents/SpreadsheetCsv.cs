@@ -1,3 +1,4 @@
+using DropWheel.Localization;
 using System.Globalization;
 using System.Text;
 using DropWheel.Engines;
@@ -57,11 +58,11 @@ public static class SpreadsheetCsv
         }
         catch (InvalidPasswordException ex)
         {
-            throw new ConversionException("Таблица защищена паролем", ex.Message, ex);
+            throw new ConversionException(Loc.T.ErrSheetPassword, ex.Message, ex);
         }
         catch (Exception ex) when (ex is ExcelReaderException or InvalidDataException or IOException or NotSupportedException)
         {
-            throw new ConversionException("Не удалось открыть таблицу: файл повреждён или это не Excel", ex.Message, ex);
+            throw new ConversionException(Loc.T.ErrSheetOpen, ex.Message, ex);
         }
 
         using (reader)
@@ -88,7 +89,7 @@ public static class SpreadsheetCsv
             }
             catch (Exception ex) when (ex is ExcelReaderException or InvalidDataException or InvalidCastException or FormatException)
             {
-                throw new ConversionException("Не удалось прочитать таблицу: файл повреждён", ex.Message, ex);
+                throw new ConversionException(Loc.T.ErrSheetRead, ex.Message, ex);
             }
             return Trim(rows);
         }

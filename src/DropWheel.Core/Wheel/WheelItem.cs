@@ -1,3 +1,4 @@
+using DropWheel.Localization;
 using DropWheel.Conversions;
 
 namespace DropWheel.Wheel;
@@ -11,6 +12,6 @@ public static class WheelItems
     public static IReadOnlyList<WheelItem> For(IReadOnlyList<Operation> ops, OperationMode mode) =>
         ops.Where(o => o.Mode == mode)
            .Take(WheelGeometry.MaxSectors)
-           .Select(o => new WheelItem(o.Id, o.Label))
+           .Select(o => new WheelItem(o.Id, Loc.Label(o)))
            .ToList();
 }

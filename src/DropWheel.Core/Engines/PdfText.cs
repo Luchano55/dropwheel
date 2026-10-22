@@ -1,3 +1,4 @@
+using DropWheel.Localization;
 using System.Text;
 
 namespace DropWheel.Engines;
@@ -5,7 +6,8 @@ namespace DropWheel.Engines;
 /// <summary>PDF → TXT (pdftotext): проверка результата.</summary>
 public static class PdfText
 {
-    public const string ScanMessage = "В PDF нет текстового слоя (это скан)";
+    /// <summary>Причина «это скан» на текущем языке.</summary>
+    public static string ScanMessage => Loc.T.ErrPdfScan;
 
     /// <summary>
     /// У скана страницы — картинки, и pdftotext успешно пишет «пустой» текст: только разрывы страниц (\f)

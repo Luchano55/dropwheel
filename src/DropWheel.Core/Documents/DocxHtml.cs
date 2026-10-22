@@ -1,3 +1,4 @@
+using DropWheel.Localization;
 using System.Globalization;
 using System.Xml.Linq;
 using Codeuctivity.OpenXmlPowerTools.OpenXMLWordprocessingMLToHtmlConverter;
@@ -33,7 +34,7 @@ public static class DocxHtml
 
         using var doc = OpenWord(stream, editable: true);
         var main = doc.MainDocumentPart;
-        if (main?.Document?.Body is null) throw new ConversionException("В файле Word нет текста документа", path);
+        if (main?.Document?.Body is null) throw new ConversionException(Loc.T.ErrWordNoBody, path);
 
         var page = ReadPageSetup(main.Document.Body);
         PrepareForHtml(main);
@@ -54,7 +55,7 @@ public static class DocxHtml
         }
         catch (Exception ex) when (ex is not ConversionException and not OperationCanceledException)
         {
-            throw new ConversionException("Не удалось разобрать документ Word", ex.Message, ex);
+            throw new ConversionException(Loc.T.ErrWordParse, ex.Message, ex);
         }
 
         ApplyPageBreaks(html);
@@ -71,7 +72,7 @@ public static class DocxHtml
         catch (Exception ex) when (ex is OpenXmlPackageException or InvalidDataException or IOException
                                        or FileFormatException or ArgumentException)
         {
-            throw new ConversionException("Не удалось открыть документ Word: файл повреждён, защищён паролем или это не DOCX", ex.Message, ex);
+            throw new ConversionException(Loc.T.ErrWordOpen, ex.Message, ex);
         }
     }
 
