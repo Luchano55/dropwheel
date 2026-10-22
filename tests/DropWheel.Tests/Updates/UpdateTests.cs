@@ -93,4 +93,28 @@ public class UpdateTests
         Assert.Equal("v3", File.ReadAllText(Path.Combine(app, "a.exe")));
         Assert.Equal("v2", File.ReadAllText(Path.Combine(app, "a.exe.old")));
     }
+
+    [SkippableFact]
+    public void Locked_old_file_does_not_break_the_update()
+    {
+        // Windows: прошлый «a.exe.old» держит не закрывшийся процесс — удалить нельзя, но обновление не должно падать.
+        Skip.IfNot(OperatingSystem.IsWindows(), "блокировка файла — только в Windows");
+        using var dir = new TempDir();
+        var app = Path.Combine(dir.Path, "app");
+        var staging = Path.Combine(dir.Path, "staging");
+        Directory.CreateDirectory(app);
+        Directory.CreateDirectory(staging);
+        File.WriteAllText(Path.Combine(app, "a.exe"), "v2");
+        File.WriteAllText(Path.Combine(app, "a.exe.old"), "v1");
+        File.WriteAllText(Path.Combine(staging, "a.exe"), "v3");
+
+        using (new FileStream(Path.Combine(app, "a.exe.old"), FileMode.Open, FileAccess.Read, FileShare.None))
+            UpdateApplier.Apply(staging, app);
+
+        Assert.Equal("v3", File.ReadAllText(Path.Combine(app, "a.exe")));
+        var olds = Directory.GetFiles(app, "a.exe*.old").Select(Path.GetFileName).Order().ToList();
+        Assert.Equal(2, olds.Count);
+        Assert.Contains("a.exe.old", olds);
+        Assert.Equal(2, UpdateApplier.CleanupOld(app));
+    }
 }
