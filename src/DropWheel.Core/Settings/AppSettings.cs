@@ -14,6 +14,10 @@ public sealed record AppSettings
     public bool ContextMenuEnabled { get; init; } = true;
     /// <summary>Ctrl+Alt+V — колесо для файлов или картинки из буфера обмена (решение D-CLIPBOARD).</summary>
     public bool ClipboardHotkey { get; init; } = true;
+    /// <summary>Папка для картинок из буфера; null — как раньше: «В одну папку» или «Изображения\DropWheel».</summary>
+    public string? ClipboardFolder { get; init; }
+    /// <summary>false — после удачной конвертации PNG из буфера удаляется, остаётся только результат.</summary>
+    public bool KeepClipboardImage { get; init; } = true;
     public bool AutoStart { get; init; }
     /// <summary>null — искать в tools/ рядом с exe.</summary>
     public string? FfmpegPath { get; init; }
@@ -97,5 +101,6 @@ public sealed record AppSettings
         Wheel = (s.Wheel ?? new()).Sanitized(),
         Language = Loc.Normalize(s.Language),
         WheelOpacity = WheelFill.Clamp(s.WheelOpacity),
+        ClipboardFolder = string.IsNullOrWhiteSpace(s.ClipboardFolder) ? null : s.ClipboardFolder,
     };
 }

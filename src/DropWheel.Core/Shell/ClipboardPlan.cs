@@ -41,11 +41,24 @@ public static class ClipboardPlan
     }
 
     /// <summary>
-    /// Папка для картинки из буфера: «В одну папку» из настроек, если выбрана; иначе «Изображения\DropWheel».
-    /// Результат конвертации кладётся рядом с картинкой — то есть туда же.
+    /// Папка для картинки из буфера: своя папка из настроек («Картинки из буфера»), если выбрана;
+    /// иначе «В одну папку», если выбрана; иначе «Изображения\DropWheel».
+    /// Результат конвертации кладётся рядом с картинкой (или в «одну папку»).
     /// </summary>
-    public static string ImageFolder(ConversionSettings settings) =>
-        settings.OutputFolder is { Length: > 0 } shared ? shared : DefaultImageFolder;
+    public static string ImageFolder(string? clipboardFolder, ConversionSettings settings) =>
+        clipboardFolder is { Length: > 0 } own ? own
+        : settings.OutputFolder is { Length: > 0 } shared ? shared
+        : DefaultImageFolder;
+
+    public static string ImageFolder(ConversionSettings settings) => ImageFolder(null, settings);
+
+    /// <summary>
+    /// Удалить ли PNG из буфера после задачи: только если так настроено, задача удалась
+    /// и результат — другой файл (не сам PNG). Ошибка или отмена — картинка остаётся, чтобы не потерять её.
+    /// </summary>
+    public static bool ShouldDeleteImage(bool keepImage, bool done, string image, string? output) =>
+        !keepImage && done && output is { Length: > 0 }
+        && !string.Equals(Path.GetFullPath(output), Path.GetFullPath(image), StringComparison.OrdinalIgnoreCase);
 
     /// <summary>«Изображения\DropWheel» (в Windows — %USERPROFILE%\Pictures\DropWheel).</summary>
     public static string DefaultImageFolder

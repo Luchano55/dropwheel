@@ -128,6 +128,15 @@ public sealed partial class Texts
     public string ClipboardHotkey { get; init; } = "Ctrl+Alt+V — колесо для буфера обмена";
     public string ClipboardHotkeyHint { get; init; } =
         "Скопируйте файлы или снимок экрана и нажмите Ctrl+Alt+V — колесо появится у курсора.";
+    public string ClipboardImageTitle { get; init; } = "Картинки из буфера обмена";
+    public string ClipboardImageHint { get; init; } =
+        "Куда сохранять картинку из буфера перед конвертацией. Результат ляжет рядом с ней.";
+    public string ClipboardFolderDefault { get; init; } = "По умолчанию";
+    public string ClipboardFolderOwn { get; init; } = "Своя папка";
+    public string ClipboardFolderBrowseTitle { get; init; } = "Папка для картинок из буфера обмена";
+    public string KeepClipboardImage { get; init; } = "Оставлять исходную картинку";
+    public string KeepClipboardImageHint { get; init; } =
+        "Если выключить, после конвертации останется только результат (например, JPG), а PNG удалится.";
     public string WheelOpacityTitle { get; init; } = "Прозрачность колеса";
     public string WheelOpacityHint { get; init; } = "Насколько сквозь колесо видно окна под ним. Подписи остаются чёткими.";
     public string WheelOpacitySolid { get; init; } = "плотнее";

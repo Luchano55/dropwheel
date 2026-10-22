@@ -79,6 +79,26 @@ public class ClipboardPlanTests
         Assert.Equal(ClipboardPlan.DefaultImageFolder, fallback);
         Assert.Equal("DropWheel", Path.GetFileName(fallback));
     }
+
+    [Fact]
+    public void Own_clipboard_folder_wins_over_shared_output_folder()
+    {
+        var shared = ConversionSettings.Default with { OutputFolder = "/data/Результаты" };
+        Assert.Equal("/data/Буфер", ClipboardPlan.ImageFolder("/data/Буфер", shared));
+        Assert.Equal("/data/Результаты", ClipboardPlan.ImageFolder(null, shared));
+        Assert.Equal(ClipboardPlan.DefaultImageFolder, ClipboardPlan.ImageFolder("", ConversionSettings.Default));
+    }
+
+    [Theory]
+    [InlineData(true, true, "/p/Буфер 1.jpg", false)]   // оставлять — не трогаем
+    [InlineData(false, true, "/p/Буфер 1.jpg", true)]   // не оставлять, готово — удалить
+    [InlineData(false, false, "/p/Буфер 1.jpg", false)] // ошибка или отмена — картинка остаётся
+    [InlineData(false, true, null, false)]              // результата нет
+    [InlineData(false, true, "/p/Буфер 1.png", false)]  // результат — сам PNG
+    public void Image_is_deleted_only_after_success_when_not_kept(bool keep, bool done, string? output, bool expected)
+    {
+        Assert.Equal(expected, ClipboardPlan.ShouldDeleteImage(keep, done, "/p/Буфер 1.png", output));
+    }
 }
 
 [Collection(LanguageCollection.Name)]

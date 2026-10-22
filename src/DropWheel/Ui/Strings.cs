@@ -62,6 +62,13 @@ internal static class Strings
         public static string ContextMenuHint => T.ContextMenuHint;
         public static string ClipboardHotkey => T.ClipboardHotkey;
         public static string ClipboardHotkeyHint => T.ClipboardHotkeyHint;
+        public static string ClipboardImageTitle => T.ClipboardImageTitle;
+        public static string ClipboardImageHint => T.ClipboardImageHint;
+        public static string ClipboardFolderDefault => T.ClipboardFolderDefault;
+        public static string ClipboardFolderOwn => T.ClipboardFolderOwn;
+        public static string ClipboardFolderBrowseTitle => T.ClipboardFolderBrowseTitle;
+        public static string KeepClipboardImage => T.KeepClipboardImage;
+        public static string KeepClipboardImageHint => T.KeepClipboardImageHint;
         public static string WheelOpacityTitle => T.WheelOpacityTitle;
         public static string WheelOpacityHint => T.WheelOpacityHint;
         public static string WheelOpacitySolid => T.WheelOpacitySolid;

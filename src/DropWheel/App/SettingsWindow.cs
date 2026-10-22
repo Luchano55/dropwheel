@@ -111,13 +111,13 @@ internal sealed class SettingsWindow : Window
         }
     }
 
-    private string? PickFolder(string current)
+    private string? PickFolder(string current, string title)
     {
         try
         {
             var dialog = new Microsoft.Win32.OpenFolderDialog
             {
-                Title = Strings.Settings.OutputBrowseTitle,
+                Title = title,
                 InitialDirectory = Directory.Exists(current) ? current : Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
                 Multiselect = false,
             };

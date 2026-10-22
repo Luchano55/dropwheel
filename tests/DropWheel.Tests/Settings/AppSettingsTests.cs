@@ -194,6 +194,25 @@ public class AppSettingsTests : IDisposable
         // Новые настройки, которых в старом файле нет, — по умолчанию.
         Assert.Equal(WheelFill.DefaultPercent, s.WheelOpacity);
         Assert.True(s.ClipboardHotkey);
+        Assert.True(s.KeepClipboardImage);
+        Assert.Null(s.ClipboardFolder);
+    }
+
+    [Fact]
+    public void Clipboard_image_settings_round_trip()
+    {
+        new AppSettings { KeepClipboardImage = false, ClipboardFolder = "/data/Мои фото/буфер 1" }.Save(SettingsPath);
+        var loaded = AppSettings.Load(SettingsPath);
+        Assert.False(loaded.KeepClipboardImage);
+        Assert.Equal("/data/Мои фото/буфер 1", loaded.ClipboardFolder);
+    }
+
+    [Fact]
+    public void Blank_clipboard_folder_means_default()
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(SettingsPath)!);
+        File.WriteAllText(SettingsPath, """{ "clipboardFolder": "  " }""");
+        Assert.Null(AppSettings.Load(SettingsPath).ClipboardFolder);
     }
 
     [Fact]

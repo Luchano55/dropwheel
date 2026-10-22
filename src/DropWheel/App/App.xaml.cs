@@ -33,6 +33,8 @@ public partial class App : Application
     private IReadOnlyList<IInternalEngine> _engines = [];
     private WheelWindow? _chooser;
     private IReadOnlyList<string> _chooserPaths = [];
+    /// <summary>PNG, сохранённые из буфера обмена в этом сеансе, — их можно удалить после конвертации.</summary>
+    private readonly HashSet<string> _clipboardImages = new(StringComparer.OrdinalIgnoreCase);
     private SettingsWindow? _settingsWindow;
     private SettingsSaver? _saver;
     private GlobalHotkey? _clipboardHotkey;
@@ -194,7 +196,7 @@ public partial class App : Application
                 string path;
                 try
                 {
-                    var folder = ClipboardPlan.ImageFolder(Settings.Conversion);
+                    var folder = ClipboardPlan.ImageFolder(Settings.ClipboardFolder, Settings.Conversion);
                     Directory.CreateDirectory(folder);
                     path = ClipboardPlan.ImagePath(folder, DateTime.Now);
                     ClipboardReader.SaveImage(snapshot, path);
@@ -206,6 +208,7 @@ public partial class App : Application
                     return;
                 }
                 Log.Write($"Буфер обмена: картинка сохранена в {path}");
+                _clipboardImages.Add(path);
                 ShowChooser([path]);
                 break;
             default:
@@ -355,6 +358,28 @@ public partial class App : Application
         {
             Log.Write($"Ошибка {job.Operation.Id} {job.Input}: {job.Error}\n{job.ErrorDetails}");
             _notifier?.Failed(job.Input, job.Error ?? Loc.T.UnknownError);
+        }
+        if (job.State is JobState.Done or JobState.Failed or JobState.Canceled)
+            CleanUpClipboardImage(job);
+    }
+
+    /// <summary>
+    /// PNG из буфера — промежуточный файл: если «Оставлять исходную картинку» выключено и задача удалась,
+    /// удаляем его (решение D-CLIPBOARD). Ошибка или отмена — оставляем, чтобы картинка не пропала.
+    /// </summary>
+    private void CleanUpClipboardImage(Job job)
+    {
+        if (job.Inputs.Count != 1 || !_clipboardImages.Remove(job.Input)) return;
+        if (!ClipboardPlan.ShouldDeleteImage(Settings.KeepClipboardImage, job.State == JobState.Done, job.Input, job.OutputPath))
+            return;
+        try
+        {
+            File.Delete(job.Input);
+            Log.Write($"Буфер обмена: промежуточная картинка удалена {job.Input}");
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            Log.Write("Буфер обмена: картинку не удалось удалить: " + ex.Message);
         }
     }
 

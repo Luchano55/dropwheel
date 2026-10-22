@@ -6,6 +6,7 @@ using DropWheel.Conversions;
 using DropWheel.Input;
 using DropWheel.Localization;
 using DropWheel.Settings;
+using DropWheel.Shell;
 using DropWheel.Ui;
 using DropWheel.Wheel;
 using S = DropWheel.Ui.Strings.Settings;
@@ -33,6 +34,7 @@ public sealed class SettingsView : Border
     private string _group = WheelGroups.Photo;
     private OperationMode _mode = OperationMode.Convert;
     private string _sharedFolder;
+    private string _clipboardFolder;
     private readonly int _build;
 
     private ScrollViewer _scroll = null!;
@@ -49,6 +51,7 @@ public sealed class SettingsView : Border
         _settings = settings;
         _build = build;
         _sharedFolder = settings.Conversion.OutputFolder ?? ConversionSettings.DefaultSharedFolder;
+        _clipboardFolder = settings.ClipboardFolder ?? ClipboardPlan.DefaultImageFolder;
         Update = change => _settings = change(_settings);
         UseLayoutRounding = true;
         SnapsToDevicePixels = true;
@@ -64,8 +67,8 @@ public sealed class SettingsView : Border
     /// </summary>
     public Func<Func<AppSettings, AppSettings>, AppSettings> Update { get; set; }
 
-    /// <summary>Выбор папки: текущая → выбранная (null — отказались).</summary>
-    public Func<string, string?>? PickFolder { get; set; }
+    /// <summary>Выбор папки: (текущая, заголовок окна) → выбранная (null — отказались).</summary>
+    public Func<string, string, string?>? PickFolder { get; set; }
 
     public event Action? OpenLogsRequested;
     public event Action? CheckUpdatesRequested;
@@ -79,6 +82,7 @@ public sealed class SettingsView : Border
             if (Equals(value, _settings)) return;
             _settings = value;
             if (value.Conversion.OutputFolder is { } folder) _sharedFolder = folder;
+            if (value.ClipboardFolder is { } clipFolder) _clipboardFolder = clipFolder;
             ShowPage();
         }
     }
@@ -352,7 +356,7 @@ public sealed class SettingsView : Border
         };
         browse.Click += () =>
         {
-            if (PickFolder?.Invoke(_sharedFolder) is not { Length: > 0 } chosen) return;
+            if (PickFolder?.Invoke(_sharedFolder, S.OutputBrowseTitle) is not { Length: > 0 } chosen) return;
             _sharedFolder = chosen;
             folderText.Text = chosen;
             folderText.ToolTip = chosen;
@@ -384,8 +388,63 @@ public sealed class SettingsView : Border
             on => Change(s => s with { ContextMenuEnabled = on })));
         page.Children.Add(ToggleCard(S.ClipboardHotkey, S.ClipboardHotkeyHint, _settings.ClipboardHotkey,
             on => Change(s => s with { ClipboardHotkey = on })));
+        page.Children.Add(ClipboardImageCard());
+        page.Children.Add(ToggleCard(S.KeepClipboardImage, S.KeepClipboardImageHint, _settings.KeepClipboardImage,
+            on => Change(s => s with { KeepClipboardImage = on })));
         page.Children.Add(ToggleCard(S.Updates, S.UpdatesHint, _settings.CheckForUpdates,
             on => Change(s => s with { CheckForUpdates = on })));
+    }
+
+    /// <summary>
+    /// «Картинки из буфера обмена»: «По умолчанию» (как «Куда класть результат» или «Изображения\DropWheel»)
+    /// или своя папка с кнопкой выбора. Под «По умолчанию» серым показан путь, куда сейчас ляжет картинка.
+    /// </summary>
+    private Border ClipboardImageCard()
+    {
+        var p = _palette;
+        var own = _settings.ClipboardFolder is not null;
+        var choice = new ChoicePills(p, [(false, S.ClipboardFolderDefault), (true, S.ClipboardFolderOwn)], own, S.ClipboardImageTitle)
+            { Margin = new Thickness(0, 12, 0, 0) };
+        var folderText = new TextBlock
+        {
+            FontSize = 12.5, Foreground = p.TextSecondary,
+            TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(0, 0, 12, 0),
+        };
+        var browse = new SettingsButton(p, S.OutputBrowse, Glyphs.FolderOpen);
+        var folderRow = new Grid { Margin = new Thickness(0, 4, 0, 0) };
+        folderRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        folderRow.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        folderRow.Children.Add(folderText);
+        Grid.SetColumn(browse, 1);
+        folderRow.Children.Add(browse);
+        void ShowFolder(bool on)
+        {
+            var folder = on ? _clipboardFolder : ClipboardPlan.ImageFolder(null, _settings.Conversion);
+            folderText.Text = folder;
+            folderText.ToolTip = folder;
+            browse.IsEnabled = on;
+            browse.Opacity = on ? 1 : 0.45;
+        }
+        ShowFolder(own);
+        choice.SelectionChanged += v =>
+        {
+            var on = (bool)v;
+            Change(s => s with { ClipboardFolder = on ? _clipboardFolder : null });
+            ShowFolder(on);
+        };
+        browse.Click += () =>
+        {
+            if (PickFolder?.Invoke(_clipboardFolder, S.ClipboardFolderBrowseTitle) is not { Length: > 0 } chosen) return;
+            _clipboardFolder = chosen;
+            Change(s => s with { ClipboardFolder = chosen });
+            ShowFolder(true);
+        };
+        var panel = new StackPanel();
+        panel.Children.Add(Titles(S.ClipboardImageTitle, S.ClipboardImageHint));
+        panel.Children.Add(choice);
+        panel.Children.Add(folderRow);
+        return Card(panel);
     }
 
     /// <summary>
