@@ -49,13 +49,26 @@ public sealed class LowLevelHooks : IDisposable
     private uint _threadId;
     private IntPtr _mouseHook;
     private IntPtr _keyboardHook;
+
+    // Страж: Windows молча снимает low-level хук, если обработчик хоть раз не уложился в LowLevelHooksTimeout
+    // (бывает при сильной нагрузке, после сна). Узнать об этом нельзя — сравниваем время последнего
+    // ввода в системе (GetLastInputInfo) с последним событием, дошедшим до наших хуков.
+    private static readonly TimeSpan WatchdogPeriod = TimeSpan.FromSeconds(5);
+    private const uint DeadAfterMs = 3000;
+    private static readonly TimeSpan MinReinstallGap = TimeSpan.FromSeconds(30);
+    private readonly Action<string>? _log;
+    private Timer? _watchdog;
+    private long _lastEventTick;
+    private long _lastReinstallTick;
     private bool _disposed;
 
     /// <param name="detector">Детектор перетаскивания (вызывается из потока хуков).</param>
     /// <param name="ui">Диспетчер потока UI, куда доставляются действия.</param>
     /// <param name="onAction">Обработчик действия: (действие, x, y в физических пикселях); вызывается в потоке UI.</param>
-    public LowLevelHooks(DragDetector detector, Dispatcher ui, Action<DragAction, int, int> onAction)
+    /// <param name="log">Журнал (переустановка хуков); необязателен.</param>
+    public LowLevelHooks(DragDetector detector, Dispatcher ui, Action<DragAction, int, int> onAction, Action<string>? log = null)
     {
+        _log = log;
         _detector = detector ?? throw new ArgumentNullException(nameof(detector));
         _ui = ui ?? throw new ArgumentNullException(nameof(ui));
         _onAction = onAction ?? throw new ArgumentNullException(nameof(onAction));
@@ -96,6 +109,71 @@ public sealed class LowLevelHooks : IDisposable
             Dispose();
             throw error;
         }
+
+        Volatile.Write(ref _lastEventTick, Environment.TickCount64);
+        _watchdog = new Timer(_ => CheckAlive(), null, WatchdogPeriod, WatchdogPeriod);
+        // После блокировки экрана и сна отпускания клавиш могли потеряться, а хуки — слететь.
+        Microsoft.Win32.SystemEvents.SessionSwitch += OnSessionSwitch;
+        Microsoft.Win32.SystemEvents.PowerModeChanged += OnPowerModeChanged;
+    }
+
+    private void OnSessionSwitch(object? sender, Microsoft.Win32.SessionSwitchEventArgs e)
+    {
+        if (e.Reason is Microsoft.Win32.SessionSwitchReason.SessionUnlock or Microsoft.Win32.SessionSwitchReason.ConsoleConnect
+            or Microsoft.Win32.SessionSwitchReason.RemoteConnect)
+            RequestReinstall("разблокировка экрана");
+    }
+
+    private void OnPowerModeChanged(object? sender, Microsoft.Win32.PowerModeChangedEventArgs e)
+    {
+        if (e.Mode == Microsoft.Win32.PowerModes.Resume) RequestReinstall("выход из сна");
+    }
+
+    /// <summary>Пользователь что-то делал, а до хуков ничего не дошло — значит, Windows их сняла.</summary>
+    private void CheckAlive()
+    {
+        try
+        {
+            var info = new LASTINPUTINFO { cbSize = (uint)Marshal.SizeOf<LASTINPUTINFO>() };
+            if (!GetLastInputInfo(ref info)) return;
+            // Оба значения — миллисекунды GetTickCount; разница в uint корректна и при переполнении.
+            var lastHook = (uint)Volatile.Read(ref _lastEventTick);
+            var gap = unchecked(info.dwTime - lastHook);
+            if (gap > DeadAfterMs && gap < int.MaxValue) RequestReinstall($"ввод не доходит до хуков {gap} мс");
+        }
+        catch
+        {
+            // Страж не должен ронять программу.
+        }
+    }
+
+    private void RequestReinstall(string reason)
+    {
+        var now = Environment.TickCount64;
+        var last = Interlocked.Read(ref _lastReinstallTick);
+        if (now - last < MinReinstallGap.TotalMilliseconds && last != 0) return;
+        Interlocked.Exchange(ref _lastReinstallTick, now);
+        uint threadId;
+        lock (_gate)
+        {
+            if (_disposed) return;
+            threadId = _threadId;
+        }
+        _log?.Invoke($"Хуки переустанавливаются: {reason}");
+        if (threadId != 0) PostThreadMessageW(threadId, WM_APP_REINSTALL, IntPtr.Zero, IntPtr.Zero);
+    }
+
+    /// <summary>В потоке хуков: снять, поставить заново, забыть «зажатые» клавиши.</summary>
+    private void Reinstall()
+    {
+        Unhook();
+        var module = GetModuleHandleW(null);
+        _mouseHook = SetWindowsHookExW(WH_MOUSE_LL, _mouseProc, module, 0);
+        _keyboardHook = SetWindowsHookExW(WH_KEYBOARD_LL, _keyboardProc, module, 0);
+        _detector.ResetKeys();
+        Volatile.Write(ref _lastEventTick, Environment.TickCount64);
+        if (_mouseHook == IntPtr.Zero || _keyboardHook == IntPtr.Zero)
+            _log?.Invoke($"Переустановка хуков не удалась: ошибка {Marshal.GetLastWin32Error()}");
     }
 
     /// <summary>Снимает оба хука (в потоке хуков) и останавливает поток.</summary>
@@ -111,6 +189,9 @@ public sealed class LowLevelHooks : IDisposable
             threadId = _threadId;
         }
         AppDomain.CurrentDomain.ProcessExit -= OnProcessExit;
+        _watchdog?.Dispose();
+        Microsoft.Win32.SystemEvents.SessionSwitch -= OnSessionSwitch;
+        Microsoft.Win32.SystemEvents.PowerModeChanged -= OnPowerModeChanged;
 
         if (thread is not null && thread != Thread.CurrentThread && thread.IsAlive)
         {
@@ -158,7 +239,10 @@ public sealed class LowLevelHooks : IDisposable
         try
         {
             // 0 — WM_QUIT, -1 — ошибка; хуки вызываются, пока поток ждёт в GetMessage.
-            while (GetMessageW(out _, IntPtr.Zero, 0, 0) > 0) { }
+            while (GetMessageW(out var msg, IntPtr.Zero, 0, 0) > 0)
+            {
+                if (msg.message == WM_APP_REINSTALL) Reinstall();
+            }
         }
         finally
         {
@@ -176,6 +260,7 @@ public sealed class LowLevelHooks : IDisposable
 
     private IntPtr MouseProc(int nCode, IntPtr wParam, IntPtr lParam)
     {
+        Volatile.Write(ref _lastEventTick, Environment.TickCount64);
         if (nCode == HC_ACTION)
         {
             try
@@ -209,6 +294,7 @@ public sealed class LowLevelHooks : IDisposable
 
     private IntPtr KeyboardProc(int nCode, IntPtr wParam, IntPtr lParam)
     {
+        Volatile.Write(ref _lastEventTick, Environment.TickCount64);
         if (nCode == HC_ACTION)
         {
             try

@@ -455,4 +455,26 @@ public class DragDetectorTests
         for (var i = 0; i < 100; i++) Cycle();
         Assert.Equal(0, GC.GetAllocatedBytesForCurrentThread() - before);
     }
+
+    [Fact]
+    public void Lost_key_up_does_not_kill_the_hotkey()
+    {
+        // Пробел нажали в окне, куда хук не видит отпускания (UAC, экран блокировки) — «залип».
+        var d = new DragDetector(Space);
+        Assert.Equal((DragAction.None, false), d.KeyDown(Space, 1_000));
+        // Через минуту: перетаскиваем и жмём Пробел — должно сработать, а не считаться автоповтором.
+        d.MouseDown(0, 0);
+        d.MouseMove(50, 0);
+        Assert.Equal((DragAction.ShowWheel, true), d.KeyDown(Space, 61_000));
+    }
+
+    [Fact]
+    public void Real_autorepeat_within_threshold_stays_autorepeat()
+    {
+        var d = Dragging();
+        Assert.Equal((DragAction.ShowWheel, true), d.KeyDown(Space, 10_000));
+        Assert.Equal((DragAction.None, true), d.KeyDown(Space, 10_500)); // первый автоповтор
+        Assert.Equal((DragAction.None, true), d.KeyDown(Space, 10_533));
+        Assert.Equal((DragAction.None, true), d.KeyDown(Space, 11_400));
+    }
 }
