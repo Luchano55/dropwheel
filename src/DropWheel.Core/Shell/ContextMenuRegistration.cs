@@ -16,11 +16,14 @@ public static class ContextMenuRegistration
     /// <summary>Подпись пункта на текущем языке интерфейса.</summary>
     public static string MenuText => Loc.T.ContextMenuText;
 
-    /// <summary>
-    /// Ключ для всех файлов («*»): «В ZIP» подходит к любому файлу, поэтому пункт есть везде.
-    /// Папки (Directory) пока не регистрируем.
-    /// </summary>
+    /// <summary>Ключ для всех файлов («*»): «В ZIP» подходит к любому файлу, поэтому пункт есть везде.</summary>
     public const string AllFilesKey = @"Software\Classes\*\shell\" + VerbKey;
+
+    /// <summary>
+    /// Ключ для папок (Directory, решение D-FOLDERS): «Конвертировать…» по папке — колесо для файлов внутри.
+    /// Фон папки (Directory\Background) и диски (Drive) не регистрируем.
+    /// </summary>
+    public const string FoldersKey = @"Software\Classes\Directory\shell\" + VerbKey;
 
     public static IReadOnlyList<RegistryValue> Entries(string exePath) =>
     [
@@ -30,6 +33,10 @@ public static class ContextMenuRegistration
         // и запускает процесс на каждый файл. TODO: проверить на настоящей Windows 10/11.
         new(AllFilesKey, "MultiSelectModel", "Player"),
         new(AllFilesKey + @"\command", null, $"\"{exePath}\" --convert \"%1\""),
+        new(FoldersKey, "MUIVerb", MenuText),
+        new(FoldersKey, "Icon", $"\"{exePath}\",0"),
+        new(FoldersKey, "MultiSelectModel", "Player"),
+        new(FoldersKey + @"\command", null, $"\"{exePath}\" --convert \"%1\""),
     ];
 
     /// <summary>
@@ -42,5 +49,5 @@ public static class ContextMenuRegistration
             .ToList();
 
     /// <summary>Все ключи пункта меню (текущий и прежние) — удалять целиком, с подключами.</summary>
-    public static IReadOnlyList<string> KeysToDelete() => [AllFilesKey, .. LegacyKeys()];
+    public static IReadOnlyList<string> KeysToDelete() => [AllFilesKey, FoldersKey, .. LegacyKeys()];
 }

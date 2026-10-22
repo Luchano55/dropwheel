@@ -65,7 +65,8 @@ public static class Program
 
     private static int List(List<string> files, TextWriter stdout)
     {
-        var ops = files.Count == 0 ? OperationCatalog.All : OperationCatalog.ForFiles(files);
+        // Папки — по их содержимому, как «Конвертировать…» по папке в проводнике (D-FOLDERS).
+        var ops = files.Count == 0 ? OperationCatalog.All : FolderPlan.OfferFor(files).Operations;
         if (ops.Count == 0)
         {
             stdout.WriteLine(Loc.T.WheelNothing);
@@ -91,8 +92,33 @@ public static class Program
         Action<string>? log = verbose ? line => { lock (stderr) stderr.WriteLine(line); } : null;
         var queue = new JobQueue(new Converter(tools, settings, [new ZipEngine(), new TextEngine(), new DocLibsEngine()]), maxParallel: 2, log);
 
-        var jobs = queue.EnqueueSelection(files, op);
-        await Task.WhenAll(jobs.Select(j => j.Completion));
+        IReadOnlyList<Job> jobs;
+        if (FolderPlan.ContainsFolders(files))
+        {
+            // Папка целиком: результаты — в «<папка> (<формат>)» рядом с ней (или в --out-dir), как в приложении.
+            var selection = FolderPlan.Expand(files);
+            if (selection.TooMany)
+            {
+                stderr.WriteLine(Loc.F(Loc.T.FolderTooMany, FolderPlan.MaxFiles));
+                return 1;
+            }
+            var plan = FolderPlan.Plan(selection, op, settings.OutputFolder, queue.Converter.CanRun);
+            if (plan.Jobs.Count == 0)
+            {
+                stderr.WriteLine(Loc.F(Loc.T.FolderNothingToDo, Loc.Label(op)));
+                return 1;
+            }
+            jobs = plan.Jobs.Select(j => queue.Enqueue(j.Inputs, op, j.Target)).ToList();
+            await Task.WhenAll(jobs.Select(j => j.Completion));
+            foreach (var root in plan.OutputFolders)
+                if (FolderPlan.RemoveIfEmpty(root)) log?.Invoke($"Пустая папка-результат удалена: {root}");
+            if (plan.Skipped > 0) stdout.WriteLine(Loc.F(Loc.T.FolderSkipped, plan.Skipped));
+        }
+        else
+        {
+            jobs = queue.EnqueueSelection(files, op);
+            await Task.WhenAll(jobs.Select(j => j.Completion));
+        }
 
         var failed = 0;
         foreach (var job in jobs)

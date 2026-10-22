@@ -23,6 +23,15 @@ public sealed partial class Texts
         ClipboardNothing = "The clipboard has no picture or files",
         ClipboardFailed = "Couldn't read the clipboard",
 
+        // папки целиком (Texts.Folders.cs)
+        FolderTooMany = "The folder has more than {0} files — too many for one go. Please pick a smaller folder.",
+        FolderEmpty = "The folder has no files",
+        FolderNothingToDo = "The folder has no files that “{0}” works with",
+        FolderResultFiles = "Files in the folder: {0}",
+        FolderSkipped = "Skipped (not suitable): {0}",
+        FolderFailed = "Failed: {0} — details are in the log",
+        Folders = Noun.En("folder", "folders"),
+
         // обновления
         UpdateAvailableTitle = "A new version of DropWheel is available",
         UpdateAvailableText = "Right-click the icon → “Update”.",
@@ -162,8 +171,8 @@ public sealed partial class Texts
         // CLI
         CliUsage = """
             Usage:
-              dropwheel convert <file> [<file>...] <operation> [options]
-              dropwheel list [<file>...]        — available operations (for files — only the matching ones)
+              dropwheel convert <file or folder> [...] <operation> [options]
+              dropwheel list [<file or folder>...] — available operations (for files — only the matching ones)
 
             Options:
               --out-dir <folder>  put results into this folder (default — next to the original)

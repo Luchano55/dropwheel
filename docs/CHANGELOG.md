@@ -5,6 +5,18 @@
 
 Each version section starts with `## <version>`; CI copies it into the GitHub release notes.
 
+## 0.4.0
+
+**Новое в этой версии**
+- Папки целиком: правый клик по папке → «Конвертировать…» (или перетащите папку и нажмите Пробел) — колесо для файлов внутри.
+  Результат — в папке рядом: `Отпуск` → `Отпуск (JPG)`, с теми же подпапками; файлы, которые уже в нужном формате, просто копируются,
+  неподходящие пропускаются. «Один PDF» и «Склеить» дают один файл по имени папки. Одно уведомление на всю папку. До 1000 файлов за раз.
+
+**English**
+- Whole folders: right-click a folder → “Convert…” (or drag a folder and press Space) to get the wheel for the files inside.
+  Results go to a sibling folder — `Vacation` → `Vacation (JPG)` — with the same subfolders; files already in the target format are copied,
+  unsuitable ones are skipped; “One PDF” and “Merge” make a single file named after the folder. One notification per folder, up to 1000 files.
+
 ## 0.3.0
 
 Первая стабильная версия — с установщиком, номером версии и каналами обновлений.

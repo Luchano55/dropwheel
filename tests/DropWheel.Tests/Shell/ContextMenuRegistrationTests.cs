@@ -7,30 +7,45 @@ public class ContextMenuRegistrationTests
 {
     private const string Exe = @"C:\Program Files\Мой DropWheel\DropWheel.exe";
     private const string AllFiles = @"Software\Classes\*\shell\DropWheel.Convert";
+    private const string Folders = @"Software\Classes\Directory\shell\DropWheel.Convert";
 
     private static string LegacyKeyFor(string ext) =>
         $@"Software\Classes\SystemFileAssociations\.{ext}\shell\DropWheel.Convert";
 
     [Fact]
-    public void One_verb_for_all_files()
+    public void One_verb_for_all_files_and_one_for_folders()
     {
         var entries = ContextMenuRegistration.Entries(Exe);
-        Assert.Equal(4, entries.Count);
+        Assert.Equal(8, entries.Count);
         Assert.Equal(entries.Count, entries.Distinct().Count());
-        Assert.Contains(new RegistryValue(AllFiles, "MUIVerb", "Конвертировать…"), entries);
-        Assert.Contains(new RegistryValue(AllFiles, "MultiSelectModel", "Player"), entries);
-        Assert.Contains(entries, e => e.KeyPath == AllFiles && e.Name == "Icon");
-        Assert.Contains(entries, e => e.KeyPath == AllFiles + @"\command" && e.Name is null);
+        foreach (var key in new[] { AllFiles, Folders })
+        {
+            Assert.Contains(new RegistryValue(key, "MUIVerb", "Конвертировать…"), entries);
+            Assert.Contains(new RegistryValue(key, "MultiSelectModel", "Player"), entries);
+            Assert.Contains(entries, e => e.KeyPath == key && e.Name == "Icon");
+            Assert.Contains(entries, e => e.KeyPath == key + @"\command" && e.Name is null);
+        }
     }
 
     [Fact]
-    public void Folders_are_not_registered()
+    public void Folders_are_registered_but_not_folder_background_or_drives()
     {
+        Assert.Contains(ContextMenuRegistration.Entries(Exe), e => e.KeyPath == Folders);
         Assert.All(ContextMenuRegistration.Entries(Exe), e =>
         {
-            Assert.DoesNotContain("Directory", e.KeyPath);
+            Assert.DoesNotContain("Background", e.KeyPath);
+            Assert.DoesNotContain(@"\Drive\", e.KeyPath);
             Assert.DoesNotContain("AllFilesystemObjects", e.KeyPath);
         });
+        Assert.Equal("\"C:\\Program Files\\Мой DropWheel\\DropWheel.exe\" --convert \"%1\"",
+            ContextMenuRegistration.Entries(Exe).Single(e => e.KeyPath == Folders + @"\command").Value);
+    }
+
+    [Fact]
+    public void Unregister_removes_the_folder_verb_too()
+    {
+        Assert.Contains(Folders, ContextMenuRegistration.KeysToDelete());
+        Assert.DoesNotContain(Folders, ContextMenuRegistration.LegacyKeys());
     }
 
     [Fact]
@@ -52,8 +67,8 @@ public class ContextMenuRegistrationTests
     {
         var entries = ContextMenuRegistration.Entries(Exe);
 
-        Assert.Equal("\"C:\\Program Files\\Мой DropWheel\\DropWheel.exe\",0",
-            entries.Single(e => e.Name == "Icon").Value);
+        Assert.All(entries.Where(e => e.Name == "Icon"), e =>
+            Assert.Equal("\"C:\\Program Files\\Мой DropWheel\\DropWheel.exe\",0", e.Value));
         Assert.Equal("\"C:\\Program Files\\Мой DropWheel\\DropWheel.exe\" --convert \"%1\"",
             entries.Single(e => e.KeyPath == AllFiles + @"\command").Value);
     }

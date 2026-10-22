@@ -10,10 +10,11 @@ public sealed class Job
 {
     private readonly CancellationTokenSource _cts = new();
 
-    internal Job(IReadOnlyList<string> inputs, Operation operation)
+    internal Job(IReadOnlyList<string> inputs, Operation operation, OutputTarget? target = null)
     {
         Inputs = inputs;
         Operation = operation;
+        Target = target;
     }
 
     /// <summary>Первый (для PerFile — единственный) входной файл.</summary>
@@ -21,6 +22,8 @@ public sealed class Job
     /// <summary>Все входы: больше одного — у Combine-операций (склеить PDF, ZIP).</summary>
     public IReadOnlyList<string> Inputs { get; }
     public Operation Operation { get; }
+    /// <summary>Своя папка результата (папки целиком, D-FOLDERS); null — рядом с исходником или в «одну папку».</summary>
+    public OutputTarget? Target { get; }
     public JobState State { get; internal set; }
     /// <summary>0..1; для ImageMagick прогресса нет — скачок с 0 до 1.</summary>
     public double Progress { get; internal set; }
@@ -54,10 +57,10 @@ public sealed class JobQueue(Converter converter, int maxParallel = 2, Action<st
 
     public Job Enqueue(string input, Operation op) => Enqueue([input], op);
 
-    /// <summary>Одна задача на все входы — для Combine-операций.</summary>
-    public Job Enqueue(IReadOnlyList<string> inputs, Operation op)
+    /// <summary>Одна задача на все входы — для Combine-операций. target — своя папка результата (D-FOLDERS).</summary>
+    public Job Enqueue(IReadOnlyList<string> inputs, Operation op, OutputTarget? target = null)
     {
-        var job = new Job(inputs.ToList(), op);
+        var job = new Job(inputs.ToList(), op, target);
         lock (_jobs) _jobs.Add(job);
         Changed?.Invoke(job);
         _ = Task.Run(() => RunAsync(job));
@@ -73,7 +76,7 @@ public sealed class JobQueue(Converter converter, int maxParallel = 2, Action<st
             {
                 Set(job, JobState.Running);
                 var progress = new Progress(p => { job.Progress = p; Changed?.Invoke(job); });
-                job.OutputPath = await converter.ConvertAsync(job.Inputs, job.Operation, progress, log, job.Token);
+                job.OutputPath = await converter.ConvertAsync(job.Inputs, job.Operation, progress, log, job.Token, job.Target);
                 job.Progress = 1;
                 Set(job, JobState.Done);
             }

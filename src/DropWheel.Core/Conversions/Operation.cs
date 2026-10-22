@@ -77,4 +77,17 @@ public sealed record Operation(
             && Extensions.SameFormat(ext, Output.Fallback)) return false;
         return true;
     }
+
+    /// <summary>
+    /// Файл уже в формате результата этой конвертации (photo.jpg и «JPG»): AppliesTo его не берёт,
+    /// а в папку-результат «Отпуск (JPG)» он копируется как есть (решение D-FOLDERS).
+    /// </summary>
+    public bool AlreadyIn(string inputExtension)
+    {
+        var ext = Extensions.Normalize(inputExtension);
+        if (Mode != OperationMode.Convert || Result != ResultKind.File || Output.Keep is not null) return false;
+        if (Kind != MediaKind.Any && Extensions.KindOf(ext) != Kind) return false;
+        if (InputExtensions is not null && !InputExtensions.Contains(ext)) return false;
+        return Extensions.SameFormat(ext, Output.Fallback);
+    }
 }

@@ -33,6 +33,7 @@ public partial class App : Application
     private IReadOnlyList<IInternalEngine> _engines = [];
     private WheelWindow? _chooser;
     private IReadOnlyList<string> _chooserPaths = [];
+    private FolderSelection? _chooserFolders;
     /// <summary>PNG, сохранённые из буфера обмена в этом сеансе, — их можно удалить после конвертации.</summary>
     private readonly HashSet<string> _clipboardImages = new(StringComparer.OrdinalIgnoreCase);
     private SettingsWindow? _settingsWindow;
@@ -121,7 +122,12 @@ public partial class App : Application
         SetClipboardHotkey(Settings.ClipboardHotkey);
         StartUpdater(args.AfterUpdate);
 
-        _batcher = new InvocationBatcher(BatchQuiet, paths => Dispatcher.BeginInvoke(() => ShowChooser(paths)));
+        // Папки разворачиваются в файлы здесь, в фоновом потоке (D-FOLDERS), а колесо — в потоке интерфейса.
+        _batcher = new InvocationBatcher(BatchQuiet, paths =>
+        {
+            var folders = ExpandFolders(paths);
+            Dispatcher.BeginInvoke(() => ShowChooser(paths, folders));
+        });
         _pipe = new PipeServer(pipeName, message => HandleArgs(CommandLine.Parse(message), fromPipe: true));
         _pipe.Start();
 
@@ -357,19 +363,26 @@ public partial class App : Application
     /// «Конвертировать…» из проводника: то же колесо у курсора, в режиме клика (раздел 9 ТЗ, D16);
     /// выбор — в очередь. Если колесо не открылось — запасное списочное меню.
     /// </summary>
-    private void ShowChooser(IReadOnlyList<string> paths)
+    /// <param name="folders">Папки из выбора, уже развёрнутые в файлы (D-FOLDERS); null — папок нет или ещё не развёрнуты.</param>
+    private void ShowChooser(IReadOnlyList<string> paths, FolderSelection? folders = null)
     {
         Log.Write($"Выбор операции для {paths.Count} файл(ов)");
-        var ops = OperationCatalog.ForFiles(paths, Queue.Converter.CanRun);
+        folders ??= ExpandFolders(paths);
+        if (folders is not null && !CanOfferFolders(folders)) return;
+        var offer = folders is null
+            ? new WheelOffer(OperationCatalog.ForFiles(paths, Queue.Converter.CanRun), WheelGroups.ForFiles(paths), null)
+            : FolderPlan.OfferFor(folders, Queue.Converter.CanRun);
+        var ops = offer.Operations;
         Queue.Converter.Prepare(ops);
         try
         {
             var wheel = _chooser ??= CreateChooser();
             var (x, y) = WheelNative.CursorPosition() ?? throw new InvalidOperationException("Не удалось узнать позицию курсора");
             _chooserPaths = paths;
+            _chooserFolders = folders;
             wheel.CloseOnDeactivate = true;
-            var (convert, tools) = WheelArrangement.Arrange(ops, WheelGroups.ForFiles(paths), Settings.Wheel);
-            wheel.SetItems(convert, tools, paths);
+            var (convert, tools) = WheelArrangement.Arrange(ops, offer.Group, Settings.Wheel);
+            wheel.SetItems(convert, tools, folders?.AllFiles ?? paths);
             wheel.ShowAt(x, y, activate: true);
         }
         catch (Exception ex)
@@ -377,7 +390,7 @@ public partial class App : Application
             Log.Write("Колесо выбора не открылось, показываю список: " + ex);
             try { _chooser?.Cancel(); }
             catch (Exception) { }
-            ChooserMenu.Show(paths, ops, op => Enqueue(paths, op));
+            ChooserMenu.Show(paths, ops, op => Enqueue(paths, op, folders));
         }
     }
 
@@ -389,16 +402,29 @@ public partial class App : Application
             var paths = _chooserPaths;
             if (OperationCatalog.Find(id) is not { } op || paths.Count == 0) return;
             Log.Write($"Колесо (меню проводника): {op.Id} для {paths.Count} файл(ов)");
-            Enqueue(paths, op);
+            Enqueue(paths, op, _chooserFolders);
         };
         return wheel;
     }
 
     /// <summary>Выбор пользователя (колесо, меню проводника) — в очередь; запомнить как «последний выбор» для этого типа.</summary>
-    internal void Enqueue(IReadOnlyList<string> paths, Operation op)
+    internal void Enqueue(IReadOnlyList<string> paths, Operation op) => Enqueue(paths, op, null);
+
+    /// <param name="folders">Развёрнутые папки (D-FOLDERS); null — развернуть здесь, если в выборе есть папки.</param>
+    private void Enqueue(IReadOnlyList<string> paths, Operation op, FolderSelection? folders)
     {
-        Queue.EnqueueSelection(paths, op);
-        var group = WheelGroups.ForFiles(paths);
+        folders ??= ExpandFolders(paths);
+        string group;
+        if (folders is not null)
+        {
+            if (!EnqueueFolders(folders, op)) return;
+            group = FolderPlan.DominantGroup(folders.AllFiles);
+        }
+        else
+        {
+            Queue.EnqueueSelection(paths, op);
+            group = WheelGroups.ForFiles(paths);
+        }
         UpdateSettings(s => s with { Wheel = s.Wheel.WithRecent(group, op.Mode, op.Id) });
     }
 
@@ -406,6 +432,7 @@ public partial class App : Application
     {
         _tray?.Update(Queue.Jobs);
         _jobsWindow?.Refresh(job);
+        if (OnFolderJobChanged(job)) return;
         if (job.State == JobState.Done && job.OutputPath is not null)
             _notifier?.Done(job.OutputPath);
         else if (job.State == JobState.Failed)
