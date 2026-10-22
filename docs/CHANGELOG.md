@@ -5,6 +5,18 @@
 
 Each version section starts with `## <version>`; CI copies it into the GitHub release notes.
 
+## 0.4.0
+
+**Новое в этой версии**
+- Обрезка видео: «Инструменты» → «Обрезать…» — окно с кадром и полосой миниатюр, ручки «начало» и «конец».
+  По умолчанию мгновенно и без потери качества (`видео (обрезано).mp4`, формат тот же); галочка
+  «Точно по кадру» — ровно с выбранного кадра, с пересжатием. «В 7Z» для видео теперь девятый лепесток —
+  по умолчанию не виден, его можно поднять в «Настройки → Колесо».
+
+**English**
+- Video trimming: Tools → “Trim…” opens a window with a frame preview, a thumbnail strip and start/end handles.
+  Instant and lossless by default (same container); “Frame-accurate” re-encodes to start exactly on the chosen frame.
+
 ## 0.3.0
 
 Первая стабильная версия — с установщиком, номером версии и каналами обновлений.
