@@ -29,6 +29,9 @@ public sealed partial class Texts
     public string ClipboardNothingTitle { get; init; } = "Буфер обмена";
     public string ClipboardNothing { get; init; } = "В буфере нет картинки или файлов";
     public string ClipboardFailed { get; init; } = "Не удалось прочитать буфер обмена";
+    public string ClipboardImageLinkOnly { get; init; } =
+        "В буфере только ссылка на картинку. Скопируйте саму картинку: правый клик → «Копировать изображение»";
+    public string BrowserImageFailed { get; init; } = "Не удалось сохранить картинку из браузера";
 
     // ---------- обновления ----------
     public string UpdateAvailableTitle { get; init; } = "Есть новая версия DropWheel";
@@ -53,6 +56,8 @@ public sealed partial class Texts
     public string ModeTools { get; init; } = "Инструменты";
     public string WheelEmptyClick { get; init; } = "Щёлкните, чтобы закрыть";
     public string WheelEmptyDrag { get; init; } = "Отпустите — ничего не произойдёт";
+    /// <summary>С сайта пришла только ссылка на картинку (без самой картинки): скачивать не будем (D-BROWSER).</summary>
+    public string WheelImageLinkOnly { get; init; } = "Только ссылка — сохраните картинку и перетащите файл";
     /// <summary>Меню выбора без колеса (запасное): заголовок для нескольких файлов.</summary>
     public string ChooserFiles { get; init; } = "Файлов: {0}";
 
@@ -128,15 +133,15 @@ public sealed partial class Texts
     public string ClipboardHotkey { get; init; } = "Ctrl+Alt+V — колесо для буфера обмена";
     public string ClipboardHotkeyHint { get; init; } =
         "Скопируйте файлы или снимок экрана и нажмите Ctrl+Alt+V — колесо появится у курсора.";
-    public string ClipboardImageTitle { get; init; } = "Картинки из буфера обмена";
+    public string ClipboardImageTitle { get; init; } = "Картинки из буфера и браузера";
     public string ClipboardImageHint { get; init; } =
-        "Куда сохранять картинку из буфера перед конвертацией. Результат ляжет рядом с ней.";
+        "Куда сохранять картинку из буфера обмена или с сайта перед конвертацией. Результат ляжет рядом с ней.";
     public string ClipboardFolderDefault { get; init; } = "По умолчанию";
     public string ClipboardFolderOwn { get; init; } = "Своя папка";
-    public string ClipboardFolderBrowseTitle { get; init; } = "Папка для картинок из буфера обмена";
+    public string ClipboardFolderBrowseTitle { get; init; } = "Папка для картинок из буфера и браузера";
     public string KeepClipboardImage { get; init; } = "Оставлять исходную картинку";
     public string KeepClipboardImageHint { get; init; } =
-        "Если выключить, после конвертации останется только результат (например, JPG), а PNG удалится.";
+        "Если выключить, после конвертации останется только результат (например, JPG), а исходная картинка удалится.";
     public string WheelOpacityTitle { get; init; } = "Прозрачность колеса";
     public string WheelOpacityHint { get; init; } = "Насколько сквозь колесо видно окна под ним. Подписи остаются чёткими.";
     public string WheelOpacitySolid { get; init; } = "плотнее";
@@ -206,6 +211,8 @@ public sealed partial class Texts
     public string FrameFile { get; init; } = "кадр";
     /// <summary>Картинка из буфера обмена: «Буфер 2026-10-22 10-31-05.png» ({0} — дата и время).</summary>
     public string ClipboardFile { get; init; } = "Буфер {0}";
+    /// <summary>Картинка из браузера без имени: «Браузер 2026-10-22 10-31-05.webp» ({0} — дата и время).</summary>
+    public string BrowserFile { get; init; } = "Браузер {0}";
     /// <summary>Файлы слайдов: «слайд-1.png».</summary>
     public string SlideFile { get; init; } = "слайд";
     /// <summary>Лист XLSX из CSV.</summary>

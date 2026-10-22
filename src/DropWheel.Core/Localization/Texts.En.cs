@@ -22,6 +22,8 @@ public sealed partial class Texts
         ClipboardNothingTitle = "Clipboard",
         ClipboardNothing = "The clipboard has no picture or files",
         ClipboardFailed = "Couldn't read the clipboard",
+        ClipboardImageLinkOnly = "The clipboard has only a link to a picture. Copy the picture itself: right-click → Copy image",
+        BrowserImageFailed = "Couldn't save the picture from the browser",
 
         // обновления
         UpdateAvailableTitle = "A new version of DropWheel is available",
@@ -46,6 +48,7 @@ public sealed partial class Texts
         ModeTools = "Tools",
         WheelEmptyClick = "Click to close",
         WheelEmptyDrag = "Release — nothing will happen",
+        WheelImageLinkOnly = "Only a link — save the picture and drag the file",
         ChooserFiles = "Files: {0}",
 
         // окно задач
@@ -116,13 +119,13 @@ public sealed partial class Texts
         ContextMenuHint = "Right-click a file → “Convert…” — the same wheel, by clicking.",
         ClipboardHotkey = "Ctrl+Alt+V — wheel for the clipboard",
         ClipboardHotkeyHint = "Copy files or a screenshot and press Ctrl+Alt+V — the wheel appears at the cursor.",
-        ClipboardImageTitle = "Pictures from the clipboard",
-        ClipboardImageHint = "Where to save a clipboard picture before converting. The result goes next to it.",
+        ClipboardImageTitle = "Pictures from the clipboard and browser",
+        ClipboardImageHint = "Where to save a picture from the clipboard or a website before converting. The result goes next to it.",
         ClipboardFolderDefault = "Default",
         ClipboardFolderOwn = "My folder",
-        ClipboardFolderBrowseTitle = "Folder for clipboard pictures",
+        ClipboardFolderBrowseTitle = "Folder for pictures from the clipboard and browser",
         KeepClipboardImage = "Keep the original picture",
-        KeepClipboardImageHint = "If off, only the result (e.g. a JPG) is kept after converting; the PNG is deleted.",
+        KeepClipboardImageHint = "If off, only the result (e.g. a JPG) is kept after converting; the original picture is deleted.",
         WheelOpacityTitle = "Wheel transparency",
         WheelOpacityHint = "How much of the windows behind shows through the wheel. Labels stay crisp.",
         WheelOpacitySolid = "solid",
@@ -188,6 +191,7 @@ public sealed partial class Texts
         SlideFile = "slide",
         FrameFile = "frame",
         ClipboardFile = "Clipboard {0}",
+        BrowserFile = "Browser {0}",
         SheetName = "Sheet1",
         MdPicture = "Picture",
 

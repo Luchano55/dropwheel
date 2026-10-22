@@ -33,7 +33,7 @@ public partial class App : Application
     private IReadOnlyList<IInternalEngine> _engines = [];
     private WheelWindow? _chooser;
     private IReadOnlyList<string> _chooserPaths = [];
-    /// <summary>PNG, сохранённые из буфера обмена в этом сеансе, — их можно удалить после конвертации.</summary>
+    /// <summary>Картинки, сохранённые из буфера обмена и браузера в этом сеансе, — их можно удалить после конвертации.</summary>
     private readonly HashSet<string> _clipboardImages = new(StringComparer.OrdinalIgnoreCase);
     private SettingsWindow? _settingsWindow;
     private SettingsSaver? _saver;
@@ -135,7 +135,7 @@ public partial class App : Application
     {
         try
         {
-            _dragWheel = new DragWheelController(Settings.Hotkey, Dispatcher, Queue.Converter, Enqueue, Log, () => Settings.Wheel)
+            _dragWheel = new DragWheelController(Settings.Hotkey, Dispatcher, Queue.Converter, Enqueue, EnqueueBrowserImage, Log, () => Settings.Wheel)
             {
                 FillPercent = Settings.WheelOpacity,
             };
@@ -221,9 +221,36 @@ public partial class App : Application
                 ShowChooser([path]);
                 break;
             default:
-                _tray?.ShowInfo(Loc.T.ClipboardNothingTitle, Loc.T.ClipboardNothing);
+                _tray?.ShowInfo(Loc.T.ClipboardNothingTitle, snapshot.HasImageLink ? Loc.T.ClipboardImageLinkOnly : Loc.T.ClipboardNothing);
                 break;
         }
+    }
+
+    /// <summary>
+    /// Картинку из браузера бросили на сектор колеса (D-BROWSER): сохранить в папку картинок
+    /// (та же, что для буфера обмена) под её именем или «Браузер дата время», затем — в очередь.
+    /// «Оставлять исходную картинку» действует и на неё.
+    /// </summary>
+    private void EnqueueBrowserImage(DraggedImage image, Operation op)
+    {
+        string path;
+        try
+        {
+            var folder = ClipboardPlan.ImageFolder(Settings.ClipboardFolder, Settings.Conversion);
+            Directory.CreateDirectory(folder);
+            path = BrowserDrag.ImagePath(folder, image, DateTime.Now);
+            using (var file = new FileStream(path, FileMode.CreateNew, FileAccess.Write))
+                file.Write(image.Bytes);
+        }
+        catch (Exception ex)
+        {
+            Log.Write("Картинка из браузера не сохранилась: " + ex);
+            _tray?.ShowInfo(Loc.T.BrowserImageFailed, ex.Message);
+            return;
+        }
+        Log.Write($"Браузер: картинка сохранена в {path}");
+        _clipboardImages.Add(path);
+        Enqueue([path], op);
     }
 
     private void StartUpdater(int? afterUpdate)
@@ -418,7 +445,7 @@ public partial class App : Application
     }
 
     /// <summary>
-    /// PNG из буфера — промежуточный файл: если «Оставлять исходную картинку» выключено и задача удалась,
+    /// Картинка из буфера или браузера — промежуточный файл: если «Оставлять исходную картинку» выключено и задача удалась,
     /// удаляем его (решение D-CLIPBOARD). Ошибка или отмена — оставляем, чтобы картинка не пропала.
     /// </summary>
     private void CleanUpClipboardImage(Job job)

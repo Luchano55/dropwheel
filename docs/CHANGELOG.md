@@ -5,6 +5,17 @@
 
 Each version section starts with `## <version>`; CI copies it into the GitHub release notes.
 
+## 0.4.0
+
+- Картинки из браузера: тащите картинку с сайта (Chrome, Edge, Firefox), нажмите Пробел — колесо форматов,
+  как для файла. Картинка сохраняется в ту же папку, что и картинки из буфера (по умолчанию «Изображения\DropWheel»),
+  с именем с сайта, результат — рядом. Формат определяется по содержимому (WebP под именем .jpg — это WebP).
+  Ничего не скачивается: если браузер дал только ссылку — подсказка. При перетаскивании текста колесо больше не висит.
+
+**English**
+- Pictures from the browser: drag an image from a web page (Chrome, Edge, Firefox) and press Space to get the format wheel;
+  the picture is saved to the clipboard pictures folder and converted there. Fully offline: a bare link shows a hint instead of downloading.
+
 ## 0.3.0
 
 Первая стабильная версия — с установщиком, номером версии и каналами обновлений.

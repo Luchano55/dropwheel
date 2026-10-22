@@ -3,6 +3,7 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 using DropWheel.Localization;
+using DropWheel.Shell;
 using DropWheel.Ui;
 
 namespace DropWheel.Wheel;
@@ -10,6 +11,7 @@ namespace DropWheel.Wheel;
 /// <summary>
 /// Прозрачное окно поверх всех с колесом. Одно на сценарий, переиспользуется (Show/Hide).
 /// Сценарий перетаскивания: ShowAt(x, y) → DragEnter → FilesEntered → хост вызывает SetItems → Drop → FilesDropped.
+/// Картинка с сайта (D-BROWSER): DragEnter → ImageEntered → SetItems → Drop → ImageDropped.
 /// Сценарий меню проводника: SetItems → CloseOnDeactivate = true → ShowAt(x, y) → клик → ItemChosen.
 /// После закрытия колесо сбрасывается в «ждём файлы» (без секторов и без «Нечего предложить»).
 /// Прятать колесо снаружи — через Cancel(), а не Hide(): так сбрасывается состояние.
@@ -49,6 +51,7 @@ public sealed class WheelWindow : Window
     private bool _shadowFailed;
 
     private string[]? _files;          // пути текущего перетаскивания
+    private DraggedImage? _image;      // или картинка из браузера (байты, ещё не на диске)
     private Point? _lastPoint;         // последняя позиция курсора над колесом
     private Point? _lastMouse;         // для отличия настоящего движения мыши от синтетического
     private (int X, int Y)? _anchor;   // куда просили поставить центр (физические пиксели)
@@ -72,6 +75,16 @@ public sealed class WheelWindow : Window
     public event Action<string[]>? FilesEntered;
     /// <summary>Файлы брошены на сектор: (пути, id операции). Окно уже закрывается; обработчик должен быть быстрым.</summary>
     public event Action<string[], string>? FilesDropped;
+    /// <summary>
+    /// Над колесом картинка из браузера (D-BROWSER): байты и настоящий формат. Хост считает сектора и вызывает SetItems.
+    /// Вызывается внутри OLE-цикла перетаскивания — обработчик должен быть быстрым.
+    /// </summary>
+    public event Action<DraggedImage>? ImageEntered;
+    /// <summary>Картинка брошена на сектор: (картинка, id операции). Сохраняет её на диск хост — после возврата из Drop.</summary>
+    public event Action<DraggedImage, string>? ImageDropped;
+
+    /// <summary>Журнал: что пришло при перетаскивании (картинка из браузера, неизвестные форматы).</summary>
+    public Action<string>? Log { get; set; }
 
     /// <summary>Прятать колесо при потере фокуса (режим клика из меню проводника).</summary>
     public bool CloseOnDeactivate { get; set; }
@@ -376,24 +389,51 @@ public sealed class WheelWindow : Window
             e.Effects = DragDropEffects.None;
             return;
         }
-        var files = ReadFiles(e.Data);
-        if (files is { Length: > 0 })
+        var content = ReadContent(e.Data);
+        switch (content.Kind)
         {
-            // Вернулись с теми же файлами — сектора и выбранный режим уже есть.
-            var same = _files is not null && !_wheel.IsPending && _files.SequenceEqual(files);
-            _files = files;
-            if (!same)
+            case DragContentKind.Files:
             {
-                _wheel.IdleText = SizeText(files);
-                FilesEntered?.Invoke(files);
+                var files = content.Files.ToArray();
+                // Вернулись с теми же файлами — сектора и выбранный режим уже есть.
+                var same = _files is not null && !_wheel.IsPending && _files.SequenceEqual(files);
+                _files = files;
+                _image = null;
+                if (!same)
+                {
+                    _wheel.IdleText = SizeText(files);
+                    FilesEntered?.Invoke(files);
+                }
+                break;
             }
-        }
-        else
-        {
-            // TODO(D5): из браузера приходит ссылка или «виртуальный файл» (FileGroupDescriptor/FileContents),
-            // а не путь на диске. Пока решение D5 не принято — показываем «Нечего предложить».
-            _files = null;
-            SetItems([], []);
+            case DragContentKind.Image:
+            {
+                var image = content.Image!;
+                var same = _image is not null && !_wheel.IsPending && _image.Extension == image.Extension
+                    && _image.Bytes.Length == image.Bytes.Length;
+                _image = image;
+                _files = null;
+                if (!same)
+                {
+                    _wheel.IdleText = Loc.FileSize(image.Bytes.Length);
+                    ImageEntered?.Invoke(image);
+                }
+                break;
+            }
+            case DragContentKind.ImageLink:
+                // С сайта пришла только http-ссылка: без сети картинку не получить (D-BROWSER) — подсказка.
+                _files = null;
+                _image = null;
+                _wheel.EmptyHint = Loc.T.WheelImageLinkOnly;
+                SetItems([], []);
+                break;
+            default:
+                // Текст, ссылка на страницу — это не файл: колесо не нужно (ТЗ, раздел 4). Прячем после выхода из DragEnter.
+                _files = null;
+                _image = null;
+                e.Effects = DragDropEffects.None;
+                Dispatcher.InvokeAsync(Cancel);
+                return;
         }
         UpdateHover(e.GetPosition(_wheel));
         e.Effects = EffectFor(e);
@@ -432,13 +472,15 @@ public sealed class WheelWindow : Window
         var index = _wheel.HitTest(e.GetPosition(_wheel));
         var item = _state.At(index);
         var files = _files;
-        var ok = item is not null && files is { Length: > 0 } && e.AllowedEffects.HasFlag(DragDropEffects.Copy);
+        var image = _image;
+        var ok = item is not null && (files is { Length: > 0 } || image is not null) && e.AllowedEffects.HasFlag(DragDropEffects.Copy);
         // Только Copy: Move заставил бы источник удалить исходник.
         e.Effects = ok ? DragDropEffects.Copy : DragDropEffects.None;
 
         CloseAnimated(ok ? index : null);
-        if (ok) FilesDropped?.Invoke(files!, item!.Id);
-        else Canceled?.Invoke();
+        if (!ok) Canceled?.Invoke();
+        else if (files is { Length: > 0 }) FilesDropped?.Invoke(files, item!.Id);
+        else ImageDropped?.Invoke(image!, item!.Id);
     }
 
     // ---- внутреннее ----
@@ -462,22 +504,35 @@ public sealed class WheelWindow : Window
     }
 
     private DragDropEffects EffectFor(DragEventArgs e) =>
-        _files is { Length: > 0 } && _state.At(_wheel.HoverIndex) is not null
+        (_files is { Length: > 0 } || _image is not null) && _state.At(_wheel.HoverIndex) is not null
         && e.AllowedEffects.HasFlag(DragDropEffects.Copy)
             ? DragDropEffects.Copy
             : DragDropEffects.None;
 
-    private static string[]? ReadFiles(IDataObject data)
+    /// <summary>Файлы, картинка из браузера, только ссылка или ничего (D-BROWSER). Сбой чтения — «ничего».</summary>
+    private DragContent ReadContent(IDataObject data)
     {
         try
         {
-            return data.GetDataPresent(DataFormats.FileDrop) ? data.GetData(DataFormats.FileDrop) as string[] : null;
+            var content = DragDataReader.Read(data);
+            if (content.Image is { } image)
+                Log?.Invoke($"Колесо: картинка из перетаскивания ({image.Source}, {image.Extension}, {image.Bytes.Length} байт, имя «{image.SuggestedName}»)");
+            else if (content.Kind != DragContentKind.Files)
+                Log?.Invoke($"Колесо: в перетаскивании нет файлов и картинки ({content.Kind}); форматы: {Formats(data)}");
+            return content;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // Некоторые источники бросают COMException на чужих форматах.
-            return null;
+            Log?.Invoke("Колесо: перетаскивание не прочиталось: " + ex.Message);
+            return DragContent.Nothing;
         }
+    }
+
+    /// <summary>Список форматов перетаскивания — для журнала (что прислал браузер).</summary>
+    private static string Formats(IDataObject data)
+    {
+        try { return string.Join(", ", data.GetFormats(false).Take(20)); }
+        catch (Exception) { return "?"; }
     }
 
     private void ApplyState()
@@ -651,6 +706,7 @@ public sealed class WheelWindow : Window
     private void Reset()
     {
         _files = null;
+        _image = null;
         _pressed = false;
         _anchor = null;
         _keyboard = false;
