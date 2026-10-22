@@ -9,7 +9,8 @@ namespace DropWheel.Conversions;
 /// Плейсхолдеры: {jpgq} {webpq} {crf} {crfsmall} {mp3k} — из ConversionSettings; {page} — «стр» / «page»,
 /// {frame} — «кадр» / «frame» (язык интерфейса);
 /// {acodec} — кодек звука под расширение результата (см. ArgumentBuilder.AudioCodec);
-/// {имя} из Operation.Parameters — значение для одной задачи (обрезка: {start} {end}, см. Operation.WithValues).
+/// {имя} из Operation.Parameters — значение для одной задачи (обрезка видео: {start} {end}, картинки: {x} {y} {w} {h};
+/// см. Operation.WithValues).
 /// Для qpdf / pdftoppm шаблон берётся целиком: {in} — первый файл, {ins} — все файлы, {out} — результат
 /// (файл или временная папка). У ffmpeg результат дописывается в конец, если в шаблоне нет {out}
 /// (кадры в папку: «{out}/{frame}-%03d.jpg»), а вход «-i файл» — в начало, если в шаблоне нет {in}
@@ -42,6 +43,10 @@ public static class OperationCatalog
         new("img-half",     "Уменьшить ×2",   Tool, Image, ImageMagick, "-auto-orient -resize 50%",               OutputRule.Same("jpg", RasterKeep), " (50%)"),
         new("img-1920",     "До 1920 px",     Tool, Image, ImageMagick, "-auto-orient -resize 1920x1920>",        OutputRule.Same("jpg", RasterKeep), " (1920)"),
         new("img-strip",    "Без метаданных", Tool, Image, ImageMagick, "-auto-orient -strip",                    OutputRule.Same("jpg", RasterKeep), " (без метаданных)"),
+        // Обрезать (D-CROP): область {x} {y} {w} {h} — в пикселях уже повёрнутой (-auto-orient) картинки, задаётся
+        // в окне «Обрезать…» или в CLI (--crop WxH+X+Y). +repage — без «холста» от исходника (иначе PNG/GIF помнят смещение).
+        new(ImageCrop.Id,   "Обрезать…",      Tool, Image, ImageMagick, "-auto-orient -crop {w}x{h}+{x}+{y} +repage -quality {jpgq}",
+            OutputRule.Same("jpg", RasterKeep), " (обрезано)") { Parameters = ImageCrop.ParameterNames, MaxFiles = 1 },
 
         // Видео — конвертация
         new("to-mp4",       "MP4",  Conv, Video, FFmpeg, $"-map 0:v:0 -map 0:a:0? -vf {Even} -crf {{crf}} {H264}", OutputRule.Fixed("mp4")),

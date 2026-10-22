@@ -217,6 +217,7 @@ The wheel only offers what makes sense for the file you are dragging: a `.jpg` n
 | Tool | Downscale ×2 | half the width and height → `photo (50%).jpg` | — | `img-half` |
 | Tool | Fit to 1920 px | longest side ≤ 1920 px, small pictures are left as is → `photo (1920).jpg` | — | `img-1920` |
 | Tool | Strip metadata | removes EXIF, GPS location, camera info → `photo (no metadata).jpg` | — | `img-strip` |
+| Tool | Crop… | a window with a crop frame (8 handles) and aspect presets Free / 1:1 / 4:3 / 16:9 / Original → `photo (cropped).jpg`, same format; transparency kept. One picture at a time. CLI: `--crop 800x600+100+50` | — | `img-crop` |
 | Tool | One PDF (2+ images) | every image becomes a page → `photo (all).pdf` | — | `images-to-pdf` |
 
 Tools keep the format for ordinary pictures; HEIC, AVIF, SVG, PSD and RAW come out as JPG.
@@ -601,7 +602,8 @@ Right-click the tray icon → *Open log*, take the newest `.log` file and attach
 
 **Next:**
 
-- [ ] Built-in editors: crop with aspect ratios (Free, 1:1, 16:9, 9:16, 4:3, 3:4), background removal, add a background (palette, padding, rounded corners, shadow), annotations
+- [x] Pictures: crop with aspect presets (Free, 1:1, 4:3, 16:9, Original)
+- [ ] Built-in editors: background removal, add a background (palette, padding, rounded corners, shadow), annotations
 - [ ] A smaller download: a custom ffmpeg build with only what DropWheel needs
 
 Have an idea? [Open a feature request](https://github.com/Luchano55/dropwheel/issues/new/choose).

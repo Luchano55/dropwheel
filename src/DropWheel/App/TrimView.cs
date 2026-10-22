@@ -319,8 +319,8 @@ public sealed class TrimView : Border
         _badge.Visibility = _frame is not null && !_failed ? Visibility.Visible : Visibility.Collapsed;
     }
 
-    /// <summary>Главная кнопка диалога — залита акцентом (как «ОК» в Windows 11).</summary>
-    private sealed class PrimaryButton : Pressable
+    /// <summary>Главная кнопка диалога — залита акцентом (как «ОК» в Windows 11). Её же берёт окно «Обрезать картинку».</summary>
+    internal sealed class PrimaryButton : Pressable
     {
         private readonly TextBlock _text;
         private bool _enabled = true;

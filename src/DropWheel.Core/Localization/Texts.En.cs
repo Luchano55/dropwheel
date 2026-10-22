@@ -317,6 +317,21 @@ public sealed partial class Texts
             """,
         CliBadTime = "Can't read the time “{0}” (e.g. 0:05 or 1:02.5)",
         CliTrimRange = "The end (--end) must be after the start (--start)",
-        CliNoParameters = "Operation {0} doesn't take --start, --end or --exact",
+        CliNoParameters = "Operation {0} doesn't take --start, --end, --exact or --crop",
+        CropTitle = "Crop picture",
+        CropButton = "Crop",
+        CropFree = "Free",
+        CropOriginal = "Original",
+        CropHint = "Drag the corners and edges; drag inside the frame to move it.",
+        CropLoading = "Opening the picture…",
+        CropFailed = "Couldn't open the picture",
+        CropCliUsage = """
+            Cropping a picture:
+              dropwheel convert <picture> img-crop --crop 800x600+100+50
+              --crop WxH+X+Y      width × height and the top-left corner, in pixels
+            """,
+        CliBadCrop = "Can't read the area “{0}” (e.g. 800x600+100+50)",
+        CliNeedCrop = "img-crop needs an area: --crop 800x600+100+50",
+        CliCropOutside = "The area “{0}” is outside the picture ({1}×{2})",
     };
 }

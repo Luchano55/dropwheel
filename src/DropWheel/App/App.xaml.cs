@@ -463,17 +463,18 @@ public partial class App : Application
     }
 
     /// <summary>
-    /// «Обрезать…» — окно обрезки для одного ролика; после «Обрезать» задача уходит в очередь обычным путём.
+    /// «Обрезать…» — окно обрезки для одного ролика (D-TRIM) или одной картинки (D-CROP);
+    /// после «Обрезать» задача уходит в очередь обычным путём.
     /// Открывается чуть позже: выбор приходит из обработчика броска на колесо, перетаскивание должно закончиться.
     /// </summary>
     private void AskValues(IReadOnlyList<string> paths, Operation op)
     {
-        if (op.Id != VideoTrim.Id || paths.Count != 1)
+        if (op.Id is not (VideoTrim.Id or ImageCrop.Id) || paths.Count != 1)
         {
             Log.Write($"{op.Id}: нечем спросить параметры для {paths.Count} файл(ов) — пропускаю");
             return;
         }
-        var video = paths[0];
+        var file = paths[0];
         var group = WheelGroups.ForFiles(paths);
         UpdateSettings(s => s with { Wheel = s.Wheel.WithRecent(group, op.Mode, op.Id) });
         Dispatcher.BeginInvoke(() =>
@@ -481,11 +482,13 @@ public partial class App : Application
             try
             {
                 var tools = new ToolLocator { FfmpegPath = Settings.FfmpegPath, MagickPath = Settings.MagickPath };
-                new TrimWindow(video, tools, Log, bound => Queue.EnqueueSelection([video], bound)).ShowAndActivate();
+                void Enqueue(Operation bound) => Queue.EnqueueSelection([file], bound);
+                if (op.Id == ImageCrop.Id) new CropWindow(file, tools, Log, Enqueue).ShowAndActivate();
+                else new TrimWindow(file, tools, Log, Enqueue).ShowAndActivate();
             }
             catch (Exception ex)
             {
-                Log.Write("Окно обрезки не открылось: " + ex);
+                Log.Write($"Окно {op.Id} не открылось: " + ex);
             }
         });
     }

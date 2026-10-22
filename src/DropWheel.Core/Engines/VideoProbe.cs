@@ -85,6 +85,13 @@ public static partial class VideoProbe
     /// <summary>Запустить ffmpeg, вернуть код выхода и stderr. Отмена — процесс убивается.</summary>
     private static async Task<(int Code, string Stderr)> RunAsync(string exe, IReadOnlyList<string> args, CancellationToken ct)
     {
+        var (code, _, stderr) = await RunProcessAsync(exe, args, ct);
+        return (code, stderr);
+    }
+
+    /// <summary>Запустить утилиту, вернуть код выхода, stdout и stderr. Отмена — процесс убивается (и ImageProbe).</summary>
+    internal static async Task<(int Code, string Stdout, string Stderr)> RunProcessAsync(string exe, IReadOnlyList<string> args, CancellationToken ct)
+    {
         var psi = new ProcessStartInfo(exe)
         {
             UseShellExecute = false,
@@ -110,7 +117,6 @@ public static partial class VideoProbe
             try { process.Kill(entireProcessTree: true); } catch { /* уже завершился */ }
             throw;
         }
-        await stdout;
-        return (process.ExitCode, await stderr);
+        return (process.ExitCode, await stdout, await stderr);
     }
 }
