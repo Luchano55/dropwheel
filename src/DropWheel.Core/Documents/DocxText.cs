@@ -1,3 +1,4 @@
+using DropWheel.Localization;
 using System.Text;
 using System.Text.RegularExpressions;
 using DocumentFormat.OpenXml;
@@ -24,7 +25,7 @@ public static partial class DocxText
         using var stream = new MemoryStream(TextFiles.ReadAllBytes(path), writable: false);
         using var doc = DocxHtml.OpenWord(stream, editable: false);
         var main = doc.MainDocumentPart;
-        var body = main?.Document?.Body ?? throw new ConversionException("В файле Word нет текста документа", path);
+        var body = main?.Document?.Body ?? throw new ConversionException(Loc.T.ErrWordNoBody, path);
         var styles = new StyleBook(main!);
         var writer = new Writer(main!, styles, new ListNumbering(main!, styles), markdown, ct);
         writer.Blocks(body);
@@ -288,7 +289,7 @@ public static partial class DocxText
             var alt = graphic.Descendants().Where(d => d.LocalName == "docPr")
                 .Select(d => d.GetAttributes().FirstOrDefault(a => a.LocalName == "descr").Value)
                 .FirstOrDefault(v => !string.IsNullOrWhiteSpace(v));
-            Add(alt is null ? "*[Рисунок]*" : $"*[Рисунок: {EscapeInline(alt.Replace('\n', ' ').Trim())}]*", Emphasis.None, null, raw: true);
+            Add(alt is null ? $"*[{Loc.T.MdPicture}]*" : $"*[{Loc.T.MdPicture}: {EscapeInline(alt.Replace('\n', ' ').Trim())}]*", Emphasis.None, null, raw: true);
         }
 
         public string Plain() => string.Concat(Trimmed().Where(s => !s.Raw).Select(s => s.Text));

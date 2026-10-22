@@ -1,3 +1,4 @@
+using DropWheel.Localization;
 using System.Text;
 using System.Text.RegularExpressions;
 using DropWheel.Conversions;
@@ -41,11 +42,11 @@ public sealed class TextEngine : IInternalEngine
     public async Task RunAsync(Operation op, IReadOnlyList<string> inputs, string output, ConversionSettings settings,
         IProgress<double>? progress, CancellationToken ct)
     {
-        if (op.Id != ToUtf8Id) throw new ConversionException($"Нет такой операции с текстом: «{op.Label}»", op.Id);
+        if (op.Id != ToUtf8Id) throw new ConversionException(Loc.F(Loc.T.ErrTextNoSuchOp, Loc.Label(op)), op.Id);
 
         var input = inputs[0];
         if (new FileInfo(input).Length > MaxBytes)
-            throw new ConversionException("Файл слишком большой для перекодировки", $"{input}: больше {MaxBytes} байт");
+            throw new ConversionException(Loc.T.ErrTextTooBig, $"{input}: больше {MaxBytes} байт");
 
         var bytes = await File.ReadAllBytesAsync(input, ct);
         var (text, _) = Decode(bytes);
@@ -64,7 +65,7 @@ public sealed class TextEngine : IInternalEngine
     {
         ReadOnlySpan<byte> b = bytes;
         if (b.StartsWith((ReadOnlySpan<byte>)[0xEF, 0xBB, 0xBF]))
-            throw new ConversionException("Файл уже в UTF-8", "BOM UTF-8");
+            throw new ConversionException(Loc.T.ErrAlreadyUtf8, "BOM UTF-8");
         // UTF-32 LE проверяем раньше UTF-16 LE: у них общее начало FF FE.
         if (b.StartsWith((ReadOnlySpan<byte>)[0xFF, 0xFE, 0x00, 0x00]))
             return (Strict(new UTF32Encoding(bigEndian: false, byteOrderMark: true, throwOnInvalidCharacters: true), b[4..], "UTF-32 LE"), "UTF-32 LE");
@@ -75,9 +76,9 @@ public sealed class TextEngine : IInternalEngine
         if (b.StartsWith((ReadOnlySpan<byte>)[0xFE, 0xFF]))
             return (Strict(new UnicodeEncoding(bigEndian: true, byteOrderMark: true, throwOnInvalidBytes: true), b[2..], "UTF-16 BE"), "UTF-16 BE");
 
-        if (IsUtf8(b)) throw new ConversionException("Файл уже в UTF-8", "корректный UTF-8 без BOM");
+        if (IsUtf8(b)) throw new ConversionException(Loc.T.ErrAlreadyUtf8, "корректный UTF-8 без BOM");
         if (b.Contains((byte)0))
-            throw new ConversionException("Это не текст или кодировка не распознана", "нулевые байты без BOM");
+            throw new ConversionException(Loc.T.ErrNotText, "нулевые байты без BOM");
 
         return Score(b, Cp866) > Score(b, Cp1251)
             ? (Cp866.GetString(b), "CP866")
@@ -87,7 +88,7 @@ public sealed class TextEngine : IInternalEngine
     private static string Strict(Encoding encoding, ReadOnlySpan<byte> body, string name)
     {
         try { return encoding.GetString(body); }
-        catch (DecoderFallbackException ex) { throw new ConversionException("Файл повреждён: ошибка в тексте " + name, ex.Message, ex); }
+        catch (DecoderFallbackException ex) { throw new ConversionException(Loc.F(Loc.T.ErrTextBroken, name), ex.Message, ex); }
     }
 
     private static bool IsUtf8(ReadOnlySpan<byte> bytes)

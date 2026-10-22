@@ -1,3 +1,4 @@
+using DropWheel.Localization;
 using DropWheel.Conversions;
 
 namespace DropWheel.Engines;
@@ -20,20 +21,23 @@ public sealed class ToolLocator
     public string Resolve(EngineKind engine) => engine switch
     {
         EngineKind.FFmpeg => Find(FfmpegPath, "DROPWHEEL_FFMPEG", ["ffmpeg"])
-            ?? throw new ConversionException("Не найден ffmpeg. Положите ffmpeg.exe в папку tools рядом с программой."),
+            ?? throw Missing("ffmpeg", "ffmpeg.exe"),
         EngineKind.ImageMagick => Find(MagickPath, "DROPWHEEL_MAGICK", ["magick", "convert"])
-            ?? throw new ConversionException("Не найден ImageMagick. Положите magick.exe в папку tools рядом с программой."),
+            ?? throw Missing("ImageMagick", "magick.exe"),
         EngineKind.Qpdf => Find(QpdfPath, "DROPWHEEL_QPDF", ["qpdf"])
-            ?? throw new ConversionException("Не найден qpdf. Положите qpdf.exe в папку tools рядом с программой."),
+            ?? throw Missing("qpdf", "qpdf.exe"),
         EngineKind.Pdftoppm => Find(PdftoppmPath, "DROPWHEEL_PDFTOPPM", ["pdftoppm"])
-            ?? throw new ConversionException("Не найден pdftoppm (poppler). Положите его в папку tools рядом с программой."),
+            ?? throw Missing("pdftoppm (poppler)", "pdftoppm.exe"),
         EngineKind.Pdftotext => Find(PdftotextPath, "DROPWHEEL_PDFTOTEXT", ["pdftotext"])
-            ?? throw new ConversionException("Не найден pdftotext (poppler). Положите его в папку tools рядом с программой."),
+            ?? throw Missing("pdftotext (poppler)", "pdftotext.exe"),
         // 7z.exe (полная версия с 7z.dll — умеет RAR); 7za — урезанная, без RAR; 7zz — Linux.
         EngineKind.SevenZip => Find(SevenZipPath, "DROPWHEEL_7Z", ["7z", "7zz", "7za"])
-            ?? throw new ConversionException("Не найден 7-Zip. Положите 7z.exe и 7z.dll в папку tools рядом с программой."),
+            ?? throw new ConversionException(Loc.T.ErrSevenZipMissing),
         _ => throw new ArgumentOutOfRangeException(nameof(engine)),
     };
+
+    private static ConversionException Missing(string tool, string file) =>
+        new(Loc.F(Loc.T.ErrToolMissing, tool, file));
 
     public bool IsAvailable(EngineKind engine)
     {

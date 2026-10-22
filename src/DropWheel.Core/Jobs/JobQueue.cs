@@ -1,3 +1,4 @@
+using DropWheel.Localization;
 using DropWheel.Conversions;
 using DropWheel.Engines;
 
@@ -93,7 +94,7 @@ public sealed class JobQueue(Converter converter, int maxParallel = 2, Action<st
         }
         catch (Exception ex)
         {
-            job.Error = "Непредвиденная ошибка";
+            job.Error = Loc.T.ErrUnexpected;
             job.ErrorDetails = ex.ToString();
             Set(job, JobState.Failed);
         }

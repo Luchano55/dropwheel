@@ -6,7 +6,7 @@ namespace DropWheel.Conversions;
 
 /// <summary>
 /// Каталог операций. Новая операция — одна строка.
-/// Плейсхолдеры: {jpgq} {webpq} {crf} {crfsmall} {mp3k} — из ConversionSettings;
+/// Плейсхолдеры: {jpgq} {webpq} {crf} {crfsmall} {mp3k} — из ConversionSettings; {page} — «стр» / «page» (язык интерфейса);
 /// {acodec} — кодек звука под расширение результата (см. ArgumentBuilder.AudioCodec).
 /// Для qpdf / pdftoppm шаблон берётся целиком: {in} — первый файл, {ins} — все файлы, {out} — результат
 /// (файл или временная папка).
@@ -60,10 +60,10 @@ public static class OperationCatalog
             OutputRule.Same("mp3", "mp3", "m4a", "wav", "flac", "ogg", "opus"), " (норм)"),
 
         // PDF (qpdf, pdftoppm из poppler). Страницы в папке: стр-1.png … или стр-01.png при 10+ страницах.
-        new("pdf-to-png",    "PNG (страницы)", Conv, Pdf, Pdftoppm, "-r 150 -png {in} {out}/стр",                        OutputRule.Fixed("png"), " (страницы)") { Result = ResultKind.Folder },
-        new("pdf-to-jpg",    "JPG (страницы)", Conv, Pdf, Pdftoppm, "-r 150 -jpeg -jpegopt quality=90 {in} {out}/стр",   OutputRule.Fixed("jpg"), " (страницы)") { Result = ResultKind.Folder },
+        new("pdf-to-png",    "PNG (страницы)", Conv, Pdf, Pdftoppm, "-r 150 -png {in} {out}/{page}",                        OutputRule.Fixed("png"), " (страницы)") { Result = ResultKind.Folder },
+        new("pdf-to-jpg",    "JPG (страницы)", Conv, Pdf, Pdftoppm, "-r 150 -jpeg -jpegopt quality=90 {in} {out}/{page}",   OutputRule.Fixed("jpg"), " (страницы)") { Result = ResultKind.Folder },
         new("pdf-merge",     "Склеить",        Tool, Pdf, Qpdf, "--empty --pages {ins} -- {out}",                        OutputRule.Fixed("pdf"), " (объединено)") { Inputs = InputMode.Combine, MinFiles = 2 },
-        new("pdf-split",     "Разбить",        Tool, Pdf, Qpdf, "--split-pages {in} {out}/стр.pdf",                      OutputRule.Fixed("pdf"), " (по страницам)") { Result = ResultKind.Folder },
+        new("pdf-split",     "Разбить",        Tool, Pdf, Qpdf, "--split-pages {in} {out}/{page}.pdf",                      OutputRule.Fixed("pdf"), " (по страницам)") { Result = ResultKind.Folder },
         new("pdf-optimize",  "Оптимизировать", Tool, Pdf, Qpdf, "--object-streams=generate --compress-streams=y --recompress-flate --compression-level=9 {in} {out}", OutputRule.Fixed("pdf"), " (оптим.)"),
         // Картинки → один PDF: каждая картинка — страница.
         new("images-to-pdf", "Один PDF",       Tool, Image, ImageMagick, "-auto-orient -compress jpeg -quality {jpgq}", OutputRule.Fixed("pdf"), " (все)") { Inputs = InputMode.Combine, MinFiles = 2 },

@@ -1,3 +1,4 @@
+using DropWheel.Localization;
 using System.Globalization;
 using DropWheel.Conversions;
 using DropWheel.Documents;
@@ -54,7 +55,7 @@ public sealed class DocLibsEngine(CultureInfo? csvCulture = null) : IInternalEng
         var input = inputs[0];
         var extension = Extensions.Normalize(Path.GetExtension(input));
         if (!CanRun(op, extension))
-            throw new ConversionException($"Без Microsoft Office «{op.Label}» не работает для .{extension}", op.Id);
+            throw new ConversionException(Loc.F(Loc.T.ErrNoOfficeFor, Loc.Label(op), extension), op.Id);
 
         // Библиотеки синхронные — не занимаем поток вызывающего (может быть поток интерфейса).
         return Task.Run(() => Run(op.Id, input, output, ct), ct);
@@ -84,7 +85,7 @@ public sealed class DocLibsEngine(CultureInfo? csvCulture = null) : IInternalEng
                 File.WriteAllText(output, html, TextFiles.Utf8);
                 break;
             default:
-                throw new ConversionException("Неизвестная операция для документов", id);
+                throw new ConversionException(Loc.T.ErrDocUnknownOp, id);
         }
     }
 }

@@ -1,30 +1,21 @@
+using System.Globalization;
 using System.Text;
 using DropWheel.Conversions;
 using DropWheel.Engines;
 using DropWheel.Jobs;
+using DropWheel.Localization;
 
 namespace DropWheel.Cli;
 
 public static class Program
 {
-    private const string Usage = """
-        Использование:
-          dropwheel convert <файл> [<файл>...] <операция> [параметры]
-          dropwheel list [<файл>...]        — какие операции доступны (для файлов — только подходящие)
-
-        Параметры:
-          --out-dir <папка>   класть результат в эту папку (по умолчанию — рядом с исходником)
-          --ffmpeg <путь>     путь к ffmpeg
-          --magick <путь>     путь к magick
-          -v, --verbose       печатать команды утилит
-
-        Пример:
-          dropwheel convert "Мои фото/тест 1.heic" to-jpg
-        """;
+    private static string Usage => Loc.T.CliUsage;
 
     public static async Task<int> Main(string[] args)
     {
         Console.OutputEncoding = Encoding.UTF8;
+        // Язык сообщений — как в системе (русский для русской, иначе английский); --lang переопределяет.
+        Loc.Current = Loc.Resolve(Loc.Auto, CultureInfo.CurrentUICulture);
         try
         {
             return await RunAsync(args, Console.Out, Console.Error);
@@ -38,8 +29,10 @@ public static class Program
         }
     }
 
+    /// <summary>Разобрать и выполнить команду. «--lang ru|en» в любом месте меняет язык сообщений (Loc.Current).</summary>
     public static async Task<int> RunAsync(string[] args, TextWriter stdout, TextWriter stderr)
     {
+        args = TakeLanguage(args);
         if (args.Length == 0 || args[0] is "-h" or "--help" or "help")
         {
             stdout.WriteLine(Usage);
@@ -66,7 +59,7 @@ public static class Program
             "list" => List(positional, stdout),
             "convert" => await Convert(positional, outDir, new ToolLocator { FfmpegPath = ffmpeg, MagickPath = magick },
                 verbose, stdout, stderr),
-            _ => throw new UsageException($"Неизвестная команда: {args[0]}"),
+            _ => throw new UsageException(Loc.F(Loc.T.CliUnknownCommand, args[0])),
         };
     }
 
@@ -75,21 +68,21 @@ public static class Program
         var ops = files.Count == 0 ? OperationCatalog.All : OperationCatalog.ForFiles(files);
         if (ops.Count == 0)
         {
-            stdout.WriteLine("Нечего предложить");
+            stdout.WriteLine(Loc.T.WheelNothing);
             return 1;
         }
         foreach (var op in ops)
-            stdout.WriteLine($"{op.Id,-16} {op.Kind,-8} {(op.Mode == OperationMode.Convert ? "→ " : "")}{op.Label}");
+            stdout.WriteLine($"{op.Id,-16} {op.Kind,-8} {(op.Mode == OperationMode.Convert ? "→ " : "")}{Loc.Label(op)}");
         return 0;
     }
 
     private static async Task<int> Convert(List<string> positional, string? outDir, ToolLocator tools,
         bool verbose, TextWriter stdout, TextWriter stderr)
     {
-        if (positional.Count < 2) throw new UsageException("Нужны файл и операция.");
+        if (positional.Count < 2) throw new UsageException(Loc.T.CliNeedFileAndOp);
         var opId = positional[^1];
         var files = positional[..^1];
-        var op = OperationCatalog.Find(opId) ?? throw new UsageException($"Неизвестная операция: {opId}");
+        var op = OperationCatalog.Find(opId) ?? throw new UsageException(Loc.F(Loc.T.CliUnknownOperation, opId));
 
         var settings = ConversionSettings.Default with
         {
@@ -105,11 +98,11 @@ public static class Program
         foreach (var job in jobs)
         {
             if (job.State == JobState.Done)
-                stdout.WriteLine($"Готово: {job.OutputPath}");
+                stdout.WriteLine(Loc.F(Loc.T.CliDone, job.OutputPath));
             else
             {
                 failed++;
-                stderr.WriteLine($"Ошибка: {job.Input}: {job.Error}");
+                stderr.WriteLine(Loc.F(Loc.T.CliError, job.Input, job.Error));
                 if (verbose && job.ErrorDetails is not null) stderr.WriteLine(job.ErrorDetails);
             }
         }
@@ -117,7 +110,20 @@ public static class Program
     }
 
     private static string Value(string[] args, ref int i) =>
-        ++i < args.Length ? args[i] : throw new UsageException($"После {args[i - 1]} нужно значение.");
+        ++i < args.Length ? args[i] : throw new UsageException(Loc.F(Loc.T.CliNeedValue, args[i - 1]));
+
+    /// <summary>Убрать «--lang ru|en» из аргументов и сменить язык; неизвестный язык — ошибка использования.</summary>
+    private static string[] TakeLanguage(string[] args)
+    {
+        var index = Array.IndexOf(args, "--lang");
+        if (index < 0) return args;
+        var i = index;
+        var value = Value(args, ref i);
+        if (Loc.Normalize(value) == Loc.Auto && !string.Equals(value, Loc.Auto, StringComparison.OrdinalIgnoreCase))
+            throw new UsageException(Loc.F(Loc.T.CliUnknownLanguage, value));
+        Loc.Current = Loc.Resolve(value);
+        return [.. args[..index], .. args[(index + 2)..]];
+    }
 }
 
 public sealed class UsageException(string message) : Exception(message);

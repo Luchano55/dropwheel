@@ -1,3 +1,4 @@
+using DropWheel.Localization;
 using DropWheel.Conversions;
 
 namespace DropWheel.Shell;
@@ -12,7 +13,8 @@ public sealed record RegistryValue(string KeyPath, string? Name, string Value);
 public static class ContextMenuRegistration
 {
     public const string VerbKey = "DropWheel.Convert";
-    public const string MenuText = "Конвертировать…";
+    /// <summary>Подпись пункта на текущем языке интерфейса.</summary>
+    public static string MenuText => Loc.T.ContextMenuText;
 
     /// <summary>
     /// Ключ для всех файлов («*»): «В ZIP» подходит к любому файлу, поэтому пункт есть везде.

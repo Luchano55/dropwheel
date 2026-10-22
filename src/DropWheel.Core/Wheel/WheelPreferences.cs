@@ -1,3 +1,4 @@
+using DropWheel.Localization;
 using DropWheel.Conversions;
 
 namespace DropWheel.Wheel;
@@ -181,6 +182,6 @@ public static class WheelArrangement
                 visible.Insert(0, op);
             }
         }
-        return visible.Take(WheelGeometry.MaxSectors).Select(o => new WheelItem(o.Id, o.Label)).ToList();
+        return visible.Take(WheelGeometry.MaxSectors).Select(o => new WheelItem(o.Id, Loc.Label(o))).ToList();
     }
 }

@@ -149,7 +149,7 @@ public sealed class WheelWindow : Window
         _keyboard = false;
         _lastMouse = null;
         UpdateHover(null);
-        _wheel.EmptyHint = activate ? "Щёлкните, чтобы закрыть" : "Отпустите — ничего не произойдёт";
+        _wheel.EmptyHint = activate ? Loc.T.WheelEmptyClick : Loc.T.WheelEmptyDrag;
 
         new WindowInteropHelper(this).EnsureHandle();
         ApplyTheme();
@@ -602,7 +602,7 @@ public sealed class WheelWindow : Window
                 // Нет доступа — просто не считаем этот файл.
             }
         }
-        return any ? Russian.FileSize(total) : null;
+        return any ? Loc.FileSize(total) : null;
     }
 
     /// <summary>Закрыть с анимацией; accepted — номер принятого сектора (сначала вспышка).</summary>

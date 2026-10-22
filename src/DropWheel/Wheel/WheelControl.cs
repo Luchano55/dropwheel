@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Media;
 using DropWheel.Conversions;
 using DropWheel.Ui;
+using DropWheel.Localization;
 
 namespace DropWheel.Wheel;
 
@@ -44,8 +45,8 @@ public sealed partial class WheelControl : FrameworkElement
     private const double PulseMs = 150;
     private const double SwitchAngle = 14;
 
-    private const string NothingText = "Нечего предложить";
-    private const string CancelText = "Отмена";
+    private static string NothingText => Loc.T.WheelNothing;
+    private static string CancelText => Loc.T.Cancel;
 
     public static readonly DependencyProperty ItemsProperty = DependencyProperty.Register(
         nameof(Items), typeof(IReadOnlyList<WheelItem>), typeof(WheelControl),
@@ -546,7 +547,7 @@ public sealed partial class WheelControl : FrameworkElement
         var bold = UiFonts.Face(UiFonts.Text, FontWeights.SemiBold);
         if (items.Count > 0)
         {
-            var caption = Mode == OperationMode.Convert ? "Конвертация" : "Инструменты";
+            var caption = Mode == OperationMode.Convert ? Loc.T.ModeConvert : Loc.T.ModeTools;
             var ft = Text(caption, regular, 10, p.TextTertiary, 2 * CenterRadius - 20, 1, dpi);
             dc.DrawText(ft, new Point(c.X - ft.MaxTextWidth / 2, c.Y - CaptionOffset - ft.Height / 2));
         }

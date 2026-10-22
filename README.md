@@ -50,7 +50,7 @@
 2. **Press <kbd>Space</kbd>.** A wheel of formats pops up right under your cursor. Press <kbd>Space</kbd> again to switch between **Convert** and **Tools**; <kbd>Esc</kbd> closes it.
 3. **Drop** the file on a petal. That's it — `photo.heic` becomes `photo.jpg` in the same folder, and a notification with a preview tells you when it's done.
 
-Not a fan of drag-and-drop? Right-click a file → **«Конвертировать…»** (Convert…) in the Explorer menu opens the same wheel — just click a petal.
+Not a fan of drag-and-drop? Right-click a file → **Convert…** in the Explorer menu opens the same wheel — just click a petal.
 
 ## Features
 
@@ -94,7 +94,7 @@ Not a fan of drag-and-drop? Right-click a file → **«Конвертирова�
     </td>
     <td width="33%" valign="top">
       <h3>🖱️ Explorer integration</h3>
-      «Конвертировать…» in the right-click menu opens the same wheel, for one file or a whole selection. Per-user, no admin rights.
+      “Convert…” in the right-click menu opens the same wheel, for one file or a whole selection. Per-user, no admin rights.
     </td>
   </tr>
   <tr>
@@ -103,8 +103,8 @@ Not a fan of drag-and-drop? Right-click a file → **«Конвертирова�
       Unzip and run — no installer, no .NET to install. New builds arrive with one click in the tray menu.
     </td>
     <td width="33%" valign="top">
-      <h3>🔤 Any file name</h3>
-      Cyrillic, spaces, long paths — <code>Мои фото\тест 1.heic</code> just works.
+      <h3>🔤 Any file name, two languages</h3>
+      Cyrillic, spaces, long paths — <code>Мои фото\тест 1.heic</code> just works. Interface in English and Russian, following your Windows language.
     </td>
     <td width="33%" valign="top">
       <h3>💸 Free &amp; open source</h3>
@@ -144,7 +144,7 @@ Not a fan of drag-and-drop? Right-click a file → **«Конвертирова�
   </tr>
 </table>
 
-<sub>The interface is in Russian for now — format names are the same in every language. See the <a href="#faq">FAQ</a>.</sub>
+<sub>Interface: Russian and English (follows the Windows language; switch in Settings). The screenshots show the Russian interface — format names are the same in both.</sub>
 
 ## Supported formats
 
@@ -285,11 +285,11 @@ Password-protected archives aren't supported — you get a clear message.
 > [!NOTE]
 > **“Windows protected your PC”?** DropWheel is a personal project and the build isn't code-signed, so Microsoft Defender SmartScreen warns about it. Click **More info → Run anyway**. Every build is made by [GitHub Actions](https://github.com/Luchano55/dropwheel/actions/workflows/build.yml) straight from the source code in this repository.
 
-**Updates are automatic after that:** when a new build is out, the tray menu shows **«Обновить до сборки N»** (Update to build N). One click — DropWheel downloads only the app part (~100 MB; the tools only if they changed), verifies it with SHA-256, waits for running jobs to finish and restarts itself.
+**Updates are automatic after that:** when a new build is out, the tray menu shows **Update to build N**. One click — DropWheel downloads only the app part (~100 MB; the tools only if they changed), verifies it with SHA-256, waits for running jobs to finish and restarts itself.
 
 **Requirements:** Windows 10 (1809 or newer) or Windows 11, 64-bit. Nothing else — .NET is built in. Optional: Microsoft Office 2013+ for the Office conversions; a Windows OCR language for text recognition.
 
-**Uninstall:** right-click the tray icon → untick «Пункт „Конвертировать…“ в проводнике» (removes the Explorer menu entry) → «Выход» (Exit). Then delete the folder and, if you like, `%AppData%\DropWheel` (settings and logs).
+**Uninstall:** right-click the tray icon → untick **“Convert…” in Explorer menu** (removes the Explorer menu entry) → **Exit**. Then delete the folder and, if you like, `%AppData%\DropWheel` (settings and logs).
 
 ## Usage
 
@@ -305,9 +305,9 @@ Password-protected archives aren't supported — you get a clear message.
 
 <kbd>Space</kbd> is only intercepted while you are dragging something — the rest of the time it types spaces and pauses videos as usual.
 
-### 🖱️ Explorer: «Конвертировать…»
+### 🖱️ Explorer: “Convert…”
 
-Right-click one or more files → **«Конвертировать…»** → the same wheel opens at the cursor, in click mode:
+Right-click one or more files → **Convert…** → the same wheel opens at the cursor, in click mode:
 
 | You do | DropWheel does |
 |---|---|
@@ -322,23 +322,24 @@ On Windows 11 the item is under **Show more options** (or press <kbd>Shift</kbd>
 
 - **Left click** the tray icon — the jobs flyout: thumbnails, progress bars, *Cancel*; finished jobs have *Open* and *Show in folder*, failed ones the reason and *Details*.
 - **Double click** — the settings window.
-- **Right click** — «Задачи» (jobs), «Настройки…» (settings), the Explorer menu on/off switch, «Открыть журнал» (open the log folder), «Проверить обновления» (check for updates), «Выход» (exit).
+- **Right click** — *Jobs*, *Settings…*, the Explorer menu on/off switch, *Open log*, *Check for updates*, *Exit*.
 - While something is being converted, the icon shows an orange badge with the number of jobs.
 - **Notifications** show a preview of the result with *Open* and *Show in folder*. Several files finished together → one notification “Готово: N файлов” (Done: N files).
 
 ### 🔄 Updates
 
-Once a day (and when you click «Проверить обновления») DropWheel reads a small `version.json` from the [`dev-build` release](https://github.com/Luchano55/dropwheel/releases/tag/dev-build). If there's a newer build, the tray menu offers **«Обновить до сборки N»** — nothing is downloaded until you click it. Don't want the check at all? Turn off «Проверять обновления» in the settings window. This is the only time DropWheel goes online.
+Once a day (and when you click *Check for updates*) DropWheel reads a small `version.json` from the [`dev-build` release](https://github.com/Luchano55/dropwheel/releases/tag/dev-build). If there's a newer build, the tray menu offers **Update to build N** — nothing is downloaded until you click it. Don't want the check at all? Turn off *Check for updates* in the settings window. This is the only time DropWheel goes online.
 
 ### ⚙️ Settings
 
-Double-click the tray icon (or right click → «Настройки…»). Every change applies immediately — no OK button — and is saved to `%AppData%\DropWheel\settings.json`.
+Double-click the tray icon (or right click → *Settings…*). Every change applies immediately — no OK button — and is saved to `%AppData%\DropWheel\settings.json`.
 
 - **Hotkey** — <kbd>Space</kbd> (default), <kbd>Ё</kbd>/<kbd>`</kbd>, <kbd>Caps Lock</kbd> or <kbd>F1</kbd>–<kbd>F12</kbd>; works right away, no restart.
+- **Language** — *Same as Windows* (default: Russian on a Russian Windows, English otherwise), *Русский* or *English*; switches right away.
 - **Where results go** — next to the original, or all into one folder (default `Downloads\DropWheel`).
 - **Quality** — JPG and WebP (50–100), video CRF (18–32, lower = better), MP3 bitrate (128–320 kbps). Applies to new jobs.
 - **Start with Windows**, the Explorer menu item, the daily update check.
-- **Your own wheel** — for each file type (photo, video, audio, PDF, Word, Excel, PowerPoint, text, archives, any file): reorder the formats (drag or ↑/↓), hide the ones you never use, with a live preview of the wheel. **«Последний выбор — первым»** puts the format you picked last time for that type on top.
+- **Your own wheel** — for each file type (photo, video, audio, PDF, Word, Excel, PowerPoint, text, archives, any file): reorder the formats (drag or ↑/↓), hide the ones you never use, with a live preview of the wheel. **Last choice first** puts the format you picked last time for that type on top.
 
 ### ⌨️ Command line
 
@@ -349,13 +350,15 @@ dropwheel-cli.exe list "C:\Мои фото\тест 1.heic"
 dropwheel-cli.exe convert "C:\Мои фото\тест 1.heic" to-jpg
 ```
 
+Messages follow the system language; `--lang en` or `--lang ru` picks one explicitly.
+
 Or simply drag a file onto `try-dropwheel.cmd`: it lists the available operations and runs the one you type.
 
 ## Privacy
 
 - **100% offline.** Every conversion happens on your PC. Your files are never uploaded anywhere — there is no server to upload them to.
 - **No telemetry, no analytics, no account, no ads.**
-- **The only thing DropWheel does online** is the update check: once a day (and when you click «Проверить обновления») it reads a small `version.json` from this repository's [releases](https://github.com/Luchano55/dropwheel/releases/tag/dev-build). It sends no files and no personal data, and an update is only installed when you click it — the download is verified with SHA-256. Don't want even that? Set `"checkForUpdates": false` in `%AppData%\DropWheel\settings.json`.
+- **The only thing DropWheel does online** is the update check: once a day (and when you click *Check for updates*) it reads a small `version.json` from this repository's [releases](https://github.com/Luchano55/dropwheel/releases/tag/dev-build). It sends no files and no personal data, and an update is only installed when you click it — the download is verified with SHA-256. Don't want even that? Set `"checkForUpdates": false` in `%AppData%\DropWheel\settings.json`.
 - Microsoft Office, Edge WebView2 and Windows OCR, when used, run locally too.
 - Settings and logs stay on your computer in `%AppData%\DropWheel`. Logs contain file paths and error messages — have a quick look before attaching one to a bug report.
 
@@ -363,11 +366,11 @@ Or simply drag a file onto `try-dropwheel.cmd`: it lists the available operation
 
 - **Windows running as administrator.** Windows doesn't let normal apps interact with elevated windows (UIPI): dragging from an app that runs as administrator won't open the wheel. Drag from a normal window instead.
 - **Office-free DOCX → PDF / HTML is an approximation.** Fonts, lists, tables, pictures, page size and margins are kept, but the browser breaks lines and pages, not Word — pages can shift by a line or two. Headers and footers, page numbers, footnotes, comments, text boxes, shapes, SmartArt, charts, old EMF/WMF pictures and columns aren't carried over. DOC, RTF, ODT, ODS and PowerPoint need Office. Need it exact? Use Office.
-- **OCR needs a Windows OCR language.** It comes with a Windows display language, or add one in *Settings → Time & language → Language & region*. Without any, the “Текст (OCR)” petal simply doesn't appear. OCR reads JPG, PNG, BMP and TIFF — convert other formats to PNG first.
+- **OCR needs a Windows OCR language.** It comes with a Windows display language, or add one in *Settings → Time & language → Language & region*. Without any, the “Text (OCR)” petal simply doesn't appear. OCR reads JPG, PNG, BMP and TIFF — convert other formats to PNG first.
 - **Scanned PDFs have no text**, so PDF → TXT reports it: export the pages as PNG and use OCR.
 - **Password-protected** archives and documents aren't supported.
 - Files dragged from a browser are often not on disk yet — save them first.
-- The interface is in Russian for now.
+- Log files are written in Russian (they are for bug reports, not for reading every day).
 
 ## FAQ
 
@@ -398,7 +401,7 @@ No. Without Office you still get DOCX → PDF / TXT / HTML / Markdown, XLSX / XL
 <details>
 <summary><b>Is the interface available in English?</b></summary>
 
-Not yet — menus and notifications are in Russian, since this started as a personal project. Format names (JPG, MP4, PDF…) are the same in every language, so the wheel is easy to use anyway. An English interface is on the <a href="#roadmap">roadmap</a>.
+Yes. The interface is in Russian and English: it follows the Windows display language — Russian on a Russian Windows, English everywhere else. To switch, double-click the tray icon → *General* → *Language* (*Same as Windows* / *Русский* / *English*); the tray menu, the wheel and the windows change right away. Result names follow the language too: `photo (compressed).jpg` instead of `photo (сжато).jpg`. The command line uses the system language; add `--lang en` or `--lang ru` to choose.
 </details>
 
 <details>
@@ -425,7 +428,7 @@ Not yet — autostart arrives with the settings window. Until then press <kbd>Wi
 <details>
 <summary><b>How do I update? Which build do I have?</b></summary>
 
-DropWheel checks for a new build once a day and offers «Обновить до сборки N» in the tray menu. Right-click the tray icon → «Проверить обновления» to check right now — it also tells you your current build number. You can always download the full archive again from <a href="https://github.com/Luchano55/dropwheel/releases/tag/dev-build">Releases</a> and unzip it over the old folder.
+DropWheel checks for a new build once a day and offers *Update to build N* in the tray menu. Right-click the tray icon → *Check for updates* to check right now — it also tells you your current build number. You can always download the full archive again from <a href="https://github.com/Luchano55/dropwheel/releases/tag/dev-build">Releases</a> and unzip it over the old folder.
 </details>
 
 <details>
@@ -437,7 +440,7 @@ It bundles ffmpeg, ImageMagick, qpdf, poppler and 7-Zip so that everything works
 <details>
 <summary><b>Something went wrong. How do I report it?</b></summary>
 
-Right-click the tray icon → «Открыть журнал» (open log), take the newest `.log` file and attach it to a <a href="https://github.com/Luchano55/dropwheel/issues/new/choose">bug report</a> together with your Windows version and DropWheel build number.
+Right-click the tray icon → *Open log*, take the newest `.log` file and attach it to a <a href="https://github.com/Luchano55/dropwheel/issues/new/choose">bug report</a> together with your Windows version and DropWheel build number.
 </details>
 
 ## Roadmap
@@ -445,7 +448,7 @@ Right-click the tray icon → «Открыть журнал» (open log), take t
 - [x] Conversion core: images, video, audio — ffmpeg + ImageMagick, background queue, safe file naming
 - [x] Tray app, jobs flyout, notifications with preview
 - [x] The wheel: drag + <kbd>Space</kbd>, Convert/Tools modes, multi-monitor and high-DPI aware, light/dark theme and accent colour
-- [x] «Конвертировать…» in the Explorer menu opens the same wheel in click mode
+- [x] “Convert…” in the Explorer menu opens the same wheel in click mode
 - [x] PDF: merge, split, rotate, lossless optimize, pages → images, → TXT
 - [x] Office documents via installed Microsoft Office, pre-warmed in the background
 - [x] Documents without Office: DOCX → PDF / TXT / HTML / Markdown, XLSX / XLS → CSV, CSV → XLSX, TXT / Markdown / HTML → PDF
@@ -456,8 +459,8 @@ Right-click the tray icon → «Открыть журнал» (open log), take t
 - [x] Automated demo recording and end-to-end test on a real Windows machine in CI
 - [ ] Built-in editors (inspired by Tangerine): crop with aspect ratios (Free, 1:1, 16:9, 9:16, 4:3, 3:4), add a background (palette, padding, rounded corners, shadow), annotations
 - [x] Settings window: hotkey, output folder, quality, autostart; your own wheel (order, hidden formats, last choice first)
+- [x] Interface in Russian and English (follows the Windows language; switch in Settings)
 - [ ] Whole-folder batch processing
-- [ ] English interface
 - [ ] Video trimming and cropping
 - [ ] E-books: EPUB, FB2
 

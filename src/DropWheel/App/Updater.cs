@@ -6,6 +6,7 @@ using System.Windows.Threading;
 using DropWheel.Jobs;
 using DropWheel.Logging;
 using DropWheel.Updates;
+using DropWheel.Localization;
 
 namespace DropWheel.App;
 
@@ -95,16 +96,16 @@ internal sealed class Updater : IDisposable
             if (Directory.Exists(work)) Directory.Delete(work, recursive: true);
             var staging = Directory.CreateDirectory(Path.Combine(work, "staging")).FullName;
 
-            status?.Report("Скачиваю программу…");
-            await DownloadAndExtractAsync(manifest.AppZip, manifest.AppSha256, work, staging, "Программа", status);
+            status?.Report(Loc.T.UpdateDownloadingApp);
+            await DownloadAndExtractAsync(manifest.AppZip, manifest.AppSha256, work, staging, Loc.T.UpdateDownloadingApp, status);
             if (plan.Tools)
             {
-                status?.Report("Скачиваю утилиты…");
-                await DownloadAndExtractAsync(manifest.ToolsZip, manifest.ToolsSha256, work, staging, "Утилиты", status);
+                status?.Report(Loc.T.UpdateDownloadingTools);
+                await DownloadAndExtractAsync(manifest.ToolsZip, manifest.ToolsSha256, work, staging, Loc.T.UpdateDownloadingTools, status);
             }
 
             // Пока идёт конвертация, ffmpeg/magick заняты — подождём.
-            status?.Report("Жду окончания задач…");
+            status?.Report(Loc.T.UpdateWaitingJobs);
             while (_queue.Jobs.Any(j => j.State is JobState.Queued or JobState.Running))
                 await Task.Delay(1000);
 
@@ -139,7 +140,9 @@ internal sealed class Updater : IDisposable
                 using var stall = new CancellationTokenSource(StallTimeout);
                 int read;
                 try { read = await source.ReadAsync(buffer, stall.Token); }
-                catch (OperationCanceledException) { throw new IOException("Загрузка остановилась: нет данных больше минуты. Проверьте интернет и повторите."); }
+                catch (OperationCanceledException) { throw new IOException(Loc.Current == UiLanguage.Ru
+                    ? "Загрузка остановилась: нет данных больше минуты. Проверьте интернет и повторите."
+                    : "Download stalled: no data for over a minute. Check the connection and try again."); }
                 if (read == 0) break;
                 await file.WriteAsync(buffer.AsMemory(0, read));
                 done += read;
@@ -147,7 +150,7 @@ internal sealed class Updater : IDisposable
                 if (percent != lastPercent && percent >= 0)
                 {
                     lastPercent = percent;
-                    status?.Report($"{what}: {percent}% ({done / 1048576} из {total / 1048576} МБ)");
+                    status?.Report($"{what.TrimEnd('…', '.')} {percent}% ({done / 1048576} / {total / 1048576} {(Loc.Current == UiLanguage.Ru ? "МБ" : "MB")})");
                 }
             }
         }
@@ -156,7 +159,7 @@ internal sealed class Updater : IDisposable
         {
             var actual = Convert.ToHexString(await SHA256.HashDataAsync(check));
             if (!actual.Equals(sha256, StringComparison.OrdinalIgnoreCase))
-                throw new InvalidOperationException($"Контрольная сумма {zipName} не совпала — обновление отменено");
+                throw new InvalidOperationException(Loc.F(Loc.T.UpdateChecksumMismatch, zipName));
         }
 
         // В архивах сборки всё лежит в папке DropWheel/ — её содержимое и есть папка программы.

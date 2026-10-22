@@ -10,6 +10,7 @@ using DropWheel.Shell;
 using DropWheel.Updates;
 using DropWheel.Wheel;
 using Microsoft.Toolkit.Uwp.Notifications;
+using DropWheel.Localization;
 
 namespace DropWheel.App;
 
@@ -86,6 +87,9 @@ public partial class App : Application
         Ui.SystemTheme.Subscribe();
 
         Settings = AppSettings.Load(AppPaths.SettingsFile);
+        // Язык интерфейса — до первого окна и значка (D-LANG): настройка или язык Windows.
+        Loc.Current = Loc.Resolve(Settings.Language);
+        Log.Write($"Язык интерфейса: {Loc.Current} (настройка {Settings.Language}, Windows {System.Globalization.CultureInfo.CurrentUICulture.Name})");
         _saver = new SettingsSaver(AppPaths.SettingsFile, SaveDelay, Log.Write);
         // Автозапуск — то, что записано в реестре (его могли выключить в диспетчере задач).
         AutoStartInstaller.RepairIfMoved(Log);
@@ -134,7 +138,7 @@ public partial class App : Application
         if (afterUpdate is { } build)
         {
             Log.Write($"Запуск после обновления до сборки {build}, удалено старых файлов: {removed}");
-            _tray?.ShowInfo("DropWheel обновлён", $"Сборка {build}. Всё готово к работе.");
+            _tray?.ShowInfo(Loc.T.UpdatedTitle, Loc.F(Loc.T.UpdatedText, build));
         }
 
         _updater = new Updater(Dispatcher, Queue, Log,
@@ -150,11 +154,11 @@ public partial class App : Application
         try
         {
             if (!await _updater.CheckAsync(manual: true))
-                _tray?.ShowInfo("Обновлений нет", $"У вас последняя сборка ({AppVersion.CurrentBuild}).");
+                _tray?.ShowInfo(Loc.T.NoUpdatesTitle, Loc.F(Loc.T.NoUpdatesText, AppVersion.CurrentBuild));
         }
         catch (Exception ex)
         {
-            _tray?.ShowInfo("Не удалось проверить обновления", ex.Message);
+            _tray?.ShowInfo(Loc.T.UpdateCheckFailed, ex.Message);
         }
     }
 
@@ -164,16 +168,16 @@ public partial class App : Application
         if (_updater?.Available is not { } manifest) return;
         try
         {
-            _tray?.ShowInfo("Обновление", $"Скачиваю сборку {manifest.Build}… Ход загрузки — в подсказке значка в трее. Программа перезапустится сама.");
-            // Progress<T> возвращает отчёты в поток интерфейса.
-            var status = new Progress<string>(text => _tray?.SetStatus("Обновление — " + text));
+            _tray?.ShowInfo(Loc.T.UpdatingTitle, Loc.F(Loc.T.UpdatingText, manifest.Build));
+            // Progress<T> возвращает отчёты в поток интерфейса; ход загрузки — в подсказке значка и в меню трея.
+            var status = new Progress<string>(text => _tray?.SetStatus(text));
             await _updater.InstallAsync(manifest, status);
         }
         catch (Exception ex)
         {
             Log.Write("Обновление не удалось: " + ex);
             _tray?.SetStatus(null);
-            _tray?.ShowInfo("Обновление не удалось", ex.Message);
+            _tray?.ShowInfo(Loc.T.UpdateFailed, ex.Message);
         }
     }
 
@@ -266,7 +270,7 @@ public partial class App : Application
         else if (job.State == JobState.Failed)
         {
             Log.Write($"Ошибка {job.Operation.Id} {job.Input}: {job.Error}\n{job.ErrorDetails}");
-            _notifier?.Failed(job.Input, job.Error ?? "Неизвестная ошибка");
+            _notifier?.Failed(job.Input, job.Error ?? Loc.T.UnknownError);
         }
     }
 
@@ -365,6 +369,20 @@ public partial class App : Application
             if (now.CheckForUpdates) _updater?.Start();
             else _updater?.Stop();
         }
+        if (now.Language != old.Language) ApplyLanguage(now);
+    }
+
+    /// <summary>Сменили язык в настройках: трей, окна и пункт меню проводника — сразу на новом языке.</summary>
+    private void ApplyLanguage(AppSettings now)
+    {
+        var language = Loc.Resolve(now.Language);
+        Log.Write($"Язык интерфейса: {language} (настройка {now.Language})");
+        if (language == Loc.Current) return;
+        Loc.Current = language;
+        _tray?.Relocalize();
+        _settingsWindow?.Relocalize();
+        _jobsWindow?.Relocalize(Hotkeys.DisplayName(now.Hotkey));
+        if (now.ContextMenuEnabled) ContextMenuInstaller.TryInstall(Log);
     }
 
     internal void Quit()
@@ -396,6 +414,8 @@ public partial class App : Application
     private static void RunRegistration(bool install)
     {
         var log = new FileLog(AppPaths.LogsDir);
+        // Подпись пункта меню — на языке интерфейса.
+        Loc.Current = Loc.Resolve(AppSettings.Load(AppPaths.SettingsFile).Language);
         if (install) ContextMenuInstaller.TryInstall(log);
         else ContextMenuInstaller.TryUninstall(log);
     }

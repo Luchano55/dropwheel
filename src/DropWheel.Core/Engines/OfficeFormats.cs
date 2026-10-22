@@ -1,3 +1,4 @@
+using DropWheel.Localization;
 using DropWheel.Conversions;
 
 namespace DropWheel.Engines;
@@ -60,7 +61,7 @@ public static class OfficeFormats
 
     /// <summary>Имя файла слайда в папке результата: «слайд-1.png»…, при 10+ слайдах — «слайд-01.png» (как страницы PDF).</summary>
     public static string SlideFileName(int number, int count) =>
-        $"слайд-{number.ToString().PadLeft(count.ToString().Length, '0')}.png";
+        $"{Loc.T.SlideFile}-{number.ToString().PadLeft(count.ToString().Length, '0')}.png";
 
     private static readonly string[] OpenXml = ["docx", "docm", "xlsx", "xlsm", "pptx", "pptm"];
     private static readonly byte[] CompoundFileSignature = [0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1];

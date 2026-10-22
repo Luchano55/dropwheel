@@ -47,6 +47,13 @@ internal sealed class SettingsWindow : Window
 
     public SettingsView View => _view;
 
+    /// <summary>Сменился язык интерфейса — заголовок и всё содержимое на новом языке.</summary>
+    public void Relocalize()
+    {
+        Title = Strings.Settings.WindowTitle;
+        _view.Relocalize();
+    }
+
     /// <summary>Настройки поменялись не из окна (трей, «последний выбор») — показать новые.</summary>
     public void Reload(AppSettings settings) => _view.Settings = settings;
 

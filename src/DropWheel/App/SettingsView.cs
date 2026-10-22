@@ -4,6 +4,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using DropWheel.Conversions;
 using DropWheel.Input;
+using DropWheel.Localization;
 using DropWheel.Settings;
 using DropWheel.Ui;
 using DropWheel.Wheel;
@@ -136,6 +137,12 @@ public sealed class SettingsView : Border
     }
 
     private void Change(Func<AppSettings, AppSettings> change) => _settings = Update(change);
+
+    /// <summary>
+    /// Сменился язык интерфейса (Loc.Current) — перестроить всё окно на новом языке. Отложено: смена приходит
+    /// из обработчика переключателя, который сейчас будет заменён.
+    /// </summary>
+    public void Relocalize() => Dispatcher.BeginInvoke(Build);
 
     // ---------- каркас ----------
 
@@ -357,6 +364,16 @@ public sealed class SettingsView : Border
         outputPanel.Children.Add(folderRow);
         page.Children.Add(Card(outputPanel));
 
+        // Язык интерфейса: «Как в Windows» / «Русский» / «English» — применяется сразу (приложение перестраивает окна).
+        var languages = new ChoicePills(p,
+            [(Loc.Auto, S.LanguageAuto), (Loc.Russian, Loc.NativeName(UiLanguage.Ru)), (Loc.English, Loc.NativeName(UiLanguage.En))],
+            Loc.Normalize(_settings.Language), S.LanguageTitle) { Margin = new Thickness(0, 12, 0, -6) };
+        languages.SelectionChanged += v => Change(s => s with { Language = (string)v });
+        var languagePanel = new StackPanel();
+        languagePanel.Children.Add(Titles(S.LanguageTitle, S.LanguageHint));
+        languagePanel.Children.Add(languages);
+        page.Children.Add(Card(languagePanel));
+
         // Windows
         page.Children.Add(SectionTitle(S.SystemTitle));
         page.Children.Add(ToggleCard(S.AutoStart, S.AutoStartHint, _settings.AutoStart,
@@ -530,7 +547,7 @@ public sealed class SettingsView : Border
         row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
-        var check = new CheckMark(p, !entry.Hidden, S.ShowOnWheel + ": " + op.Label)
+        var check = new CheckMark(p, !entry.Hidden, S.ShowOnWheel + ": " + Loc.Label(op))
         {
             Margin = new Thickness(6, 0, 12, 0), VerticalAlignment = VerticalAlignment.Center,
             ToolTip = p.MakeToolTip(S.ShowOnWheel),
@@ -545,7 +562,7 @@ public sealed class SettingsView : Border
             Text = OperationGlyphs.For(op), FontFamily = UiFonts.Icons, FontSize = 14, Foreground = p.TextSecondary,
             VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 8, 0),
         });
-        title.Children.Add(new TextBlock { Text = op.Label, FontSize = 14, Foreground = p.Text, VerticalAlignment = VerticalAlignment.Center });
+        title.Children.Add(new TextBlock { Text = Loc.Label(op), FontSize = 14, Foreground = p.Text, VerticalAlignment = VerticalAlignment.Center });
         text.Children.Add(title);
         var notes = Notes(op, overLimit);
         if (notes.Length > 0)

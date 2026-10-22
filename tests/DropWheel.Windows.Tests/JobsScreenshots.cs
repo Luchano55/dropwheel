@@ -11,7 +11,7 @@ namespace DropWheel.Windows.Tests;
 public class JobsScreenshots
 {
     /// <summary>«Фото» для миниатюры: небо, солнце, горы — вместо настоящего превью из проводника.</summary>
-    private static ImageSource FakePhoto(Color sky, Color ground)
+    internal static ImageSource FakePhoto(Color sky, Color ground)
     {
         var visual = new DrawingVisual();
         using (var dc = visual.RenderOpen())
@@ -53,7 +53,7 @@ public class JobsScreenshots
         new("7", "clip.mkv", "Без звука", JobState.Canceled) { Glyph = Glyphs.Video },
     ];
 
-    private static void Save(JobsFlyoutView view, bool light, bool backdrop, string name)
+    internal static void Save(JobsFlyoutView view, bool light, bool backdrop, string name)
     {
         var (scene, w, h) = Scenes.Flyout(view, light, backdrop);
         var path = Screenshot.Save(scene, w, h, name);

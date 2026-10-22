@@ -27,17 +27,17 @@ public class WheelScreenshots
         new("pdf-to-text", "TXT"), new("pdf-to-docx", "Word (DOCX)"),
     ];
 
-    private static IReadOnlyList<WheelItem> ItemsFor(string file, OperationMode mode) =>
+    internal static IReadOnlyList<WheelItem> ItemsFor(string file, OperationMode mode) =>
         WheelItems.For(OperationCatalog.ForFiles([file]), mode);
 
-    private static WheelControl Make(bool light, bool translucent = true) => new()
+    internal static WheelControl Make(bool light, bool translucent = true) => new()
     {
         Palette = light ? WheelPalette.Light() : WheelPalette.Dark(),
         Backdrop = translucent ? WheelBackdrop.Translucent : WheelBackdrop.Solid,
         IsPending = false,
     };
 
-    private static void Save(WheelControl wheel, bool light, string name)
+    internal static void Save(WheelControl wheel, bool light, string name)
     {
         var path = Screenshot.Save(Scenes.Wheel(wheel, light), Size, Size, name);
         Assert.True(new FileInfo(path).Length > 1000);

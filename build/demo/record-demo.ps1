@@ -204,8 +204,9 @@ try {
 
     Write-Step "Запуск DropWheel в демо-режиме"
     New-Item -ItemType Directory -Force -Path $script:dataDir | Out-Null
-    # Без проверки обновлений (сеть, «есть новая версия») и без записи в реестр пункта меню.
-    '{ "checkForUpdates": false, "contextMenuEnabled": false }' |
+    # Без проверки обновлений (сеть, «есть новая версия») и без записи в реестр пункта меню;
+    # интерфейс — русский при любом языке Windows раннера (ролик для README).
+    '{ "checkForUpdates": false, "contextMenuEnabled": false, "language": "ru" }' |
         Set-Content (Join-Path $script:dataDir "settings.json") -Encoding utf8NoBOM
     $env:DROPWHEEL_DEMO = "1"
     $env:DROPWHEEL_DATA_DIR = $script:dataDir
