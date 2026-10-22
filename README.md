@@ -86,7 +86,7 @@ Not a fan of drag-and-drop? Right-click a file → **Convert…** in the Explore
   <tr>
     <td width="33%" valign="top">
       <h3>📚 Many files at once</h3>
-      Select several files: convert them all, merge PDFs, put photos into one PDF, or pack everything into a single archive.
+      Select several files: convert them all, merge PDFs, put photos into one PDF, or pack everything into a single archive. Or copy them and press <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>V</kbd> — works for screenshots too.
     </td>
     <td width="33%" valign="top">
       <h3>⚡ Quiet background queue</h3>
@@ -177,7 +177,7 @@ Tools keep the format for ordinary pictures; HEIC, AVIF, SVG, PSD and RAW come o
 </details>
 
 <details>
-<summary><b>🎬 Video</b> — MP4, MOV, MKV, WebM, AVI · subtitles → SRT</summary>
+<summary><b>🎬 Video</b> — MP4, MOV, MKV, WebM, AVI · subtitles → SRT · rotate, frames, poster</summary>
 
 <br>
 
@@ -189,9 +189,12 @@ Tools keep the format for ordinary pictures; HEIC, AVIF, SVG, PSD and RAW come o
 | Convert | → WebM | VP9 + Opus | — | `to-webm` |
 | Convert | → GIF | 15 fps, up to 640 px wide, optimised palette | — | `to-gif` |
 | Convert | → MP3 | just the soundtrack | — | `video-to-mp3` |
+| Convert | → JPG (frame) | a poster: the frame at 1 s (the last one for shorter clips) → `clip (frame).jpg` | — | `video-poster` |
 | Tool | Compress | H.264 at CRF 28 → `clip (сжато).mp4` | — | `video-compress` |
 | Tool | 720p | short side ≤ 720 px, vertical videos stay vertical → `clip (720p).mp4` | — | `video-720p` |
 | Tool | Mute | removes the audio without re-encoding → `clip (без звука).mp4` | — | `video-mute` |
+| Tool | Rotate ↻ | 90° clockwise, re-encoded to H.264 + AAC → `clip (rotated).mp4` | — | `video-rotate-cw` |
+| Tool | Frames | one JPG per second (up to 300) → folder `clip (frames)` with `frame-001.jpg`… | — | `video-frames` |
 | Tool | Subtitles SRT | the first subtitle track → `clip.srt` next to the video (players pick it up automatically); picture subtitles from DVD/Blu-ray aren't supported | — | `video-subs` |
 
 </details>
@@ -318,11 +321,15 @@ Right-click one or more files → **Convert…** → the same wheel opens at the
 
 On Windows 11 the item is under **Show more options** (or press <kbd>Shift</kbd>+<kbd>F10</kbd>). If DropWheel isn't running, it starts automatically.
 
+### 📋 From the clipboard: <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>V</kbd>
+
+Copy files in Explorer (<kbd>Ctrl</kbd>+<kbd>C</kbd>) or take a screenshot (<kbd>Win</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd>, “Copy image” in a browser), then press <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>V</kbd> — or right-click the tray icon → **From clipboard…**. The wheel opens at the cursor: for copied files — the same as **Convert…**; a picture is first saved as `Clipboard 2026-10-22 10-31-05.png` in `Pictures\DropWheel` (or your shared output folder), then you pick JPG, WebP, PDF, ICO, text (OCR)… Only text in the clipboard → a short hint. The shortcut can be turned off in the settings; if another program already uses it, DropWheel works without it (the tray item stays).
+
 ### 🔔 Tray, jobs and notifications
 
 - **Left click** the tray icon — the jobs flyout: thumbnails, progress bars, *Cancel*; finished jobs have *Open* and *Show in folder*, failed ones the reason and *Details*.
 - **Double click** — the settings window.
-- **Right click** — *Jobs*, *Settings…*, the Explorer menu on/off switch, *Open log*, *Check for updates*, *Exit*.
+- **Right click** — *Jobs*, *From clipboard…*, *Settings…*, the Explorer menu on/off switch, *Open log*, *Check for updates*, *Exit*.
 - While something is being converted, the icon shows an orange badge with the number of jobs.
 - **Notifications** show a preview of the result with *Open* and *Show in folder*. Several files finished together → one notification “Готово: N файлов” (Done: N files).
 
@@ -338,7 +345,7 @@ Double-click the tray icon (or right click → *Settings…*). Every change appl
 - **Language** — *Same as Windows* (default: Russian on a Russian Windows, English otherwise), *Русский* or *English*; switches right away.
 - **Where results go** — next to the original, or all into one folder (default `Downloads\DropWheel`).
 - **Quality** — JPG and WebP (50–100), video CRF (18–32, lower = better), MP3 bitrate (128–320 kbps). Applies to new jobs.
-- **Start with Windows**, the Explorer menu item, the daily update check.
+- **Start with Windows**, the Explorer menu item, <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>V</kbd> for the clipboard, the daily update check.
 - **Your own wheel** — for each file type (photo, video, audio, PDF, Word, Excel, PowerPoint, text, archives, any file): reorder the formats (drag or ↑/↓), hide the ones you never use, with a live preview of the wheel. **Last choice first** puts the format you picked last time for that type on top.
 
 ### ⌨️ Command line
