@@ -18,15 +18,21 @@ $dest = New-Item -ItemType Directory -Force -Path $Destination
 $work = New-Item -ItemType Directory -Force -Path (Join-Path ([IO.Path]::GetTempPath()) "dropwheel-tools")
 
 # --- ffmpeg ---
-# Самая новая release-ветка (не master): ffmpeg-nX.Y-latest-win64-gpl-X.Y.zip. Сборки выкладываются ежедневно,
-# и в только что созданном релизе файлов ещё может не быть — тогда берём предыдущий релиз.
-$ffAsset = $null
-$ffReleases = Invoke-RestMethod -Headers $headers "https://api.github.com/repos/BtbN/FFmpeg-Builds/releases?per_page=5"
-foreach ($ffRelease in $ffReleases) {
-    $ffAsset = $ffRelease.assets | Where-Object { $_.name -match '^ffmpeg-n[\d.]+-latest-win64-gpl-[\d.]+\.zip$' } |
+# Самая новая release-ветка (не master) из релиза «latest»: ffmpeg-nX.Y-latest-win64-gpl-X.Y.zip.
+# Релиз «latest» пересобирается ежедневно, и пока идёт выкладка, файлов в нём может не быть — тогда берём
+# такую же сборку из последних ежедневных релизов autobuild-…: ffmpeg-nX.Y.Z-…-win64-gpl-X.Y.zip.
+function Find-FfmpegAsset($release) {
+    $release.assets | Where-Object { $_.name -match '^ffmpeg-n[\d.]+-[\w.-]+-win64-gpl-[\d.]+\.zip$' } |
         Sort-Object { [version]($_.name -replace '^ffmpeg-n([\d.]+)-.*$', '$1') } -Descending | Select-Object -First 1
-    if ($ffAsset) { break }
-    Write-Warning "В релизе ffmpeg $($ffRelease.tag_name) нет сборки win64-gpl — пробую предыдущий"
+}
+$ffAsset = Find-FfmpegAsset (Invoke-RestMethod -Headers $headers "https://api.github.com/repos/BtbN/FFmpeg-Builds/releases/latest")
+if (-not $ffAsset) {
+    Write-Warning "В релизе ffmpeg latest нет сборки win64-gpl — ищу в ежедневных"
+    foreach ($ffRelease in (Invoke-RestMethod -Headers $headers "https://api.github.com/repos/BtbN/FFmpeg-Builds/releases?per_page=10")) {
+        if ($ffRelease.tag_name -notlike 'autobuild-*') { continue }
+        $ffAsset = Find-FfmpegAsset $ffRelease
+        if ($ffAsset) { break }
+    }
 }
 if (-not $ffAsset) { throw "Не найдена сборка ffmpeg win64-gpl" }
 Write-Host "ffmpeg: $($ffAsset.name)"
