@@ -321,13 +321,24 @@ On Windows 11 the item is under **Show more options** (or press <kbd>Shift</kbd>
 ### 🔔 Tray, jobs and notifications
 
 - **Left click** the tray icon — the jobs flyout: thumbnails, progress bars, *Cancel*; finished jobs have *Open* and *Show in folder*, failed ones the reason and *Details*.
-- **Right click** — «Задачи» (jobs), the Explorer menu on/off switch, «Открыть журнал» (open the log folder), «Проверить обновления» (check for updates), «Выход» (exit).
+- **Double click** — the settings window.
+- **Right click** — «Задачи» (jobs), «Настройки…» (settings), the Explorer menu on/off switch, «Открыть журнал» (open the log folder), «Проверить обновления» (check for updates), «Выход» (exit).
 - While something is being converted, the icon shows an orange badge with the number of jobs.
 - **Notifications** show a preview of the result with *Open* and *Show in folder*. Several files finished together → one notification “Готово: N файлов” (Done: N files).
 
 ### 🔄 Updates
 
-Once a day (and when you click «Проверить обновления») DropWheel reads a small `version.json` from the [`dev-build` release](https://github.com/Luchano55/dropwheel/releases/tag/dev-build). If there's a newer build, the tray menu offers **«Обновить до сборки N»** — nothing is downloaded until you click it. Don't want the check at all? Set `"checkForUpdates": false` in `%AppData%\DropWheel\settings.json`. This is the only time DropWheel goes online.
+Once a day (and when you click «Проверить обновления») DropWheel reads a small `version.json` from the [`dev-build` release](https://github.com/Luchano55/dropwheel/releases/tag/dev-build). If there's a newer build, the tray menu offers **«Обновить до сборки N»** — nothing is downloaded until you click it. Don't want the check at all? Turn off «Проверять обновления» in the settings window. This is the only time DropWheel goes online.
+
+### ⚙️ Settings
+
+Double-click the tray icon (or right click → «Настройки…»). Every change applies immediately — no OK button — and is saved to `%AppData%\DropWheel\settings.json`.
+
+- **Hotkey** — <kbd>Space</kbd> (default), <kbd>Ё</kbd>/<kbd>`</kbd>, <kbd>Caps Lock</kbd> or <kbd>F1</kbd>–<kbd>F12</kbd>; works right away, no restart.
+- **Where results go** — next to the original, or all into one folder (default `Downloads\DropWheel`).
+- **Quality** — JPG and WebP (50–100), video CRF (18–32, lower = better), MP3 bitrate (128–320 kbps). Applies to new jobs.
+- **Start with Windows**, the Explorer menu item, the daily update check.
+- **Your own wheel** — for each file type (photo, video, audio, PDF, Word, Excel, PowerPoint, text, archives, any file): reorder the formats (drag or ↑/↓), hide the ones you never use, with a live preview of the wheel. **«Последний выбор — первым»** puts the format you picked last time for that type on top.
 
 ### ⌨️ Command line
 
@@ -444,7 +455,7 @@ Right-click the tray icon → «Открыть журнал» (open log), take t
 - [x] Self-update from GitHub Releases: only the changed parts, verified with SHA-256
 - [x] Automated demo recording and end-to-end test on a real Windows machine in CI
 - [ ] Built-in editors (inspired by Tangerine): crop with aspect ratios (Free, 1:1, 16:9, 9:16, 4:3, 3:4), add a background (palette, padding, rounded corners, shadow), annotations
-- [ ] Settings window: hotkey, output folder, quality, autostart
+- [x] Settings window: hotkey, output folder, quality, autostart; your own wheel (order, hidden formats, last choice first)
 - [ ] Whole-folder batch processing
 - [ ] English interface
 - [ ] Video trimming and cropping
