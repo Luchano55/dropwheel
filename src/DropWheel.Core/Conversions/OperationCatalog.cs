@@ -160,6 +160,10 @@ public static class OperationCatalog
             { InputExtensions = Extensions.PowerPoint, Result = ResultKind.Folder },
         // PDF → Word: Word сам переводит PDF в редактируемый документ.
         new("pdf-to-docx",   "DOCX", Conv, Pdf, Office, "", OutputRule.Fixed("docx")),
+        // PDF → Markdown: Word перестраивает PDF во временный DOCX, из него — Markdown (как word-to-md).
+        // Без Word — текст pdftotext как есть (шаблон аргументов — для запасного движка). Решение D-OFFICE.
+        new(Engines.OfficeFormats.PdfToMdId, "Markdown", Conv, Pdf, Office, "-layout -enc UTF-8 {in} {out}", OutputRule.Fixed("md"))
+            { Fallback = Pdftotext },
 
         // DOCLIBS — документы без Office (решение D-DOCLIBS): бесплатные библиотеки (DocLibsEngine)
         // и печать HTML в PDF через Edge (WebPdfEngine, только Windows). Word — только DOCX/DOCM.

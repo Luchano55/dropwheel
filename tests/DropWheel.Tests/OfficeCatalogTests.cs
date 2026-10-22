@@ -58,6 +58,7 @@ public class OfficeCatalogTests : IDisposable
     [InlineData("ppt-to-ppt", "PPT", "ppt", null)]
     [InlineData("ppt-to-odp", "ODP", "odp", null)]
     [InlineData("pdf-to-docx", "DOCX", "docx", null)]
+    [InlineData("pdf-to-md", "Markdown", "md", EngineKind.Pdftotext)]
     public void Office_file_operations_shape(string id, string label, string ext, EngineKind? fallback)
     {
         var op = OperationCatalog.Find(id)!;
@@ -66,6 +67,25 @@ public class OfficeCatalogTests : IDisposable
         Assert.Equal(ext, op.Output.Resolve(".anything"));
         Assert.Equal(fallback, op.Fallback);
         Assert.True(op.Label.Length <= 16, op.Label);
+    }
+
+    [Fact]
+    public void Pdf_to_markdown_goes_through_a_temporary_docx_next_to_the_result()
+    {
+        var op = OperationCatalog.Find("pdf-to-md")!;
+        Assert.Equal(new OfficeTarget(OfficeApp.Word, OfficeAction.SaveAs, OfficeFormats.WordDocx), OfficeFormats.For(op));
+        var temp = Path.Combine("Мои фото", ".dropwheel-tmp", ".dropwheel-1.md");
+        Assert.Equal(Path.Combine("Мои фото", ".dropwheel-tmp", ".dropwheel-1.docx"), OfficeFormats.ViaDocx(op, temp));
+        Assert.Null(OfficeFormats.ViaDocx(OperationCatalog.Find("pdf-to-docx")!, temp));
+    }
+
+    [Fact]
+    public void Pdf_convert_wheel_has_markdown_within_the_limit()
+    {
+        var ops = OperationCatalog.ForFiles(["Мои фото/тест 1.pdf"]);
+        var (convert, _) = DropWheel.Wheel.WheelArrangement.Arrange(ops, DropWheel.Wheel.WheelGroups.Pdf, new DropWheel.Wheel.WheelPreferences());
+        Assert.Equal(["pdf-to-png", "pdf-to-jpg", "pdf-to-txt", "pdf-to-docx", "pdf-to-md"], convert.Select(t => t.Id));
+        Assert.True(convert.Count <= DropWheel.Wheel.WheelGeometry.MaxSectors);
     }
 
     [Fact]
@@ -104,6 +124,7 @@ public class OfficeCatalogTests : IDisposable
     [InlineData("данные.csv", "csv-to-xlsx")] // CSV → XLSX — без Office (DocLibs): разделитель и кодировка угадываются
     [InlineData("данные.csv", "excel-to-pdf")]
     [InlineData("скан.pdf", "pdf-to-docx")]
+    [InlineData("скан.pdf", "pdf-to-md")]
     [InlineData("доклад.pptx", "ppt-to-png")]
     public void Offered(string file, string op) => Assert.Contains(op, Ids(file));
 

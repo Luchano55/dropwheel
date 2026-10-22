@@ -40,6 +40,8 @@ public static class OfficeFormats
         ["word-to-txt"] = new(OfficeApp.Word, OfficeAction.SaveAs, WordUnicodeText),
         // Word сам «перетекает» PDF в редактируемый документ (PDF Reflow, Word 2013+).
         ["pdf-to-docx"] = new(OfficeApp.Word, OfficeAction.SaveAs, WordDocx),
+        // PDF → Markdown: то же PDF → DOCX во временный файл, дальше DocxText.ToMarkdown (см. ViaDocx).
+        [PdfToMdId] = new(OfficeApp.Word, OfficeAction.SaveAs, WordDocx),
 
         ["excel-to-pdf"] = new(OfficeApp.Excel, OfficeAction.ExportPdf, ExcelPdf),
         ["excel-to-xlsx"] = new(OfficeApp.Excel, OfficeAction.SaveAs, ExcelXlsx),
@@ -53,6 +55,16 @@ public static class OfficeFormats
         ["ppt-to-odp"] = new(OfficeApp.PowerPoint, OfficeAction.SaveAs, PptOdp),
         ["ppt-to-png"] = new(OfficeApp.PowerPoint, OfficeAction.SlidesToPng, 0),
     };
+
+    /// <summary>PDF → Markdown: Word сохраняет DOCX, из которого делается Markdown.</summary>
+    public const string PdfToMdId = "pdf-to-md";
+
+    /// <summary>
+    /// Office сохраняет не сам результат, а промежуточный DOCX (рядом с временным результатом, в скрытой папке),
+    /// который затем переводится в Markdown. null — Office пишет результат сам.
+    /// </summary>
+    public static string? ViaDocx(Operation op, string output) =>
+        string.Equals(op.Id, PdfToMdId, StringComparison.OrdinalIgnoreCase) ? Path.ChangeExtension(output, ".docx") : null;
 
     /// <summary>Что делать Office для операции; null — операция не для Office.</summary>
     public static OfficeTarget? For(Operation op) => ById.GetValueOrDefault(op.Id);

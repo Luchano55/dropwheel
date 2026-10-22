@@ -94,6 +94,28 @@ public sealed class OfficeEngine : IInternalEngine, IDisposable
         var input = inputs[0];
         if (OfficeFormats.IsPasswordProtected(input)) throw new ConversionException(Loc.T.ErrDocPassword, input);
 
+        // PDF → Markdown: Word пишет промежуточный DOCX, затем — Markdown встроенной библиотекой (как word-to-md).
+        if (OfficeFormats.ViaDocx(op, output) is { } docx)
+        {
+            try
+            {
+                await RunAsync(op, input, docx, target, progress, ct).ConfigureAwait(false);
+                ct.ThrowIfCancellationRequested();
+                await Task.Run(() => File.WriteAllText(output, DropWheel.Documents.DocxText.ToMarkdown(docx, ct),
+                    DropWheel.Documents.TextFiles.Utf8), ct).ConfigureAwait(false);
+            }
+            finally
+            {
+                try { File.Delete(docx); } catch { /* не критично */ }
+            }
+            return;
+        }
+        await RunAsync(op, input, output, target, progress, ct).ConfigureAwait(false);
+    }
+
+    private async Task RunAsync(Operation op, string input, string output, OfficeTarget target,
+        IProgress<double>? progress, CancellationToken ct)
+    {
         var session = CurrentSession();
         var host = session.Hosts[target.App];
         var timeout = op.Kind == MediaKind.Pdf || op.Result == ResultKind.Folder ? SlowJobTimeout : JobTimeout;

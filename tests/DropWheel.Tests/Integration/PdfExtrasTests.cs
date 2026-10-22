@@ -50,6 +50,22 @@ public class PdfExtrasTests : IDisposable
     }
 
     [SkippableFact]
+    public async Task Pdf_to_markdown_without_word_is_pdftotext_text()
+    {
+        Skip.IfNot(HasPdftotext, "нет pdftotext");
+        var pdf = TextPdf.Write(Path.Combine(_dir.Path, "тест 1.pdf"), ["Hello DropWheel 2024", "Привет, мир! Ёлка"]);
+        var op = OperationCatalog.Find("pdf-to-md")!;
+        Assert.Equal(EngineKind.Pdftotext, _converter.EngineFor(op, "pdf")); // Office здесь нет
+
+        var output = await Run("pdf-to-md", pdf);
+
+        Assert.Equal(Path.Combine(_dir.Path, "тест 1.md"), output);
+        var text = File.ReadAllText(output, new UTF8Encoding(false, throwOnInvalidBytes: true));
+        Assert.Contains("Hello DropWheel 2024", text);
+        Assert.Contains("Привет, мир! Ёлка", text);
+    }
+
+    [SkippableFact]
     public async Task Scanned_pdf_without_text_fails_clearly_without_leftovers()
     {
         Skip.IfNot(HasPdftotext, "нет pdftotext");

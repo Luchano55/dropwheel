@@ -159,7 +159,7 @@ public class CatalogTests
     public void Single_pdf_gets_pages_split_optimize_but_not_merge()
     {
         var ids = Ids(OperationCatalog.ForFiles(["/docs/отчёт 1.PDF"])).ToList();
-        Assert.Equal(["pdf-to-png", "pdf-to-jpg", "pdf-split", "pdf-optimize", "zip-pack", "pack-7z", "pdf-to-txt", "pdf-rotate", "pdf-to-docx"], ids);
+        Assert.Equal(["pdf-to-png", "pdf-to-jpg", "pdf-split", "pdf-optimize", "zip-pack", "pack-7z", "pdf-to-txt", "pdf-rotate", "pdf-to-docx", "pdf-to-md"], ids);
     }
 
     [Fact]
