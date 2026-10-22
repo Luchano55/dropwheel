@@ -136,9 +136,26 @@ begin
     '', SW_HIDE, ewWaitUntilTerminated, Code) and (Code = 0);
 end;
 
+{ Принудительно завершить DropWheel.exe только из папки программы (при удалении zip-копию в другой папке не трогаем). }
+procedure KillFromAppFolder;
+var
+  Code: Integer;
+  Folder: String;
+begin
+  Folder := ExpandConstant('{app}');
+  { Апостроф в пути (O'Brien) — удвоить для строки PowerShell в одинарных кавычках. }
+  StringChangeEx(Folder, #39, #39#39, True);
+  Exec(ExpandConstant('{sys}\WindowsPowerShell\v1.0\powershell.exe'),
+    '-NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "Get-Process -Name DropWheel -ErrorAction SilentlyContinue | '
+      + 'Where-Object { $_.Path -like ' + #39 + Folder + '\*' + #39 + ' } | Stop-Process -Force"',
+    '', SW_HIDE, ewWaitUntilTerminated, Code);
+  Log(Format('Stop-Process (app folder only) finished with code %d', [Code]));
+end;
+
 { Закрыть DropWheel: сначала вежливо (--exit через канал первому экземпляру, задачи отменяются, значок убирается),
-  потом — если остался старый экземпляр (до 0.3.0 нет --exit) или копия из другой папки — принудительно. }
-procedure CloseDropWheel(const ExePath: String);
+  потом принудительно. При установке — любой DropWheel.exe этого пользователя: старый экземпляр (до 0.3.0 нет --exit)
+  или zip-копия из другой папки держит Mutex, и новый не запустится. При удалении — только из папки программы. }
+procedure CloseDropWheel(const ExePath: String; AnyFolder: Boolean);
 var
   Code, I: Integer;
 begin
@@ -153,11 +170,16 @@ begin
 
   if IsDropWheelRunning then
   begin
-    Log('DropWheel is still running: taskkill');
-    Exec(ExpandConstant('{sys}\taskkill.exe'),
-      '/F /T /IM {#AppExeName} /FI "USERNAME eq ' + GetUserNameString + '"',
-      '', SW_HIDE, ewWaitUntilTerminated, Code);
-    Log(Format('taskkill finished with code %d', [Code]));
+    if AnyFolder then
+    begin
+      Log('DropWheel is still running: taskkill');
+      Exec(ExpandConstant('{sys}\taskkill.exe'),
+        '/F /T /IM {#AppExeName} /FI "USERNAME eq ' + GetUserNameString + '"',
+        '', SW_HIDE, ewWaitUntilTerminated, Code);
+      Log(Format('taskkill finished with code %d', [Code]));
+    end
+    else
+      KillFromAppFolder;
     for I := 1 to 20 do
     begin
       if not IsDropWheelRunning then Break;
@@ -170,7 +192,7 @@ function PrepareToInstall(var NeedsRestart: Boolean): String;
 begin
   WasRunning := IsDropWheelRunning;
   Log(Format('DropWheel running before install: %d', [Ord(WasRunning)]));
-  if WasRunning then CloseDropWheel(AppExePath);
+  if WasRunning then CloseDropWheel(AppExePath, True);
   Result := '';
 end;
 
@@ -205,7 +227,7 @@ var
 begin
   if CurUninstallStep = usUninstall then
   begin
-    CloseDropWheel(AppExePath);
+    CloseDropWheel(AppExePath, False);
     { Пункт «Конвертировать…» в проводнике: программа знает все свои ключи (и старые, по расширениям). }
     if FileExists(AppExePath) then
     begin
