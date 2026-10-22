@@ -15,6 +15,7 @@ Each version section starts with `## <version>`; CI copies it into the GitHub re
 - Своя горячая клавиша: «Основное» → «Горячая клавиша» → «Своя…» → нажмите любую клавишу (Tab, Num 5, F13, буква…).
   Ctrl, Shift, Alt, Win, Esc, Enter и Print Screen не принимаются — окно объясняет почему.
 - PDF → Markdown: с Word — заголовки, списки, жирный и таблицы (Word перестраивает PDF, как для DOCX — это небыстро); «MD (быстро)» — мгновенно, но только текст, работает и без Word.
+- Исправлено: самообновление больше не останавливается с ошибкой «Access to the path …DropWheel.exe.old is denied».
 
 **English**
 - Picture cropping: Tools → Crop… opens a window with a crop frame — drag the corners and edges, drag inside to move;
@@ -23,6 +24,7 @@ Each version section starts with `## <version>`; CI copies it into the GitHub re
   One picture at a time; CLI: `img-crop --crop 800x600+100+50`.
 - Custom hotkey: General → Hotkey → Custom… → press any key. Ctrl, Shift, Alt, Win, Esc, Enter and Print Screen are not accepted.
 - PDF → Markdown: with Word — headings, lists, bold and tables (Word rebuilds the PDF, as for DOCX — not fast); “MD (fast)” — instant plain text, works without Word too.
+- Fixed: self-update no longer stops with “Access to the path …DropWheel.exe.old is denied”.
 
 ## 1.0.0
 
