@@ -292,7 +292,7 @@ public sealed class TrimView : Border
             _ => TextAlignment.Center,
         };
         panel.Children.Add(new TextBlock { Text = label, FontSize = 12, Foreground = _palette.TextSecondary, TextAlignment = textAlign });
-        var value = new TextBlock { FontSize = 15, FontWeight = FontWeights.SemiBold, Foreground = _palette.Text, TextAlignment = textAlign };
+        var value = new TextBlock { FontFamily = UiFonts.Display, FontSize = 15, FontWeight = FontWeights.SemiBold, Foreground = _palette.Text, TextAlignment = textAlign };
         AutomationProperties.SetName(value, label);
         panel.Children.Add(value);
         Grid.SetColumn(panel, column);
