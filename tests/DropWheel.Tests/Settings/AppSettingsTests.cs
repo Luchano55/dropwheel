@@ -51,6 +51,33 @@ public class AppSettingsTests : IDisposable
         Assert.Single(Directory.GetFiles(Path.GetDirectoryName(SettingsPath)!));
     }
 
+    [Theory]
+    [InlineData("en", "en")]
+    [InlineData("ru", "ru")]
+    [InlineData("auto", "auto")]
+    public void Language_round_trips(string language, string expected)
+    {
+        new AppSettings { Language = language }.Save(SettingsPath);
+        Assert.Contains($"\"language\": \"{expected}\"", File.ReadAllText(SettingsPath));
+        Assert.Equal(expected, AppSettings.Load(SettingsPath).Language);
+    }
+
+    [Theory]
+    [InlineData("{ }", "auto")]                         // старый settings.json без языка
+    [InlineData("{ \"language\": null }", "auto")]
+    [InlineData("{ \"language\": \"de\" }", "auto")]   // неизвестный язык — как в Windows
+    [InlineData("{ \"language\": \"EN\" }", "en")]
+    [InlineData("{ \"Language\": \"ru\" }", "ru")]
+    public void Language_is_sanitized_on_load(string json, string expected)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(SettingsPath)!);
+        File.WriteAllText(SettingsPath, json);
+        Assert.Equal(expected, AppSettings.Load(SettingsPath).Language);
+    }
+
+    [Fact]
+    public void Language_defaults_to_auto() => Assert.Equal("auto", new AppSettings().Language);
+
     [Fact]
     public void Save_overwrites_existing_file()
     {

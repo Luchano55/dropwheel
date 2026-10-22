@@ -18,7 +18,7 @@ public class SettingsScreenshots
 {
     private const int Build = 123;
 
-    private static AppSettings Sample() => new()
+    internal static AppSettings Sample() => new()
     {
         Hotkey = "Space",
         AutoStart = true,
@@ -86,7 +86,7 @@ public class SettingsScreenshots
         return (grid, sceneW, sceneH);
     }
 
-    private static void Save(SettingsView view, bool light, string name)
+    internal static void Save(SettingsView view, bool light, string name)
     {
         // «Колесо» длиннее — окно на снимке повыше, чтобы список и мини-колесо были видны целиком.
         var height = view.Page == SettingsPage.Wheel ? 860 : SettingsView.DefaultHeight;
@@ -95,7 +95,7 @@ public class SettingsScreenshots
         Assert.True(new FileInfo(path).Length > 5000);
     }
 
-    private static SettingsView Make(bool light, SettingsPage page, AppSettings? settings = null) =>
+    internal static SettingsView Make(bool light, SettingsPage page, AppSettings? settings = null) =>
         new(light ? SettingsPalette.Light() : SettingsPalette.Dark(), settings ?? Sample(), AccentColors.Default, Build)
         {
             Page = page,
