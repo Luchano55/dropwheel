@@ -11,11 +11,17 @@ public sealed partial class Texts
         TrayContextMenu = "“Convert…” in Explorer menu",
         TrayOpenLog = "Open log",
         TrayCheckUpdates = "Check for updates",
+        TrayFromClipboard = "From clipboard…",
         TrayExit = "Exit",
         TrayUpdateTo = "Update to build {0}",
         TrayBusy = "DropWheel — working: {0}",
         TrayRunningTitle = "DropWheel is running",
         TrayStartHint = "It lives here in the tray. Drag a file and press {0} — or right-click a file → “Convert…”.",
+
+        // буфер обмена
+        ClipboardNothingTitle = "Clipboard",
+        ClipboardNothing = "The clipboard has no picture or files",
+        ClipboardFailed = "Couldn't read the clipboard",
 
         // обновления
         UpdateAvailableTitle = "A new version of DropWheel is available",
@@ -108,6 +114,8 @@ public sealed partial class Texts
         AutoStartHint = "DropWheel quietly appears in the tray after you sign in to Windows.",
         ContextMenu = "“Convert…” in Explorer menu",
         ContextMenuHint = "Right-click a file → “Convert…” — the same wheel, by clicking.",
+        ClipboardHotkey = "Ctrl+Alt+V — wheel for the clipboard",
+        ClipboardHotkeyHint = "Copy files or a screenshot and press Ctrl+Alt+V — the wheel appears at the cursor.",
         Updates = "Check for updates",
         UpdatesHint = "Once a day — the only time DropWheel goes online.",
         WheelIntro = "Which formats to show and in what order. The first one is the top petal, the rest go clockwise.",
@@ -161,6 +169,8 @@ public sealed partial class Texts
         // имена в результатах
         PageFile = "page",
         SlideFile = "slide",
+        FrameFile = "frame",
+        ClipboardFile = "Clipboard {0}",
         SheetName = "Sheet1",
         MdPicture = "Picture",
 

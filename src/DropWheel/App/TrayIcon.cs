@@ -18,7 +18,7 @@ internal sealed partial class TrayIcon : IDisposable
     private readonly ContextMenuStrip _menu;
     private readonly ToolStripMenuItem _contextMenuItem;
     private readonly ToolStripMenuItem _updateItem;
-    private readonly ToolStripMenuItem _jobsItem, _settingsItem, _logItem, _checkItem, _exitItem;
+    private readonly ToolStripMenuItem _jobsItem, _settingsItem, _clipboardItem, _logItem, _checkItem, _exitItem;
     private int? _updateBuild;
     private readonly Icon _idle;
     private Icon? _busy;
@@ -47,6 +47,8 @@ internal sealed partial class TrayIcon : IDisposable
         _updateItem.Click += (_, _) => app.InstallUpdate();
         _menu.Items.Add(_updateItem);
         _menu.Items.Add(_jobsItem = Item(Loc.T.TrayJobs, app.ShowJobs));
+        _menu.Items.Add(_clipboardItem = Item(Loc.T.TrayFromClipboard, app.FromClipboard));
+        _clipboardItem.ShortcutKeyDisplayString = app.Settings.ClipboardHotkey ? ClipboardShortcut : null;
         _menu.Items.Add(_settingsItem = Item(Strings.Tray.Settings, app.ShowSettings));
         _menu.Items.Add(_contextMenuItem);
         _menu.Items.Add(_logItem = Item(Loc.T.TrayOpenLog, () => OpenFolder(AppPaths.LogsDir)));
@@ -79,10 +81,14 @@ internal sealed partial class TrayIcon : IDisposable
 
     private bool _syncing;
 
+    /// <summary>Подсказка сочетания справа от «Из буфера обмена…» (если Ctrl+Alt+V включена).</summary>
+    private const string ClipboardShortcut = "Ctrl+Alt+V";
+
     /// <summary>Галочку «Конвертировать…» поменяли в окне настроек — показать её и в меню трея.</summary>
     public void SyncSettings(AppSettings settings)
     {
         _syncing = true;
+        _clipboardItem.ShortcutKeyDisplayString = settings.ClipboardHotkey ? ClipboardShortcut : null;
         try { _contextMenuItem.Checked = settings.ContextMenuEnabled; }
         finally { _syncing = false; }
     }
@@ -92,6 +98,7 @@ internal sealed partial class TrayIcon : IDisposable
     {
         _jobsItem.Text = Loc.T.TrayJobs;
         _settingsItem.Text = Strings.Tray.Settings;
+        _clipboardItem.Text = Loc.T.TrayFromClipboard;
         _contextMenuItem.Text = Loc.T.TrayContextMenu;
         _logItem.Text = Loc.T.TrayOpenLog;
         _checkItem.Text = Loc.T.TrayCheckUpdates;

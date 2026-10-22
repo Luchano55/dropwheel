@@ -35,6 +35,8 @@ public partial class App : Application
     private IReadOnlyList<string> _chooserPaths = [];
     private SettingsWindow? _settingsWindow;
     private SettingsSaver? _saver;
+    private GlobalHotkey? _clipboardHotkey;
+    private const int ClipboardHotkeyId = 1;
 
     /// <summary>Сколько ждать после последней правки в окне настроек, прежде чем записать settings.json.</summary>
     private static readonly TimeSpan SaveDelay = TimeSpan.FromMilliseconds(600);
@@ -105,6 +107,7 @@ public partial class App : Application
         if (Settings.ContextMenuEnabled) ContextMenuInstaller.TryInstall(Log);
 
         StartDragWheel();
+        SetClipboardHotkey(Settings.ClipboardHotkey);
         StartUpdater(args.AfterUpdate);
 
         _batcher = new InvocationBatcher(BatchQuiet, paths => Dispatcher.BeginInvoke(() => ShowChooser(paths)));
@@ -129,6 +132,82 @@ public partial class App : Application
             Log.Write("Не удалось включить колесо (хуки): " + ex);
             _dragWheel?.Dispose();
             _dragWheel = null;
+        }
+    }
+
+    /// <summary>
+    /// Ctrl+Alt+V — колесо для буфера обмена (D-CLIPBOARD). Сочетание занято другой программой — пишем в журнал
+    /// и работаем без него (пункт трея «Из буфера обмена…» остаётся).
+    /// </summary>
+    private void SetClipboardHotkey(bool on)
+    {
+        try
+        {
+            if (!on)
+            {
+                _clipboardHotkey?.Dispose();
+                _clipboardHotkey = null;
+                return;
+            }
+            _clipboardHotkey ??= new GlobalHotkey(ClipboardHotkeyId, FromClipboard);
+            if (_clipboardHotkey.IsRegistered) return;
+            if (_clipboardHotkey.TryRegister(GlobalHotkey.ModControl | GlobalHotkey.ModAlt, GlobalHotkey.VkV, out var error))
+                Log.Write("Ctrl+Alt+V (буфер обмена) включена");
+            else
+                Log.Write($"Ctrl+Alt+V занята другой программой или недоступна (код {error}) — работаю без неё");
+        }
+        catch (Exception ex)
+        {
+            Log.Write("Не удалось включить Ctrl+Alt+V: " + ex);
+        }
+    }
+
+    /// <summary>
+    /// «Из буфера обмена…» (трей, Ctrl+Alt+V): файлы — колесо для них, как из проводника; картинка — сохранить в PNG
+    /// (папка из ClipboardPlan.ImageFolder) и открыть колесо для неё; иначе — подсказка.
+    /// </summary>
+    internal void FromClipboard()
+    {
+        ClipboardReader.Snapshot snapshot;
+        try
+        {
+            snapshot = ClipboardReader.Read();
+        }
+        catch (Exception ex)
+        {
+            Log.Write("Буфер обмена не прочитался: " + ex.Message);
+            _tray?.ShowInfo(Loc.T.ClipboardNothingTitle, Loc.T.ClipboardFailed);
+            return;
+        }
+
+        var action = ClipboardPlan.Decide(snapshot.Files, snapshot.HasImage);
+        switch (action.Kind)
+        {
+            case ClipboardActionKind.Files:
+                Log.Write($"Буфер обмена: файлов {action.Files.Count}");
+                ShowChooser(action.Files);
+                break;
+            case ClipboardActionKind.Image:
+                string path;
+                try
+                {
+                    var folder = ClipboardPlan.ImageFolder(Settings.Conversion);
+                    Directory.CreateDirectory(folder);
+                    path = ClipboardPlan.ImagePath(folder, DateTime.Now);
+                    ClipboardReader.SaveImage(snapshot, path);
+                }
+                catch (Exception ex)
+                {
+                    Log.Write("Картинка из буфера не сохранилась: " + ex);
+                    _tray?.ShowInfo(Loc.T.ClipboardNothingTitle, Loc.T.ClipboardFailed);
+                    return;
+                }
+                Log.Write($"Буфер обмена: картинка сохранена в {path}");
+                ShowChooser([path]);
+                break;
+            default:
+                _tray?.ShowInfo(Loc.T.ClipboardNothingTitle, Loc.T.ClipboardNothing);
+                break;
         }
     }
 
@@ -187,6 +266,8 @@ public partial class App : Application
         _saver?.Flush();
         _dragWheel?.Dispose();
         _dragWheel = null;
+        _clipboardHotkey?.Dispose();
+        _clipboardHotkey = null;
         _pipe?.Dispose();
         _pipe = null;
         _instance?.Dispose();
@@ -364,6 +445,7 @@ public partial class App : Application
             if (now.ContextMenuEnabled) ContextMenuInstaller.TryInstall(Log);
             else ContextMenuInstaller.TryUninstall(Log);
         }
+        if (now.ClipboardHotkey != old.ClipboardHotkey) SetClipboardHotkey(now.ClipboardHotkey);
         if (now.CheckForUpdates != old.CheckForUpdates)
         {
             if (now.CheckForUpdates) _updater?.Start();
@@ -397,6 +479,7 @@ public partial class App : Application
         _settingsWindow?.Close();
         _updater?.Dispose();
         _dragWheel?.Dispose();
+        _clipboardHotkey?.Dispose();
         _chooser?.Close();
         _pipe?.Dispose();
         _batcher?.Dispose();

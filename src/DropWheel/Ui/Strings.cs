@@ -60,6 +60,8 @@ internal static class Strings
         public static string AutoStartHint => T.AutoStartHint;
         public static string ContextMenu => T.ContextMenu;
         public static string ContextMenuHint => T.ContextMenuHint;
+        public static string ClipboardHotkey => T.ClipboardHotkey;
+        public static string ClipboardHotkeyHint => T.ClipboardHotkeyHint;
         public static string Updates => T.Updates;
         public static string UpdatesHint => T.UpdatesHint;
 

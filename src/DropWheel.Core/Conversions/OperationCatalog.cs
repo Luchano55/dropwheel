@@ -6,10 +6,12 @@ namespace DropWheel.Conversions;
 
 /// <summary>
 /// Каталог операций. Новая операция — одна строка.
-/// Плейсхолдеры: {jpgq} {webpq} {crf} {crfsmall} {mp3k} — из ConversionSettings; {page} — «стр» / «page» (язык интерфейса);
+/// Плейсхолдеры: {jpgq} {webpq} {crf} {crfsmall} {mp3k} — из ConversionSettings; {page} — «стр» / «page»,
+/// {frame} — «кадр» / «frame» (язык интерфейса);
 /// {acodec} — кодек звука под расширение результата (см. ArgumentBuilder.AudioCodec).
 /// Для qpdf / pdftoppm шаблон берётся целиком: {in} — первый файл, {ins} — все файлы, {out} — результат
-/// (файл или временная папка).
+/// (файл или временная папка). У ffmpeg результат дописывается в конец, если в шаблоне нет {out}
+/// (кадры в папку: «{out}/{frame}-%03d.jpg»).
 /// </summary>
 public static class OperationCatalog
 {
@@ -44,10 +46,19 @@ public static class OperationCatalog
         new("to-webm",      "WebM", Conv, Video, FFmpeg, "-map 0:v:0 -map 0:a:0? -c:v libvpx-vp9 -crf 32 -b:v 0 -row-mt 1 -deadline good -cpu-used 4 -c:a libopus -b:a 128k", OutputRule.Fixed("webm")),
         new("to-gif",       "GIF",  Conv, Video, FFmpeg, "-an -vf fps=15,scale='min(640,iw)':-1:flags=lanczos,split[a][b];[a]palettegen[p];[b][p]paletteuse -loop 0", OutputRule.Fixed("gif")),
         new("video-to-mp3", "MP3",  Conv, Video, FFmpeg, "-vn -map 0:a:0 {acodec}", OutputRule.Fixed("mp3")),
+        // Обложка: кадр на 1-й секунде. tpad дублирует последний кадр на секунду — у ролика короче секунды
+        // берётся последний кадр, а не «ничего». -update 1 — один файл, а не серия.
+        new("video-poster", "JPG (кадр)", Conv, Video, FFmpeg, "-vf tpad=stop_mode=clone:stop_duration=1 -ss 1 -frames:v 1 -q:v 2 -update 1", OutputRule.Fixed("jpg"), " (кадр)"),
         // Видео — инструменты
         new("video-compress", "Сжать",      Tool, Video, FFmpeg, $"-map 0:v:0 -map 0:a:0? -vf {Even} -crf {{crfsmall}} {H264}", OutputRule.Fixed("mp4"), " (сжато)"),
         new("video-720p",     "720p",       Tool, Video, FFmpeg, $"-map 0:v:0 -map 0:a:0? -vf {To720} -crf {{crf}} {H264}",     OutputRule.Fixed("mp4"), " (720p)"),
         new("video-mute",     "Без звука",  Tool, Video, FFmpeg, "-map 0 -map -0:a -c copy",                                     OutputRule.Same("mp4", "mp4", "m4v", "mov", "mkv", "webm", "avi"), " (без звука)"),
+        // Повернуть на 90° по часовой: кадр перекодируется (H.264, как «Сжать»), звук — в AAC:
+        // копировать звук нельзя — PCM/FLAC из MOV/MKV в MP4 не кладётся. Телефонная пометка поворота
+        // ffmpeg применяет сам до transpose, так что «на боку» не окажется.
+        new("video-rotate-cw", "Повернуть ↻", Tool, Video, FFmpeg, $"-map 0:v:0 -map 0:a:0? -vf transpose=1,{Even} -crf {{crf}} {H264}", OutputRule.Fixed("mp4"), " (повёрнуто)"),
+        // Кадр в секунду, не больше 300, в папку «видео (кадры)»: кадр-001.jpg … ({frame} — «кадр» / «frame»).
+        new("video-frames", "Кадры", Tool, Video, FFmpeg, "-vf fps=1 -frames:v 300 -q:v 2 {out}/{frame}-%03d.jpg", OutputRule.Fixed("jpg"), " (кадры)") { Result = ResultKind.Folder },
 
         // Аудио — конвертация
         new("to-mp3",  "MP3",  Conv, Audio, FFmpeg, "-vn {acodec}", OutputRule.Fixed("mp3")),

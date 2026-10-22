@@ -380,6 +380,8 @@ public sealed class SettingsView : Border
             on => Change(s => s with { AutoStart = on })));
         page.Children.Add(ToggleCard(S.ContextMenu, S.ContextMenuHint, _settings.ContextMenuEnabled,
             on => Change(s => s with { ContextMenuEnabled = on })));
+        page.Children.Add(ToggleCard(S.ClipboardHotkey, S.ClipboardHotkeyHint, _settings.ClipboardHotkey,
+            on => Change(s => s with { ClipboardHotkey = on })));
         page.Children.Add(ToggleCard(S.Updates, S.UpdatesHint, _settings.CheckForUpdates,
             on => Change(s => s with { CheckForUpdates = on })));
     }

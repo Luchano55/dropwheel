@@ -12,6 +12,8 @@ public sealed record AppSettings
     /// <summary>Горячая клавиша колеса (имя клавиши).</summary>
     public string Hotkey { get; init; } = "Space";
     public bool ContextMenuEnabled { get; init; } = true;
+    /// <summary>Ctrl+Alt+V — колесо для файлов или картинки из буфера обмена (решение D-CLIPBOARD).</summary>
+    public bool ClipboardHotkey { get; init; } = true;
     public bool AutoStart { get; init; }
     /// <summary>null — искать в tools/ рядом с exe.</summary>
     public string? FfmpegPath { get; init; }

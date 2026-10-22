@@ -25,8 +25,7 @@ public static class ArgumentBuilder
             [
                 "-hide_banner", "-nostdin", "-y", "-nostats", "-progress", "pipe:1",
                 "-i", input,
-                .. middle,
-                output,
+                .. FfmpegOutput(middle, output),
             ],
             // [0] — только первый кадр/страница: статичный результат из GIF/TIFF/HEIC-серий.
             // Combine (картинки → один PDF): все входы, каждый — первым кадром, по странице на файл.
@@ -60,6 +59,18 @@ public static class ArgumentBuilder
         return args;
     }
 
+    /// <summary>
+    /// ffmpeg: результат — последним аргументом. Если в шаблоне есть {out} (серия кадров в папку:
+    /// «{out}/{frame}-%03d.jpg»), подставляем папку туда, а «%» в самом пути удваиваем —
+    /// иначе ffmpeg примет «%» из имени папки («100% фото») за номер кадра.
+    /// </summary>
+    private static string[] FfmpegOutput(string[] template, string output)
+    {
+        if (!template.Any(t => t.Contains("{out}"))) return [.. template, output];
+        var escaped = output.Replace("%", "%%");
+        return template.Select(t => t.Replace("{out}/", escaped + Path.DirectorySeparatorChar).Replace("{out}", escaped)).ToArray();
+    }
+
     /// <summary>JPEG (и PDF с JPEG-сжатием) не умеет прозрачность — подкладываем белый фон.</summary>
     private static readonly string[] FlattenOnWhite = ["-background", "white", "-alpha", "remove", "-alpha", "off"];
 
@@ -84,7 +95,8 @@ public static class ArgumentBuilder
             .Replace("{crf}", s.VideoCrf.ToString())
             .Replace("{crfsmall}", s.CompressCrf.ToString())
             .Replace("{mp3k}", s.Mp3BitrateKbps.ToString())
-            .Replace("{page}", Loc.T.PageFile);
+            .Replace("{page}", Loc.T.PageFile)
+            .Replace("{frame}", Loc.T.FrameFile);
         return text.Split(' ', StringSplitOptions.RemoveEmptyEntries);
     }
 }

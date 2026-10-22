@@ -18,6 +18,7 @@ public class AppSettingsTests : IDisposable
         Assert.Equal(new AppSettings(), s);
         Assert.Equal("Space", s.Hotkey);
         Assert.True(s.ContextMenuEnabled);
+        Assert.True(s.ClipboardHotkey);
         Assert.False(s.AutoStart);
         Assert.Equal(90, s.Conversion.JpegQuality);
     }

@@ -17,12 +17,18 @@ public sealed partial class Texts
     public string TrayContextMenu { get; init; } = "Пункт «Конвертировать…» в проводнике";
     public string TrayOpenLog { get; init; } = "Открыть журнал";
     public string TrayCheckUpdates { get; init; } = "Проверить обновления";
+    public string TrayFromClipboard { get; init; } = "Из буфера обмена…";
     public string TrayExit { get; init; } = "Выход";
     public string TrayUpdateTo { get; init; } = "Обновить до сборки {0}";
     public string TrayBusy { get; init; } = "DropWheel — в работе: {0}";
     public string TrayRunningTitle { get; init; } = "DropWheel работает";
     public string TrayStartHint { get; init; } =
         "Значок — здесь, в трее. Потащите файл и нажмите {0} — или правой кнопкой по файлу → «Конвертировать…».";
+
+    // ---------- буфер обмена ----------
+    public string ClipboardNothingTitle { get; init; } = "Буфер обмена";
+    public string ClipboardNothing { get; init; } = "В буфере нет картинки или файлов";
+    public string ClipboardFailed { get; init; } = "Не удалось прочитать буфер обмена";
 
     // ---------- обновления ----------
     public string UpdateAvailableTitle { get; init; } = "Есть новая версия DropWheel";
@@ -119,6 +125,9 @@ public sealed partial class Texts
     public string AutoStartHint { get; init; } = "DropWheel тихо появится в трее после входа в Windows.";
     public string ContextMenu { get; init; } = "Пункт «Конвертировать…» в проводнике";
     public string ContextMenuHint { get; init; } = "Правый клик по файлу → «Конвертировать…» — то же колесо, но щелчком.";
+    public string ClipboardHotkey { get; init; } = "Ctrl+Alt+V — колесо для буфера обмена";
+    public string ClipboardHotkeyHint { get; init; } =
+        "Скопируйте файлы или снимок экрана и нажмите Ctrl+Alt+V — колесо появится у курсора.";
     public string Updates { get; init; } = "Проверять обновления";
     public string UpdatesHint { get; init; } = "Раз в сутки — единственное обращение программы в интернет.";
     public string WheelIntro { get; init; } =
@@ -173,6 +182,10 @@ public sealed partial class Texts
     // ---------- имена в результатах ----------
     /// <summary>Файлы страниц PDF: «стр-1.png».</summary>
     public string PageFile { get; init; } = "стр";
+    /// <summary>Кадры из видео: «кадр-001.jpg».</summary>
+    public string FrameFile { get; init; } = "кадр";
+    /// <summary>Картинка из буфера обмена: «Буфер 2026-10-22 10-31-05.png» ({0} — дата и время).</summary>
+    public string ClipboardFile { get; init; } = "Буфер {0}";
     /// <summary>Файлы слайдов: «слайд-1.png».</summary>
     public string SlideFile { get; init; } = "слайд";
     /// <summary>Лист XLSX из CSV.</summary>
