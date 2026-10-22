@@ -16,7 +16,8 @@ public class FolderPlanTests : IDisposable
     /// <summary>Файл в подпапке «Мои фото/…» (папки создаются).</summary>
     private string Touch(string relative, string content = "x")
     {
-        var path = Path.Combine(_dir.Path, relative);
+        // GetFullPath: «/» в относительном пути → «\» на Windows, как в путях, которые возвращает обход папки.
+        var path = Path.GetFullPath(Path.Combine(_dir.Path, relative));
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         File.WriteAllText(path, content);
         return path;
@@ -24,7 +25,7 @@ public class FolderPlanTests : IDisposable
 
     private string Folder(string name)
     {
-        var path = Path.Combine(_dir.Path, name);
+        var path = Path.GetFullPath(Path.Combine(_dir.Path, name));
         Directory.CreateDirectory(path);
         return path;
     }

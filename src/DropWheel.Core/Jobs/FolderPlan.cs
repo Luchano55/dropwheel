@@ -110,8 +110,9 @@ public static class FolderPlan
         return new(root, files, tooMany);
     }
 
+    /// <summary>Скрытые и системные пропускаем; имена с точкой в начале (.git, .thumbnails) — служебные и в Windows.</summary>
     private static bool Visible(FileSystemInfo info) =>
-        (info.Attributes & (FileAttributes.Hidden | FileAttributes.System)) == 0;
+        (info.Attributes & (FileAttributes.Hidden | FileAttributes.System)) == 0 && !info.Name.StartsWith('.');
 
     private static bool IsLink(DirectoryInfo dir)
     {
