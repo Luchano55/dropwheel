@@ -25,11 +25,14 @@ internal sealed class DragWheelController : IDisposable
     private readonly Converter _converter;
     private readonly Action<IReadOnlyList<string>, Operation> _enqueue;
     private readonly FileLog _log;
+    private readonly Func<WheelPreferences> _preferences;
 
+    /// <param name="preferences">Своё колесо из настроек (читается при каждом показе — правки применяются сразу).</param>
     public DragWheelController(string hotkey, Dispatcher ui, Converter converter,
-        Action<IReadOnlyList<string>, Operation> enqueue, FileLog log)
+        Action<IReadOnlyList<string>, Operation> enqueue, FileLog log, Func<WheelPreferences> preferences)
     {
         _converter = converter;
+        _preferences = preferences;
         _enqueue = enqueue;
         _log = log;
         var vk = Hotkeys.ToVirtualKey(hotkey) ?? Hotkeys.ToVirtualKey(Hotkeys.Default)!.Value;
@@ -57,6 +60,7 @@ internal sealed class DragWheelController : IDisposable
             + (LowLevelHooks.AcceptInjectedKeys ? " (DROPWHEEL_DEMO: программные нажатия принимаются)" : ""));
     }
 
+    /// <summary>Сменить горячую клавишу на ходу (окно настроек).</summary>
     public string Hotkey
     {
         set
@@ -93,7 +97,8 @@ internal sealed class DragWheelController : IDisposable
     {
         var ops = OperationCatalog.ForFiles(files, _converter.CanRun);
         _converter.Prepare(ops);
-        _wheel.SetItems(WheelItems.For(ops, OperationMode.Convert), WheelItems.For(ops, OperationMode.Tool));
+        var (convert, tools) = WheelArrangement.Arrange(ops, WheelGroups.ForFiles(files), _preferences());
+        _wheel.SetItems(convert, tools);
     }
 
     private void OnFilesDropped(string[] files, string operationId)

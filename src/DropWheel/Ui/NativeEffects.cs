@@ -25,6 +25,8 @@ internal static class NativeEffects
     public const int CornerRoundSmall = 3;
 
     public const int BackdropNone = 1;
+    /// <summary>Mica — подложка обычных окон Windows 11 (окно настроек).</summary>
+    public const int BackdropMica = 2;
     public const int BackdropTransient = 3;
 
     public static int Build => Environment.OSVersion.Version.Build;

@@ -97,6 +97,12 @@ internal sealed class JobsWindow : Window
         SystemTheme.Changed += OnThemeChanged;
     }
 
+    /// <summary>Горячую клавишу сменили в настройках — подсказка в пустом окне называет новую.</summary>
+    public string HotkeyName
+    {
+        set => _view.HotkeyName = value;
+    }
+
     /// <summary>Показать у трея (повторный запуск программы, пункт меню «Задачи»).</summary>
     public void ShowNearTray() => ShowFlyout();
 

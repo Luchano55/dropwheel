@@ -33,6 +33,12 @@ public static class Glyphs
     public const string OpenFile = "\uE8E5";
     public const string Open = "\uE8A7";
     public const string Clock = "\uE823";
+    public const string Settings = "\uE713";
+    public const string Quality = "\uE9E9";
+    public const string WheelPage = "\uE8AB";
+    public const string Up = "\uE70E";
+    public const string Down = "\uE70D";
+    public const string Undo = "\uE7A7";
 }
 
 /// <summary>

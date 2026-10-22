@@ -1,6 +1,7 @@
 using System.Windows;
 using DropWheel.Conversions;
 using DropWheel.Engines;
+using DropWheel.Input;
 using DropWheel.Ipc;
 using DropWheel.Jobs;
 using DropWheel.Logging;
@@ -31,6 +32,11 @@ public partial class App : Application
     private IReadOnlyList<IInternalEngine> _engines = [];
     private WheelWindow? _chooser;
     private IReadOnlyList<string> _chooserPaths = [];
+    private SettingsWindow? _settingsWindow;
+    private SettingsSaver? _saver;
+
+    /// <summary>Сколько ждать после последней правки в окне настроек, прежде чем записать settings.json.</summary>
+    private static readonly TimeSpan SaveDelay = TimeSpan.FromMilliseconds(600);
 
     internal static FileLog Log { get; private set; } = null!;
     internal AppSettings Settings { get; private set; } = new();
@@ -80,6 +86,10 @@ public partial class App : Application
         Ui.SystemTheme.Subscribe();
 
         Settings = AppSettings.Load(AppPaths.SettingsFile);
+        _saver = new SettingsSaver(AppPaths.SettingsFile, SaveDelay, Log.Write);
+        // Автозапуск — то, что записано в реестре (его могли выключить в диспетчере задач).
+        AutoStartInstaller.RepairIfMoved(Log);
+        Settings = Settings with { AutoStart = AutoStartInstaller.IsEnabled() };
         var tools = new ToolLocator { FfmpegPath = Settings.FfmpegPath, MagickPath = Settings.MagickPath };
         _engines = AppEngines.EngineRegistry.Create(Log, Dispatcher);
         Queue = new JobQueue(new Converter(tools, Settings.Conversion, _engines), maxParallel: 2, Log.Write);
@@ -97,8 +107,8 @@ public partial class App : Application
         _pipe = new PipeServer(pipeName, message => HandleArgs(CommandLine.Parse(message), fromPipe: true));
         _pipe.Start();
 
-        // Запуск двойным кликом: окна нет — подскажем, где искать программу.
-        if (args.ConvertPaths.Count == 0) _tray.ShowStartHint();
+        // Запуск двойным кликом: окна нет — подскажем, где искать программу. При входе в Windows — молча.
+        if (args.ConvertPaths.Count == 0 && !args.AutoStart) _tray.ShowStartHint(Hotkeys.DisplayName(Settings.Hotkey));
         HandleArgs(args, fromPipe: false);
     }
 
@@ -107,7 +117,7 @@ public partial class App : Application
     {
         try
         {
-            _dragWheel = new DragWheelController(Settings.Hotkey, Dispatcher, Queue.Converter, Enqueue, Log);
+            _dragWheel = new DragWheelController(Settings.Hotkey, Dispatcher, Queue.Converter, Enqueue, Log, () => Settings.Wheel);
             _dragWheel.Start();
         }
         catch (Exception ex)
@@ -167,6 +177,7 @@ public partial class App : Application
     /// <summary>Перед перезапуском: отпустить Mutex, канал, хуки и значок, чтобы новый экземпляр стал первым.</summary>
     private void ReleaseForRestart()
     {
+        _saver?.Flush();
         _dragWheel?.Dispose();
         _dragWheel = null;
         _pipe?.Dispose();
@@ -209,7 +220,8 @@ public partial class App : Application
             var (x, y) = WheelNative.CursorPosition() ?? throw new InvalidOperationException("Не удалось узнать позицию курсора");
             _chooserPaths = paths;
             wheel.CloseOnDeactivate = true;
-            wheel.SetItems(WheelItems.For(ops, OperationMode.Convert), WheelItems.For(ops, OperationMode.Tool), paths);
+            var (convert, tools) = WheelArrangement.Arrange(ops, WheelGroups.ForFiles(paths), Settings.Wheel);
+            wheel.SetItems(convert, tools, paths);
             wheel.ShowAt(x, y, activate: true);
         }
         catch (Exception ex)
@@ -234,7 +246,13 @@ public partial class App : Application
         return wheel;
     }
 
-    internal void Enqueue(IReadOnlyList<string> paths, Operation op) => Queue.EnqueueSelection(paths, op);
+    /// <summary>Выбор пользователя (колесо, меню проводника) — в очередь; запомнить как «последний выбор» для этого типа.</summary>
+    internal void Enqueue(IReadOnlyList<string> paths, Operation op)
+    {
+        Queue.EnqueueSelection(paths, op);
+        var group = WheelGroups.ForFiles(paths);
+        UpdateSettings(s => s with { Wheel = s.Wheel.WithRecent(group, op.Mode, op.Id) });
+    }
 
     private void OnJobChanged(Job job)
     {
@@ -266,13 +284,84 @@ public partial class App : Application
         else _jobsWindow.Toggle();
     }
 
-    internal void SetContextMenuEnabled(bool enabled)
+    internal void SetContextMenuEnabled(bool enabled) => UpdateSettings(s => s with { ContextMenuEnabled = enabled });
+
+    /// <summary>Окно настроек (пункт трея «Настройки…», двойной клик по значку). Одно на приложение.</summary>
+    internal void ShowSettings()
     {
-        if (enabled) ContextMenuInstaller.TryInstall(Log);
-        else ContextMenuInstaller.TryUninstall(Log);
-        Settings = Settings with { ContextMenuEnabled = enabled };
-        try { Settings.Save(AppPaths.SettingsFile); }
-        catch (Exception ex) { Log.Write("Не удалось сохранить настройки: " + ex.Message); }
+        try
+        {
+            if (_settingsWindow is null)
+            {
+                // Автозапуск показываем по реестру — его могли поменять в обход программы.
+                Settings = Settings with { AutoStart = AutoStartInstaller.IsEnabled() };
+                var window = new SettingsWindow(Settings, change => UpdateSettings(change, fromWindow: true),
+                    AppVersion.CurrentBuild, Log);
+                window.View.OpenLogsRequested += () => Notifier.OpenLog(Log);
+                window.View.CheckUpdatesRequested += CheckUpdatesManually;
+                window.Closed += (_, _) =>
+                {
+                    if (ReferenceEquals(_settingsWindow, window)) _settingsWindow = null;
+                    _saver?.Flush();
+                };
+                _settingsWindow = window;
+            }
+            _settingsWindow.ShowAndActivate();
+        }
+        catch (Exception ex)
+        {
+            Log.Write("Окно настроек не открылось: " + ex);
+        }
+    }
+
+    /// <summary>
+    /// Единственный способ менять настройки: применить на ходу (клавиша, качество, меню проводника, автозапуск,
+    /// обновления), показать в трее и окне настроек и сохранить в settings.json чуть позже.
+    /// fromWindow — правка пришла из окна настроек: оно уже показывает её, перестраивать не нужно.
+    /// </summary>
+    internal AppSettings UpdateSettings(Func<AppSettings, AppSettings> change, bool fromWindow = false)
+    {
+        var old = Settings;
+        var wanted = change(old);
+        if (Equals(wanted, old)) return old;
+
+        // Автозапуск: если запись в реестр не удалась — переключатель возвращается как было.
+        var now = wanted;
+        if (now.AutoStart != old.AutoStart && !AutoStartInstaller.TrySet(now.AutoStart, Log))
+            now = now with { AutoStart = old.AutoStart };
+
+        Settings = now;
+        Apply(old, now);
+        _saver?.Schedule(now);
+        _tray?.SyncSettings(now);
+        if (!fromWindow || !Equals(now, wanted)) _settingsWindow?.Reload(now);
+        return now;
+    }
+
+    private void Apply(AppSettings old, AppSettings now)
+    {
+        if (!string.Equals(now.Hotkey, old.Hotkey, StringComparison.OrdinalIgnoreCase))
+        {
+            if (_dragWheel is not null) _dragWheel.Hotkey = now.Hotkey;
+            if (_jobsWindow is not null) _jobsWindow.HotkeyName = Hotkeys.DisplayName(now.Hotkey);
+            Log.Write($"Горячая клавиша: {now.Hotkey}");
+        }
+        if (!Equals(now.Conversion, old.Conversion))
+        {
+            Queue.Converter.Settings = now.Conversion;
+            Log.Write($"Качество и папка: JPG {now.Conversion.JpegQuality}, WebP {now.Conversion.WebpQuality}, " +
+                      $"CRF {now.Conversion.VideoCrf}, MP3 {now.Conversion.Mp3BitrateKbps}, папка {now.Conversion.OutputFolder ?? "рядом"}");
+        }
+        if (now.ContextMenuEnabled != old.ContextMenuEnabled)
+        {
+            if (now.ContextMenuEnabled) ContextMenuInstaller.TryInstall(Log);
+            else ContextMenuInstaller.TryUninstall(Log);
+        }
+        if (now.CheckForUpdates != old.CheckForUpdates)
+        {
+            if (now.CheckForUpdates) _updater?.Start();
+            else _updater?.Stop();
+        }
     }
 
     internal void Quit()
@@ -283,6 +372,8 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        _saver?.Dispose();
+        _settingsWindow?.Close();
         _updater?.Dispose();
         _dragWheel?.Dispose();
         _chooser?.Close();

@@ -9,7 +9,7 @@ namespace DropWheel.App;
 
 /// <summary>
 /// Значок в трее: значок программы; пока идёт работа — с оранжевым кружком-счётчиком задач.
-/// Клик — окно задач (ещё клик — спрятать). Меню — в цветах темы Windows.
+/// Клик — окно задач (ещё клик — спрятать), двойной клик — настройки. Меню — в цветах темы Windows.
 /// </summary>
 internal sealed partial class TrayIcon : IDisposable
 {
@@ -29,7 +29,10 @@ internal sealed partial class TrayIcon : IDisposable
             Checked = app.Settings.ContextMenuEnabled,
             CheckOnClick = true,
         };
-        _contextMenuItem.CheckedChanged += (_, _) => app.SetContextMenuEnabled(_contextMenuItem.Checked);
+        _contextMenuItem.CheckedChanged += (_, _) =>
+        {
+            if (!_syncing) app.SetContextMenuEnabled(_contextMenuItem.Checked);
+        };
 
         _menu = new ContextMenuStrip
         {
@@ -41,6 +44,7 @@ internal sealed partial class TrayIcon : IDisposable
         _updateItem.Click += (_, _) => app.InstallUpdate();
         _menu.Items.Add(_updateItem);
         _menu.Items.Add(Item("Задачи", app.ShowJobs));
+        _menu.Items.Add(Item(Strings.Tray.Settings, app.ShowSettings));
         _menu.Items.Add(_contextMenuItem);
         _menu.Items.Add(Item("Открыть журнал", () => OpenFolder(AppPaths.LogsDir)));
         _menu.Items.Add(Item("Проверить обновления", app.CheckUpdatesManually));
@@ -64,6 +68,20 @@ internal sealed partial class TrayIcon : IDisposable
         {
             if (e.Button == MouseButtons.Left) app.ToggleJobs();
         };
+        _icon.MouseDoubleClick += (_, e) =>
+        {
+            if (e.Button == MouseButtons.Left) app.ShowSettings();
+        };
+    }
+
+    private bool _syncing;
+
+    /// <summary>Галочку «Конвертировать…» поменяли в окне настроек — показать её и в меню трея.</summary>
+    public void SyncSettings(AppSettings settings)
+    {
+        _syncing = true;
+        try { _contextMenuItem.Checked = settings.ContextMenuEnabled; }
+        finally { _syncing = false; }
     }
 
     /// <summary>Показать пункт «Обновить до сборки N» и подсказку.</summary>
@@ -79,9 +97,8 @@ internal sealed partial class TrayIcon : IDisposable
     /// <summary>Размер маленького значка Windows (16 при 100 %, 20 при 125 %, 24 при 150 %).</summary>
     private static int IconSize => Math.Clamp(SystemInformation.SmallIconSize.Width, 16, 64);
 
-    public void ShowStartHint() => _icon.ShowBalloonTip(5000, "DropWheel работает",
-        "Значок — здесь, в трее. Потащите файл и нажмите Пробел — или правой кнопкой по файлу → «Конвертировать…».",
-        ToolTipIcon.Info);
+    public void ShowStartHint(string hotkeyName) => _icon.ShowBalloonTip(5000, "DropWheel работает",
+        Strings.Tray.StartHint(hotkeyName), ToolTipIcon.Info);
 
     public void Update(IReadOnlyList<Job> jobs)
     {

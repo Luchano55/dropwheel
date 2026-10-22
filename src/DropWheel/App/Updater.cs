@@ -51,6 +51,9 @@ internal sealed class Updater : IDisposable
 
     public void Start() => _timer.Start();
 
+    /// <summary>Выключили «Проверять обновления» — больше не проверять по расписанию.</summary>
+    public void Stop() => _timer.Stop();
+
     /// <returns>true — есть обновление.</returns>
     public async Task<bool> CheckAsync(bool manual)
     {

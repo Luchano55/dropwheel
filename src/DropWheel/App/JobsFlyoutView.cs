@@ -139,7 +139,7 @@ public sealed class JobsFlyoutView : Border
     public const double FlyoutWidth = 380;
     private const double MaxListHeight = 432;
 
-    private readonly string _hotkeyName;
+    private string _hotkeyName;
     private readonly List<JobRowView> _views = [];
     private readonly TranslateTransform _slide = new();
     private FlyoutPalette _palette;
@@ -178,6 +178,19 @@ public sealed class JobsFlyoutView : Border
         set
         {
             _palette = value;
+            Build();
+            SetRows(_rows);
+        }
+    }
+
+    /// <summary>Как называть горячую клавишу в подсказке (сменили в настройках — подсказка обновляется).</summary>
+    public string HotkeyName
+    {
+        get => _hotkeyName;
+        set
+        {
+            if (_hotkeyName == value) return;
+            _hotkeyName = value;
             Build();
             SetRows(_rows);
         }
