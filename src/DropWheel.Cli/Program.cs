@@ -9,7 +9,7 @@ namespace DropWheel.Cli;
 
 public static class Program
 {
-    private static string Usage => Loc.T.CliUsage.TrimEnd() + "\n\n" + Loc.T.CliTrimUsage;
+    private static string Usage => Loc.T.CliUsage.TrimEnd() + "\n\n" + Loc.T.CliTrimUsage.TrimEnd() + "\n\n" + Loc.T.CropCliUsage;
 
     public static async Task<int> Main(string[] args)
     {
@@ -40,7 +40,7 @@ public static class Program
         }
 
         var positional = new List<string>();
-        string? outDir = null, ffmpeg = null, magick = null, start = null, end = null;
+        string? outDir = null, ffmpeg = null, magick = null, start = null, end = null, crop = null;
         bool verbose = false, exact = false;
         for (var i = 1; i < args.Length; i++)
         {
@@ -53,6 +53,7 @@ public static class Program
                 case "--start": start = Value(args, ref i); break;
                 case "--end": end = Value(args, ref i); break;
                 case "--exact": exact = true; break;
+                case "--crop": crop = Value(args, ref i); break;
                 default: positional.Add(args[i]); break;
             }
         }
@@ -61,7 +62,7 @@ public static class Program
         {
             "list" => List(positional, stdout),
             "convert" => await Convert(positional, outDir, new ToolLocator { FfmpegPath = ffmpeg, MagickPath = magick },
-                new TrimOptions(start, end, exact), verbose, stdout, stderr),
+                new TrimOptions(start, end, exact, crop), verbose, stdout, stderr),
             _ => throw new UsageException(Loc.F(Loc.T.CliUnknownCommand, args[0])),
         };
     }
@@ -88,6 +89,7 @@ public static class Program
         var files = positional[..^1];
         var op = OperationCatalog.Find(opId) ?? throw new UsageException(Loc.F(Loc.T.CliUnknownOperation, opId));
         op = WithTrim(op, trim);
+        op = await WithCropAsync(op, files, trim.Crop, tools);
 
         var settings = ConversionSettings.Default with
         {
@@ -139,9 +141,37 @@ public static class Program
         return failed == 0 ? 0 : 1;
     }
 
-    private sealed record TrimOptions(string? Start, string? End, bool Exact)
+    private sealed record TrimOptions(string? Start, string? End, bool Exact, string? Crop)
     {
         public bool Any => Start is not null || End is not null || Exact;
+    }
+
+    /// <summary>
+    /// img-crop: --crop WxH+X+Y → значения задачи; область подрезается по картинке (её размер после поворота
+    /// узнаёт ImageMagick; не узнал — область как есть, ошибку даст сама обрезка). У других операций --crop — ошибка.
+    /// </summary>
+    private static async Task<Operation> WithCropAsync(Operation op, List<string> files, string? crop, ToolLocator tools)
+    {
+        if (op.Id != ImageCrop.Id)
+        {
+            if (crop is not null) throw new UsageException(Loc.F(Loc.T.CliNoParameters, op.Id));
+            return op;
+        }
+        if (crop is null) throw new UsageException(Loc.T.CliNeedCrop);
+        if (!CropRect.TryParse(crop, out var rect)) throw new UsageException(Loc.F(Loc.T.CliBadCrop, crop));
+        if (files.Count != 1 || !File.Exists(files[0])) return ImageCrop.Bind(rect);
+        (int W, int H)? size;
+        try
+        {
+            size = await ImageProbe.SizeAsync(tools, files[0]);
+        }
+        catch (Exception ex) when (ex is ConversionException or System.ComponentModel.Win32Exception or IOException)
+        {
+            size = null;
+        }
+        if (size is not { } s) return ImageCrop.Bind(rect);
+        if (rect.Intersect(s.W, s.H) is null) throw new UsageException(Loc.F(Loc.T.CliCropOutside, rect.Geometry, s.W, s.H));
+        return ImageCrop.Bind(rect, s.W, s.H);
     }
 
     /// <summary>

@@ -334,5 +334,22 @@ public sealed partial class Texts
         """;
     public string CliBadTime { get; init; } = "Не понял время «{0}» (пример: 0:05 или 1:02.5)";
     public string CliTrimRange { get; init; } = "Конец (--end) должен быть позже начала (--start)";
-    public string CliNoParameters { get; init; } = "Операция {0} не принимает --start, --end и --exact";
+    public string CliNoParameters { get; init; } = "Операция {0} не принимает --start, --end, --exact и --crop";
+
+    // ---------- обрезка картинки (D-CROP) ----------
+    public string CropTitle { get; init; } = "Обрезать картинку";
+    public string CropButton { get; init; } = "Обрезать";
+    public string CropFree { get; init; } = "Свободно";
+    public string CropOriginal { get; init; } = "Как было";
+    public string CropHint { get; init; } = "Тяните углы и края рамки, а саму рамку — за середину.";
+    public string CropLoading { get; init; } = "Открываю картинку…";
+    public string CropFailed { get; init; } = "Не удалось открыть картинку";
+    public string CropCliUsage { get; init; } = """
+        Обрезка картинки:
+          dropwheel convert <картинка> img-crop --crop 800x600+100+50
+          --crop ШxВ+X+Y      ширина × высота и левый верхний угол, в пикселях
+        """;
+    public string CliBadCrop { get; init; } = "Не понял область «{0}» (пример: 800x600+100+50)";
+    public string CliNeedCrop { get; init; } = "Для img-crop нужна область: --crop 800x600+100+50";
+    public string CliCropOutside { get; init; } = "Область «{0}» за краем картинки ({1}×{2})";
 }

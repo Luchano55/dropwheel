@@ -61,15 +61,17 @@ public class TrimScreenshots
     }
 
     /// <summary>Окно с заголовком Windows 11 поверх обоев (как у снимков окна настроек).</summary>
-    internal static void Save(TrimView view, bool light, string name)
+    internal static void Save(TrimView view, bool light, string name) =>
+        SaveWindow(view, TrimView.DefaultWidth, Loc.T.TrimTitle, view.Palette, light, name);
+
+    /// <summary>Любое окно-диалог (обрезка видео, обрезка картинки) с заголовком поверх обоев.</summary>
+    internal static void SaveWindow(FrameworkElement view, double w, string titleText, SettingsPalette palette, bool light, string name)
     {
         const double margin = 28, titleHeight = 32;
-        view.Measure(new Size(TrimView.DefaultWidth, double.PositiveInfinity));
-        var w = TrimView.DefaultWidth;
+        view.Measure(new Size(w, double.PositiveInfinity));
         var h = Math.Ceiling(view.DesiredSize.Height) + titleHeight;
         var sceneW = w + 2 * margin;
         var sceneH = h + 2 * margin;
-        var palette = view.Palette;
 
         var grid = new Grid { Width = sceneW, Height = sceneH };
         grid.Children.Add(Scenes.Wallpaper(sceneW, sceneH, light));
@@ -86,7 +88,7 @@ public class TrimScreenshots
         var title = new Grid { Height = titleHeight };
         title.Children.Add(new TextBlock
         {
-            Text = Loc.T.TrimTitle, FontFamily = UiFonts.Text, FontSize = 12, Foreground = palette.Text,
+            Text = titleText, FontFamily = UiFonts.Text, FontSize = 12, Foreground = palette.Text,
             VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(16, 0, 0, 0),
         });
         title.Children.Add(new TextBlock

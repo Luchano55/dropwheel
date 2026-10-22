@@ -13,6 +13,7 @@ internal static class OperationTexts
         ["img-half"] = "Half size",
         ["img-1920"] = "Fit 1920 px",
         ["img-strip"] = "No metadata",
+        [Conversions.ImageCrop.Id] = "Crop…",
         ["video-compress"] = "Compress",
         ["video-mute"] = "Mute",
         ["video-rotate-cw"] = "Rotate ↻",
@@ -44,6 +45,7 @@ internal static class OperationTexts
     {
         ["img-compress"] = " (compressed)",
         ["img-strip"] = " (no metadata)",
+        [Conversions.ImageCrop.Id] = " (cropped)",
         ["video-compress"] = " (compressed)",
         ["video-mute"] = " (muted)",
         ["video-rotate-cw"] = " (rotated)",

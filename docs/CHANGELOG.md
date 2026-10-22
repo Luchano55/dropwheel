@@ -5,6 +5,20 @@
 
 Each version section starts with `## <version>`; CI copies it into the GitHub release notes.
 
+## 1.1.0
+
+**Новое в этой версии**
+- Обрезка картинки: «Инструменты» → «Обрезать…» — окно с картинкой и рамкой: тяните углы и края, рамку — за середину,
+  вне рамки — затемнено, под картинкой — размер в пикселях. Пропорции: «Свободно», «1:1», «4:3», «16:9», «Как было».
+  Результат — `фото (обрезано).jpg` рядом, формат тот же (HEIC, RAW и подобные — в JPG), прозрачность PNG сохраняется,
+  фото с телефона не ложится на бок. По одной картинке. В командной строке: `img-crop --crop 800x600+100+50`.
+
+**English**
+- Picture cropping: Tools → Crop… opens a window with a crop frame — drag the corners and edges, drag inside to move;
+  the outside is dimmed and the size is shown in pixels. Aspect presets: Free, 1:1, 4:3, 16:9, Original.
+  The result is `photo (cropped).jpg` next to the original, same format, transparency kept, phone photos stay upright.
+  One picture at a time; CLI: `img-crop --crop 800x600+100+50`.
+
 ## 1.0.0
 
 Первый полноценный выпуск: всё из 0.3.0 плюс папки целиком, картинки из браузера и обрезка видео.
