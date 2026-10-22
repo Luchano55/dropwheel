@@ -14,4 +14,13 @@ public sealed record ConversionSettings
     public string? OutputFolder { get; init; }
 
     public static ConversionSettings Default { get; } = new();
+
+    // Что можно выбрать в окне настроек.
+    public const int MinImageQuality = 50, MaxImageQuality = 100;
+    public const int MinVideoCrf = 18, MaxVideoCrf = 32;
+    public static IReadOnlyList<int> Mp3Bitrates { get; } = [128, 160, 192, 256, 320];
+
+    /// <summary>Папка «В одну папку» по умолчанию: «Загрузки\DropWheel».</summary>
+    public static string DefaultSharedFolder =>
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads", "DropWheel");
 }

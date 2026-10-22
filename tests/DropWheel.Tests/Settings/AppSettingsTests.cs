@@ -1,5 +1,6 @@
 using DropWheel.Conversions;
 using DropWheel.Settings;
+using DropWheel.Wheel;
 
 namespace DropWheel.Tests.Settings;
 
@@ -115,6 +116,101 @@ public class AppSettingsTests : IDisposable
         Assert.Equal("Space", s.Hotkey);
         Assert.NotNull(s.Conversion);
         Assert.Equal(90, s.Conversion.JpegQuality);
+    }
+
+    [Fact]
+    public void Wheel_preferences_round_trip()
+    {
+        var original = new AppSettings
+        {
+            Wheel = new WheelPreferences { MruFirst = true }
+                .WithLayout(WheelGroups.Photo, OperationMode.Convert, ["to-png", "to-jpg"], ["to-avif"])
+                .WithLayout(WheelGroups.Video, OperationMode.Tool, [], ["video-mute"])
+                .WithRecent(WheelGroups.Photo, OperationMode.Convert, "to-webp"),
+        };
+
+        original.Save(SettingsPath);
+        var loaded = AppSettings.Load(SettingsPath);
+
+        Assert.Equal(original, loaded);
+        Assert.True(loaded.Wheel.MruFirst);
+        Assert.Equal(["to-png", "to-jpg"], loaded.Wheel.For(WheelGroups.Photo, OperationMode.Convert)!.Order);
+        Assert.Equal("to-webp", loaded.Wheel.For(WheelGroups.Photo, OperationMode.Convert)!.Recent);
+        Assert.Equal(["video-mute"], loaded.Wheel.For(WheelGroups.Video, OperationMode.Tool)!.Hidden);
+        Assert.Contains("\"photo\"", File.ReadAllText(SettingsPath));
+    }
+
+    [Fact]
+    public void Old_settings_without_wheel_load_with_defaults()
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(SettingsPath)!);
+        // settings.json этапа 3 — без «wheel».
+        File.WriteAllText(SettingsPath, """
+            {
+              "hotkey": "F8",
+              "contextMenuEnabled": true,
+              "autoStart": false,
+              "ffmpegPath": null,
+              "magickPath": null,
+              "conversion": { "jpegQuality": 90, "webpQuality": 85, "videoCrf": 23, "compressCrf": 28, "mp3BitrateKbps": 192, "outputFolder": null },
+              "checkForUpdates": true
+            }
+            """);
+
+        var s = AppSettings.Load(SettingsPath);
+
+        Assert.Equal("F8", s.Hotkey);
+        Assert.Equal(new WheelPreferences(), s.Wheel);
+        Assert.False(s.Wheel.MruFirst);
+        Assert.False(File.Exists(SettingsPath + ".bad"));
+    }
+
+    [Fact]
+    public void Wheel_nulls_are_sanitized()
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(SettingsPath)!);
+        File.WriteAllText(SettingsPath, """
+            { "wheel": { "mruFirst": true, "groups": { "photo": { "convert": { "order": null, "hidden": ["to-png", null] } }, "video": null } } }
+            """);
+
+        var s = AppSettings.Load(SettingsPath);
+
+        var photo = s.Wheel.For(WheelGroups.Photo, OperationMode.Convert)!;
+        Assert.Empty(photo.Order);
+        Assert.Equal(["to-png"], photo.Hidden);
+        Assert.Null(s.Wheel.For(WheelGroups.Video, OperationMode.Convert));
+        Assert.True(s.Wheel.MruFirst);
+
+        File.WriteAllText(SettingsPath, """{ "wheel": null }""");
+        Assert.Equal(new WheelPreferences(), AppSettings.Load(SettingsPath).Wheel);
+    }
+
+    [Fact]
+    public async Task Saver_writes_only_the_latest_value_after_delay()
+    {
+        using var saver = new SettingsSaver(SettingsPath, TimeSpan.FromMilliseconds(80));
+        saver.Schedule(new AppSettings { Hotkey = "F1" });
+        saver.Schedule(new AppSettings { Hotkey = "F2" });
+        Assert.False(File.Exists(SettingsPath));
+
+        for (var i = 0; i < 100 && saver.HasPending; i++) await Task.Delay(20);
+
+        Assert.False(saver.HasPending);
+        Assert.Equal("F2", AppSettings.Load(SettingsPath).Hotkey);
+    }
+
+    [Fact]
+    public void Saver_flush_and_dispose_write_immediately()
+    {
+        var saver = new SettingsSaver(SettingsPath, TimeSpan.FromHours(1));
+        saver.Schedule(new AppSettings { Hotkey = "F3" });
+        saver.Flush();
+        Assert.Equal("F3", AppSettings.Load(SettingsPath).Hotkey);
+
+        saver.Schedule(new AppSettings { Hotkey = "F4" });
+        saver.Dispose();
+        Assert.Equal("F4", AppSettings.Load(SettingsPath).Hotkey);
+        saver.Flush(); // повторно — ничего не делает
     }
 
     [Fact]

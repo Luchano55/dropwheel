@@ -15,7 +15,17 @@ public sealed class Converter(ToolLocator tools, ConversionSettings settings, IE
     // Утилиты в tools/ за время работы не появляются и не пропадают — ищем один раз.
     private readonly System.Collections.Concurrent.ConcurrentDictionary<EngineKind, bool> _toolFound = new();
 
-    public ConversionSettings Settings { get; } = settings;
+    private ConversionSettings _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+
+    /// <summary>
+    /// Качество и папка результата. Можно менять на ходу (окно настроек): новые задачи берут новые значения,
+    /// уже начатые доделываются со своими — каждая конвертация читает настройки один раз в начале.
+    /// </summary>
+    public ConversionSettings Settings
+    {
+        get => Volatile.Read(ref _settings);
+        set => Volatile.Write(ref _settings, value ?? throw new ArgumentNullException(nameof(value)));
+    }
 
     /// <summary>Можно ли выполнить операцию на этом компьютере (основным или запасным движком).</summary>
     public bool CanRun(Operation op) =>
@@ -80,13 +90,14 @@ public sealed class Converter(ToolLocator tools, ConversionSettings settings, IE
                 throw new ConversionException($"Операция «{op.Label}» не подходит для этого файла", $"{op.Id}: {input}");
         }
 
+        var settings = Settings;
         var first = full[0];
         var folder = op.Result == ResultKind.Folder;
         var outExt = folder ? "" : op.Output.Resolve(Path.GetExtension(first));
         var stem = op.ResultStem?.Invoke(full);
         var desired = folder
-            ? OutputNamer.DesiredFolder(first, op.Suffix, Settings.OutputFolder, stem)
-            : OutputNamer.DesiredPath(first, outExt, op.Suffix, Settings.OutputFolder, stem);
+            ? OutputNamer.DesiredFolder(first, op.Suffix, settings.OutputFolder, stem)
+            : OutputNamer.DesiredPath(first, outExt, op.Suffix, settings.OutputFolder, stem);
         var dir = Path.GetDirectoryName(desired)!;
         Directory.CreateDirectory(dir);
 
@@ -97,7 +108,7 @@ public sealed class Converter(ToolLocator tools, ConversionSettings settings, IE
         try
         {
             if (folder) Directory.CreateDirectory(temp);
-            await RunEngineAsync(op, full, temp, progress, log, ct);
+            await RunEngineAsync(op, full, temp, settings, progress, log, ct);
 
             if (folder)
             {
@@ -158,7 +169,7 @@ public sealed class Converter(ToolLocator tools, ConversionSettings settings, IE
     }
 
     private async Task RunEngineAsync(Operation op, IReadOnlyList<string> inputs, string output,
-        IProgress<double>? progress, Action<string>? log, CancellationToken ct)
+        ConversionSettings settings, IProgress<double>? progress, Action<string>? log, CancellationToken ct)
     {
         var kind = EngineFor(op, Path.GetExtension(inputs[0])) ?? throw new ConversionException(op.Engine == EngineKind.Office
             ? "Не найден Microsoft Office"
@@ -167,7 +178,7 @@ public sealed class Converter(ToolLocator tools, ConversionSettings settings, IE
         if (_internal.TryGetValue(kind, out var engine))
         {
             log?.Invoke($"> [{kind}] {op.Id} {string.Join(" | ", inputs)} → {output}");
-            await engine.RunAsync(op, inputs, output, Settings, progress, ct);
+            await engine.RunAsync(op, inputs, output, settings, progress, ct);
             progress?.Report(1.0);
             return;
         }
@@ -177,10 +188,10 @@ public sealed class Converter(ToolLocator tools, ConversionSettings settings, IE
         // Распаковка 7-Zip: .tar.gz — в два запуска (см. SevenZip.ExtractAsync).
         if (kind == EngineKind.SevenZip && op.Result == ResultKind.Folder)
         {
-            await SevenZip.ExtractAsync(_runner, effective, inputs[0], output, Settings, progress, log, ct);
+            await SevenZip.ExtractAsync(_runner, effective, inputs[0], output, settings, progress, log, ct);
             return;
         }
-        var args = ArgumentBuilder.Build(effective, inputs, output, Settings);
+        var args = ArgumentBuilder.Build(effective, inputs, output, settings);
         await _runner.RunAsync(kind, args, progress, log, ct);
         // У скана pdftotext «успешно» пишет пустой текст.
         if (kind == EngineKind.Pdftotext) PdfText.EnsureHasText(output);

@@ -45,6 +45,27 @@ public class ZipEngineTests : IDisposable
     private void AssertNoTempLeft() =>
         Assert.Empty(Directory.GetFileSystemEntries(_dir.Path, ".dropwheel-*"));
 
+    // ---------- Настройки на ходу ----------
+
+    /// <summary>Окно настроек меняет папку результата — следующая задача кладёт файл уже туда.</summary>
+    [Fact]
+    public async Task Settings_swap_applies_to_next_conversion()
+    {
+        var src = Bytes("фото 1.jpg", 1000);
+        var shared = Path.Combine(_dir.Path, "Загрузки", "DropWheel");
+
+        var first = await _converter.ConvertAsync([src], Pack);
+        _converter.Settings = _converter.Settings with { OutputFolder = shared };
+        var second = await _converter.ConvertAsync([src], Pack);
+        _converter.Settings = ConversionSettings.Default;
+        var third = await _converter.ConvertAsync([src], Pack);
+
+        Assert.Equal(Path.Combine(_dir.Path, "фото 1.zip"), first);
+        Assert.Equal(Path.Combine(shared, "фото 1.zip"), second);
+        Assert.Equal(Path.Combine(_dir.Path, "фото 1 (1).zip"), third);
+        Assert.Throws<ArgumentNullException>(() => _converter.Settings = null!);
+    }
+
     // ---------- Упаковка ----------
 
     [Fact]

@@ -1,6 +1,7 @@
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using DropWheel.Conversions;
+using DropWheel.Wheel;
 
 namespace DropWheel.Settings;
 
@@ -18,6 +19,8 @@ public sealed record AppSettings
     public ConversionSettings Conversion { get; init; } = new();
     /// <summary>Раз в сутки проверять на GitHub, нет ли новой сборки. Единственное обращение программы в сеть.</summary>
     public bool CheckForUpdates { get; init; } = true;
+    /// <summary>Своё колесо: порядок и видимость лепестков по типам файлов, «последний выбор — первым».</summary>
+    public WheelPreferences Wheel { get; init; } = new();
 
     private static readonly JsonSerializerOptions Json = new()
     {
@@ -84,5 +87,6 @@ public sealed record AppSettings
     {
         Hotkey = string.IsNullOrWhiteSpace(s.Hotkey) ? new AppSettings().Hotkey : s.Hotkey,
         Conversion = s.Conversion ?? new(),
+        Wheel = (s.Wheel ?? new()).Sanitized(),
     };
 }
