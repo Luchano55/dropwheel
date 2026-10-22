@@ -81,7 +81,7 @@ public static class WheelGroups
     {
         var exts = ExtensionsOf(group);
         if (exts.Count == 0) exts = [UnknownExtension];
-        return OperationCatalog.All.Where(o => exts.Any(o.AppliesTo)).ToList();
+        return OperationCatalog.All.Where(o => o.OnWheel && exts.Any(o.AppliesTo)).ToList();
     }
 
     /// <summary>

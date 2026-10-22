@@ -22,7 +22,9 @@ public class VideoToolsTests
         Assert.Contains("video-rotate-cw", tools);
         Assert.Contains("video-frames", tools);
         Assert.Contains("video-poster", convert);
-        Assert.True(tools.Count <= 8, string.Join(", ", tools));
+        // Девятый — «В 7Z»: по умолчанию не виден, колесо берёт первые 8 (D-TRIM).
+        Assert.Equal(9, tools.Count);
+        Assert.Equal("pack-7z", tools[^1]);
         Assert.True(convert.Count <= 8, string.Join(", ", convert));
     }
 

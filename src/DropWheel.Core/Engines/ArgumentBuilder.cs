@@ -17,15 +17,17 @@ public static class ArgumentBuilder
     {
         var input = inputs[0];
         var outExt = Extensions.Normalize(Path.GetExtension(output));
-        var middle = Expand(op.Args, outExt, settings);
+        var middle = WithValues(Expand(op.Args, outExt, settings), op);
 
         return op.Engine switch
         {
+            // Вход «-i файл» — сразу после общих ключей; если в шаблоне есть {in} — там, где он стоит
+            // (параметры входа, например «-ss … -to … -i {in}»). {in} подставляется последним — после {out}.
             EngineKind.FFmpeg =>
             [
                 "-hide_banner", "-nostdin", "-y", "-nostats", "-progress", "pipe:1",
-                "-i", input,
-                .. FfmpegOutput(middle, output),
+                .. (middle.Contains("{in}") ? [] : new[] { "-i", input }),
+                .. FfmpegOutput(middle, output).Select(t => t == "{in}" ? input : t),
             ],
             // [0] — только первый кадр/страница: статичный результат из GIF/TIFF/HEIC-серий.
             // Combine (картинки → один PDF): все входы, каждый — первым кадром, по странице на файл.
@@ -84,6 +86,22 @@ public static class ArgumentBuilder
         "opus" => "-c:a libopus -b:a 128k",
         _ => throw new ArgumentOutOfRangeException(nameof(outExt), outExt, "Нет аудиокодека для формата"),
     };
+
+    /// <summary>
+    /// Значения параметров задачи ({start}, {end} …, см. Operation.Values) — внутрь токенов, уже после разбиения
+    /// шаблона по пробелам: значение с пробелом остаётся одним аргументом. Не задано — ConversionException.
+    /// </summary>
+    private static string[] WithValues(string[] tokens, Operation op)
+    {
+        if (op.Parameters.Count == 0) return tokens;
+        if (op.MissingValues() is { Count: > 0 } missing)
+            throw new ConversionException(Loc.F(Loc.T.ErrMissingValues, Loc.Label(op), string.Join(", ", missing)));
+        return tokens.Select(t =>
+        {
+            foreach (var name in op.Parameters) t = t.Replace("{" + name + "}", op.Values![name]);
+            return t;
+        }).ToArray();
+    }
 
     private static string[] Expand(string template, string outExt, ConversionSettings s)
     {

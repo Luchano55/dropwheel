@@ -9,7 +9,7 @@ namespace DropWheel.Cli;
 
 public static class Program
 {
-    private static string Usage => Loc.T.CliUsage;
+    private static string Usage => Loc.T.CliUsage.TrimEnd() + "\n\n" + Loc.T.CliTrimUsage;
 
     public static async Task<int> Main(string[] args)
     {
@@ -40,8 +40,8 @@ public static class Program
         }
 
         var positional = new List<string>();
-        string? outDir = null, ffmpeg = null, magick = null;
-        var verbose = false;
+        string? outDir = null, ffmpeg = null, magick = null, start = null, end = null;
+        bool verbose = false, exact = false;
         for (var i = 1; i < args.Length; i++)
         {
             switch (args[i])
@@ -50,6 +50,9 @@ public static class Program
                 case "--ffmpeg": ffmpeg = Value(args, ref i); break;
                 case "--magick": magick = Value(args, ref i); break;
                 case "-v" or "--verbose": verbose = true; break;
+                case "--start": start = Value(args, ref i); break;
+                case "--end": end = Value(args, ref i); break;
+                case "--exact": exact = true; break;
                 default: positional.Add(args[i]); break;
             }
         }
@@ -58,7 +61,7 @@ public static class Program
         {
             "list" => List(positional, stdout),
             "convert" => await Convert(positional, outDir, new ToolLocator { FfmpegPath = ffmpeg, MagickPath = magick },
-                verbose, stdout, stderr),
+                new TrimOptions(start, end, exact), verbose, stdout, stderr),
             _ => throw new UsageException(Loc.F(Loc.T.CliUnknownCommand, args[0])),
         };
     }
@@ -77,12 +80,13 @@ public static class Program
     }
 
     private static async Task<int> Convert(List<string> positional, string? outDir, ToolLocator tools,
-        bool verbose, TextWriter stdout, TextWriter stderr)
+        TrimOptions trim, bool verbose, TextWriter stdout, TextWriter stderr)
     {
         if (positional.Count < 2) throw new UsageException(Loc.T.CliNeedFileAndOp);
         var opId = positional[^1];
         var files = positional[..^1];
         var op = OperationCatalog.Find(opId) ?? throw new UsageException(Loc.F(Loc.T.CliUnknownOperation, opId));
+        op = WithTrim(op, trim);
 
         var settings = ConversionSettings.Default with
         {
@@ -107,6 +111,34 @@ public static class Program
             }
         }
         return failed == 0 ? 0 : 1;
+    }
+
+    private sealed record TrimOptions(string? Start, string? End, bool Exact)
+    {
+        public bool Any => Start is not null || End is not null || Exact;
+    }
+
+    /// <summary>
+    /// video-trim / video-trim-exact: --start и --end (12, 0:05, 1:02.5…) → значения задачи; --exact — точный вариант.
+    /// Без --start — с начала, без --end — до конца ролика. У других операций эти ключи — ошибка.
+    /// </summary>
+    private static Operation WithTrim(Operation op, TrimOptions trim)
+    {
+        var isTrim = op.Id is VideoTrim.Id or VideoTrim.ExactId;
+        if (!isTrim)
+        {
+            if (trim.Any) throw new UsageException(Loc.F(Loc.T.CliNoParameters, op.Id));
+            return op;
+        }
+        var start = 0.0;
+        if (trim.Start is not null && !VideoTrim.TryParse(trim.Start, out start))
+            throw new UsageException(Loc.F(Loc.T.CliBadTime, trim.Start));
+        // «До конца»: заведомо дальше конца любого ролика — ffmpeg остановится на последнем кадре.
+        var end = 360000.0;
+        if (trim.End is not null && !VideoTrim.TryParse(trim.End, out end))
+            throw new UsageException(Loc.F(Loc.T.CliBadTime, trim.End));
+        if (end - start < VideoTrim.MinLength) throw new UsageException(Loc.T.CliTrimRange);
+        return VideoTrim.Bind(trim.Exact || op.Id == VideoTrim.ExactId, start, end);
     }
 
     private static string Value(string[] args, ref int i) =>

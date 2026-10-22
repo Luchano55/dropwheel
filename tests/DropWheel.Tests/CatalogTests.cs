@@ -19,7 +19,7 @@ public class CatalogTests
         // Считаем по каждому расширению: операции «для любых файлов» (В ZIP) добавляются к операциям типа.
         foreach (var ext in Extensions.All.Append("txt"))
             foreach (var group in OperationCatalog.ForFile("file." + ext).GroupBy(o => o.Mode))
-                Assert.True(group.Count() <= 8, $"{ext} {group.Key}: {group.Count()}");
+                AssertFitsWheel(ext, group);
     }
 
     [Fact]
@@ -27,7 +27,24 @@ public class CatalogTests
     {
         foreach (var ext in Extensions.All)
             foreach (var group in OperationCatalog.ForFile("file." + ext).GroupBy(o => o.Mode))
-                Assert.True(group.Count() <= 8, $"{ext} {group.Key}: {group.Count()}");
+                AssertFitsWheel(ext, group);
+    }
+
+    /// <summary>
+    /// Не больше 8 лепестков на режим. Единственное исключение (D-TRIM): у видео 9 инструментов — девятый «В 7Z»
+    /// по умолчанию не виден (колесо берёт первые 8), его можно поднять в настройках колеса.
+    /// </summary>
+    internal static void AssertFitsWheel(string ext, IEnumerable<Operation> group)
+    {
+        var ops = group.ToList();
+        var list = string.Join(", ", ops.Select(o => o.Id));
+        if (Extensions.KindOf(ext) == MediaKind.Video && ops[0].Mode == OperationMode.Tool)
+        {
+            Assert.True(ops.Count == 9, $"{ext}: {list}");
+            Assert.Equal(Engines.SevenZip.PackId, ops[^1].Id);
+            return;
+        }
+        Assert.True(ops.Count <= 8, $"{ext} {ops[0].Mode}: {list}");
     }
 
     [Fact]

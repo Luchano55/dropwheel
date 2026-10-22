@@ -8,10 +8,12 @@ namespace DropWheel.Conversions;
 /// Каталог операций. Новая операция — одна строка.
 /// Плейсхолдеры: {jpgq} {webpq} {crf} {crfsmall} {mp3k} — из ConversionSettings; {page} — «стр» / «page»,
 /// {frame} — «кадр» / «frame» (язык интерфейса);
-/// {acodec} — кодек звука под расширение результата (см. ArgumentBuilder.AudioCodec).
+/// {acodec} — кодек звука под расширение результата (см. ArgumentBuilder.AudioCodec);
+/// {имя} из Operation.Parameters — значение для одной задачи (обрезка: {start} {end}, см. Operation.WithValues).
 /// Для qpdf / pdftoppm шаблон берётся целиком: {in} — первый файл, {ins} — все файлы, {out} — результат
 /// (файл или временная папка). У ffmpeg результат дописывается в конец, если в шаблоне нет {out}
-/// (кадры в папку: «{out}/{frame}-%03d.jpg»).
+/// (кадры в папку: «{out}/{frame}-%03d.jpg»), а вход «-i файл» — в начало, если в шаблоне нет {in}
+/// (с {in} параметры входа пишутся до него: «-ss {start} -to {end} -i {in}»).
 /// </summary>
 public static class OperationCatalog
 {
@@ -57,6 +59,14 @@ public static class OperationCatalog
         // копировать звук нельзя — PCM/FLAC из MOV/MKV в MP4 не кладётся. Телефонная пометка поворота
         // ffmpeg применяет сам до transpose, так что «на боку» не окажется.
         new("video-rotate-cw", "Повернуть ↻", Tool, Video, FFmpeg, $"-map 0:v:0 -map 0:a:0? -vf transpose=1,{Even} -crf {{crf}} {H264}", OutputRule.Fixed("mp4"), " (повёрнуто)"),
+        // Обрезать (D-TRIM): начало и конец ({start}/{end}, секунды) задаются в окне «Обрезать…» или в CLI.
+        // -ss/-to до -i — поиск по входу. Без пересжатия: мгновенно и без потерь, контейнер тот же, все дорожки;
+        // начало — с ближайшего опорного кадра не позже {start}. Точно по кадру — вариант с пересжатием в H.264
+        // (как «Повернуть»: CRF из настроек, звук AAC), в колесе отдельно не показывается — это галочка окна.
+        new(VideoTrim.Id, "Обрезать…", Tool, Video, FFmpeg, "-ss {start} -to {end} -i {in} -map 0 -c copy -avoid_negative_ts make_zero",
+            OutputRule.Same("mp4", [.. Extensions.Video]), " (обрезано)") { Parameters = VideoTrim.ParameterNames, MaxFiles = 1 },
+        new(VideoTrim.ExactId, "Обрезать точно", Tool, Video, FFmpeg, $"-ss {{start}} -to {{end}} -i {{in}} -map 0:v:0 -map 0:a:0? -vf {Even} -crf {{crf}} {H264}",
+            OutputRule.Fixed("mp4"), " (обрезано)") { Parameters = VideoTrim.ParameterNames, MaxFiles = 1, OnWheel = false },
         // Кадр в секунду, не больше 300, в папку «видео (кадры)»: кадр-001.jpg … ({frame} — «кадр» / «frame»).
         new("video-frames", "Кадры", Tool, Video, FFmpeg, "-vf fps=1 -frames:v 300 -q:v 2 {out}/{frame}-%03d.jpg", OutputRule.Fixed("jpg"), " (кадры)") { Result = ResultKind.Folder },
 
@@ -161,13 +171,13 @@ public static class OperationCatalog
     public static Operation? Find(string id) =>
         All.FirstOrDefault(o => string.Equals(o.Id, id, StringComparison.OrdinalIgnoreCase));
 
-    /// <summary>Операции для одного файла (по расширению).</summary>
+    /// <summary>Операции для одного файла (по расширению) — те, что предлагает колесо (без вариантов OnWheel = false).</summary>
     /// <param name="available">Доступна ли операция для файла с этим расширением на этом компьютере
     /// (Converter.CanRun); null — не проверять.</param>
     public static IReadOnlyList<Operation> ForFile(string path, Func<Operation, string, bool>? available = null)
     {
         var ext = Path.GetExtension(path);
-        return All.Where(o => o.AppliesTo(ext) && (available is null || available(o, ext))).ToList();
+        return All.Where(o => o.OnWheel && o.AppliesTo(ext) && (available is null || available(o, ext))).ToList();
     }
 
     /// <summary>
@@ -183,6 +193,6 @@ public static class OperationCatalog
             var ops = ForFile(path, available);
             common = common is null ? ops : common.Intersect(ops);
         }
-        return common?.Where(o => count >= o.MinFiles).ToList() ?? [];
+        return common?.Where(o => count >= o.MinFiles && count <= o.MaxFiles).ToList() ?? [];
     }
 }

@@ -178,7 +178,7 @@ public class WheelGroupsTests
         foreach (var group in WheelGroups.All)
             Assert.NotEmpty(WheelGroups.Operations(group));
         var covered = WheelGroups.All.SelectMany(WheelGroups.Operations).Select(o => o.Id).ToHashSet();
-        Assert.Equal(OperationCatalog.All.Select(o => o.Id).ToHashSet(), covered);
+        Assert.Equal(OperationCatalog.All.Where(o => o.OnWheel).Select(o => o.Id).ToHashSet(), covered);
     }
 
     [Fact]

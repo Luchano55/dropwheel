@@ -11,6 +11,8 @@ public class ArgumentBuilderTests
     private static IReadOnlyList<string> Build(string opId, string input = In, string? output = null)
     {
         var op = OperationCatalog.Find(opId)!;
+        // Параметры задачи (обрезка: начало и конец) — какие-нибудь значения.
+        if (op.Parameters.Count > 0) op = op.WithValues(op.Parameters.ToDictionary(p => p, _ => "1.5"));
         output ??= "/data/Мои фото/out." + op.Output.Resolve(Path.GetExtension(input));
         return ArgumentBuilder.Build(op, input, output, S);
     }
