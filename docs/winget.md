@@ -79,6 +79,23 @@ winget install Luchano55.DropWheel
 
 ## 3. Отправить в winget
 
+### Автоматически (настроено с 1.0.0)
+
+Каждый стабильный выпуск сам отправляет заявку в winget — шаг «Отправка в winget» в сборке
+(`build/submit-winget.ps1`, программа wingetcreate на сервере GitHub). Нужен один раз секрет с ключом:
+
+1. https://github.com/settings/tokens → **Generate new token** → **Generate new token (classic)**;
+   Note: `winget-auto`; Expiration: **No expiration**; одна галочка **`public_repo`** → **Generate token** → скопировать `ghp_…`.
+2. https://github.com/Luchano55/dropwheel/settings/secrets/actions → **New repository secret** →
+   Name: `WINGET_TOKEN`, Secret: вставить ключ → **Add secret**. Ключ больше никому не виден (и в журналах сборки скрыт).
+
+Нет секрета — выпуск всё равно выходит, в журнале предупреждение. Отправить уже выпущенную версию вручную:
+[Actions → winget](https://github.com/Luchano55/dropwheel/actions/workflows/winget.yml) → **Run workflow** → версия (`1.0.0`).
+Заявки на новые версии уже принятой программы winget обычно принимает сам, без модератора.
+
+Варианты ниже — если хочется отправить руками.
+
+
 Нужен аккаунт GitHub (тот же, Luchano55). Выберите **один** из вариантов.
 
 ### Вариант А — программа wingetcreate (быстрее, 5 минут)

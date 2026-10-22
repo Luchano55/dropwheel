@@ -299,6 +299,15 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "gh release: код $LASTEXITCODE" }
           Write-Host "Релиз: https://github.com/$env:GITHUB_REPOSITORY/releases/tag/$tag"
           "Релиз: https://github.com/$env:GITHUB_REPOSITORY/releases/tag/$tag" >> $env:GITHUB_STEP_SUMMARY
+      - name: Отправка в winget
+        # Стабильный выпуск сам отправляет заявку в microsoft/winget-pkgs (нужен секрет WINGET_TOKEN, см. docs/winget.md).
+        # Ошибка здесь не красит выпуск: релиз уже опубликован, отправить можно и вручную (workflow «winget»).
+        if: env.DW_STABLE == 'true'
+        continue-on-error: true
+        shell: pwsh
+        env:
+          WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
+        run: ./build/submit-winget.ps1 -ManifestDir "out/winget/manifests/l/Luchano55/DropWheel/$env:DW_VERSION" -Version $env:DW_VERSION
 
   demo:
     # Настоящий ролик с экрана windows-latest и заодно сквозной тест: проводник → Пробел → колесо →

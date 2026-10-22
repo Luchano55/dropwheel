@@ -1,0 +1,35 @@
+name: winget
+
+# Отправить уже выпущенную версию в winget вручную (Actions → winget → Run workflow → номер версии).
+# Обычно не нужен: стабильный выпуск отправляет себя сам (build.yml, шаг «Отправка в winget»).
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Версия, уже выпущенная на GitHub (например 1.0.0)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  submit:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Отправка в winget
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
+          DW_VERSION: ${{ inputs.version }}
+        run: |
+          if ($env:DW_VERSION -notmatch '^\d+\.\d+\.\d+$') { throw "Версия должна быть вида 1.2.3, а не '$env:DW_VERSION'" }
+          $zip = "DropWheel-winget-manifests-$env:DW_VERSION.zip"
+          gh release download "v$env:DW_VERSION" --pattern $zip
+          if ($LASTEXITCODE -ne 0) { throw "В релизе v$env:DW_VERSION нет $zip" }
+          Expand-Archive $zip -DestinationPath out/winget
+          $dir = Get-ChildItem out/winget -Recurse -Directory | Where-Object { $_.Name -eq $env:DW_VERSION } | Select-Object -First 1
+          if (-not $dir) { throw "В $zip нет папки $env:DW_VERSION" }
+          ./build/submit-winget.ps1 -ManifestDir $dir.FullName -Version $env:DW_VERSION -Required
