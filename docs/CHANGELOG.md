@@ -5,7 +5,9 @@
 
 Each version section starts with `## <version>`; CI copies it into the GitHub release notes.
 
-## 0.4.0
+## 1.0.0
+
+Первый полноценный выпуск: всё из 0.3.0 плюс папки целиком, картинки из браузера и обрезка видео.
 
 **Новое в этой версии**
 - Папки целиком: правый клик по папке → «Конвертировать…» (или перетащите папку и нажмите Пробел) — колесо для файлов внутри.
@@ -21,6 +23,7 @@ Each version section starts with `## <version>`; CI copies it into the GitHub re
   по умолчанию не виден, его можно поднять в «Настройки → Колесо».
 
 **English**
+- First full release: everything from 0.3.0 plus whole folders, browser pictures and video trimming.
 - Whole folders: right-click a folder → “Convert…” (or drag a folder and press Space) to get the wheel for the files inside.
   Results go to a sibling folder — `Vacation` → `Vacation (JPG)` — with the same subfolders; files already in the target format are copied,
   unsuitable ones are skipped; “One PDF” and “Merge” make a single file named after the folder. One notification per folder, up to 1000 files.
