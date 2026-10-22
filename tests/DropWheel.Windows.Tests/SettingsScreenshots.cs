@@ -34,10 +34,13 @@ public class SettingsScreenshots
             .WithRecent(WheelGroups.Photo, OperationMode.Convert, "to-webp"),
     };
 
+    /// <summary>Высота заголовка окна на снимке.</summary>
+    internal const double TitleHeight = 32;
+
     /// <summary>Окно с заголовком Windows 11 поверх обоев: тень, скругление, заголовок с кнопками.</summary>
-    private static (FrameworkElement Scene, double Width, double Height) Window(SettingsView view, bool light, double h)
+    internal static (FrameworkElement Scene, double Width, double Height) Window(SettingsView view, bool light, double h)
     {
-        const double margin = 28, titleHeight = 32;
+        const double margin = 28, titleHeight = TitleHeight;
         var w = SettingsView.DefaultWidth;
         var sceneW = w + 2 * margin;
         var sceneH = h + 2 * margin;

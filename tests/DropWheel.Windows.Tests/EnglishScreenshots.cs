@@ -137,6 +137,35 @@ public class EnglishScreenshots
         });
     }
 
+    /// <summary>Колесо для папки «Vacation» из меню проводника (D-FOLDERS).</summary>
+    [Theory]
+    [InlineData(true, OperationMode.Convert, 0, "wheel-en-light-folder-convert")]
+    [InlineData(true, OperationMode.Tool, null, "wheel-en-light-folder-tools")]
+    public void Wheel_folder(bool light, OperationMode mode, int? hover, string name)
+    {
+        using var _ = Loc.Use(UiLanguage.En);
+        FeatureScreenshots.FolderWheel(light, mode, hover, "Vacation", name);
+    }
+
+    /// <summary>Колесо для картинки WebP, перетащенной из браузера (D-BROWSER).</summary>
+    [Theory]
+    [InlineData(true, 1, "wheel-en-light-browser-webp")]
+    public void Wheel_browser_image(bool light, int? hover, string name)
+    {
+        using var _ = Loc.Use(UiLanguage.En);
+        FeatureScreenshots.BrowserWheel(light, hover, name);
+    }
+
+    /// <summary>Нижняя часть «General»: картинки из буфера и браузера, автозапуск, канал обновлений.</summary>
+    [Theory]
+    [InlineData(true, "settings-en-light-general-lower")]
+    [InlineData(false, "settings-en-dark-general-lower")]
+    public void Settings_general_lower(bool light, string name)
+    {
+        using var _ = Loc.Use(UiLanguage.En);
+        FeatureScreenshots.SettingsLower(light, @"C:\Users\Roman\Pictures\From browser", name);
+    }
+
     /// <summary>Смена языка на лету: окно настроек перестраивается и говорит на новом языке.</summary>
     [Fact]
     public void Settings_view_relocalizes()
