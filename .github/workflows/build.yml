@@ -60,7 +60,7 @@ jobs:
         # Свежие картинки интерфейса: их видно в README и их может забрать разработчик (git fetch).
         # Ветка без истории (каждый раз один коммит), но параллельные сборки не затирают папки друг друга:
         # берём текущее содержимое, меняем только свою папку, пушим с --force-with-lease и повторяем при гонке.
-        if: always() && github.event_name != 'pull_request' && hashFiles('screenshots/*.png') != ''
+        if: always() && github.event_name != 'pull_request' && !startsWith(github.ref, 'refs/tags/') && hashFiles('screenshots/*.png') != ''
         shell: pwsh
         run: |
           $branch = "$env:GITHUB_REF_NAME" -replace '[^A-Za-z0-9._-]', '-'
@@ -90,21 +90,56 @@ jobs:
           }
           if (-not $ok) { Write-Warning "Скриншоты не опубликованы (ветка занята другими сборками)" }
           $global:LASTEXITCODE = 0
+      - name: Версия и канал
+        # Решение D-RELEASE. Тег vX.Y.Z → стабильная версия X.Y.Z (канал stable, обычный релиз vX.Y.Z).
+        # Остальное → тестовая X.Y.Z-dev.<run> из version.txt (канал dev; из main — релиз dev-build).
+        # Номер сборки (третья часть AssemblyVersion) — всегда номер запуска CI: по нему программа сравнивает сборки.
+        shell: pwsh
+        run: |
+          $base = (Get-Content version.txt -Raw).Trim()
+          if ($base -notmatch '^\d+\.\d+\.\d+$') { throw "version.txt должен быть вида 1.2.3, а там: '$base'" }
+          $run = [int]$env:GITHUB_RUN_NUMBER
+          if ($run -gt 65534) { throw "Номер запуска $run не помещается в AssemblyVersion" }
+          $stable = $false
+          if ($env:GITHUB_REF -like 'refs/tags/*') {
+            if ($env:GITHUB_REF_NAME -match '^v(\d+\.\d+\.\d+)$') {
+              $version = $Matches[1]
+              $stable = $true
+              if ($version -ne $base) { Write-Warning "Тег $env:GITHUB_REF_NAME, а в version.txt $base — беру версию из тега. Поправьте version.txt." }
+            } else {
+              Write-Warning "Тег $env:GITHUB_REF_NAME не вида vX.Y.Z — собираю как тестовую сборку, без релиза"
+            }
+          }
+          if (-not $stable) { $version = "$base-dev.$run" }
+          $core = $version.Split('-')[0].Split('.')
+          $fileVersion = "$($core[0]).$($core[1]).$run.0"
+          $channel = if ($stable) { 'stable' } else { 'dev' }
+          "DW_VERSION=$version" >> $env:GITHUB_ENV
+          "DW_FILE_VERSION=$fileVersion" >> $env:GITHUB_ENV
+          "DW_CHANNEL=$channel" >> $env:GITHUB_ENV
+          "DW_STABLE=$($stable.ToString().ToLowerInvariant())" >> $env:GITHUB_ENV
+          Write-Host "Версия $version, файл $fileVersion, канал $channel, сборка $run"
+          "### DropWheel $version`nКанал **$channel**, сборка $run, AssemblyVersion $fileVersion" >> $env:GITHUB_STEP_SUMMARY
       - name: Сборка
         shell: pwsh
         run: |
-          # Номер сборки = номер запуска CI: по нему программа понимает, что есть обновление.
           $common = @("-c", "Release", "-r", "win-x64", "--self-contained",
             "-p:PublishSingleFile=true", "-p:IncludeNativeLibrariesForSelfExtract=true",
             "-p:EnableCompressionInSingleFile=true", "-p:DebugType=None",
-            "-p:Version=0.2.$env:GITHUB_RUN_NUMBER", "-p:SourceRevisionId=$env:GITHUB_SHA",
+            "-p:Version=$env:DW_VERSION", "-p:AssemblyVersion=$env:DW_FILE_VERSION", "-p:FileVersion=$env:DW_FILE_VERSION",
+            "-p:UpdateChannel=$env:DW_CHANNEL", "-p:SourceRevisionId=$env:GITHUB_SHA",
             "-o", "out/DropWheel")
           dotnet publish src/DropWheel @common
+          if ($LASTEXITCODE -ne 0) { throw "dotnet publish DropWheel: код $LASTEXITCODE" }
           dotnet publish src/DropWheel.Cli @common
+          if ($LASTEXITCODE -ne 0) { throw "dotnet publish dropwheel-cli: код $LASTEXITCODE" }
+          $exeVersion = (Get-Item out/DropWheel/DropWheel.exe).VersionInfo
+          Write-Host "DropWheel.exe: FileVersion $($exeVersion.FileVersion), ProductVersion $($exeVersion.ProductVersion)"
           Copy-Item tools out/DropWheel/tools -Recurse
           # ffprobe нужен только тестам.
           Remove-Item out/DropWheel/tools/ffmpeg/ffprobe.exe -ErrorAction SilentlyContinue
-          Copy-Item packaging/* out/DropWheel/
+          # Только файлы из корня packaging (try-dropwheel.cmd); installer/ и winget/ — не для папки программы.
+          Get-ChildItem packaging -File | Copy-Item -Destination out/DropWheel/
 
           # Версия набора утилит = хэш всех их файлов: обновление перекачивает утилиты, только если она сменилась.
           $root = (Resolve-Path out/DropWheel/tools).Path
@@ -112,6 +147,7 @@ jobs:
             ForEach-Object { (Get-FileHash $_.FullName -Algorithm SHA256).Hash + " " + $_.FullName.Substring($root.Length) }
           $toolsVersion = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes($sig -join "`n"))).Substring(0, 16)
           Set-Content out/DropWheel/tools/tools-version.txt $toolsVersion -NoNewline
+          "DW_TOOLS_VERSION=$toolsVersion" >> $env:GITHUB_ENV
 
           Get-ChildItem out/DropWheel -Recurse -File | Sort-Object Length -Descending | Select-Object -First 8 |
             ForEach-Object { "{0,8:N1} MB  {1}" -f ($_.Length / 1MB), $_.FullName }
@@ -123,23 +159,95 @@ jobs:
           Compress-Archive out/DropWheel DropWheel-win-x64.zip
           Compress-Archive out/app/DropWheel DropWheel-app-win-x64.zip
           Compress-Archive out/tools/DropWheel DropWheel-tools-win-x64.zip
-
+          Get-ChildItem *.zip | ForEach-Object { "{0,8:N1} MB  {1}" -f ($_.Length / 1MB), $_.Name }
+      - name: Установщик (Inno Setup)
+        # packaging/installer/DropWheel.iss → DropWheel-Setup-<версия>.exe. Inno Setup есть не на каждом образе — ставим через choco.
+        shell: pwsh
+        run: |
+          function Find-Iscc {
+            $cmd = Get-Command iscc.exe -ErrorAction SilentlyContinue
+            if ($cmd) { return $cmd.Source }
+            @("${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe", "$env:ProgramFiles\Inno Setup 6\ISCC.exe",
+              "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe") | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
+          }
+          $iscc = Find-Iscc
+          if (-not $iscc) {
+            Write-Host "Inno Setup не найден — ставлю через choco"
+            choco install innosetup -y --no-progress
+            $iscc = Find-Iscc
+          }
+          if (-not $iscc) { throw "ISCC.exe не найден и после choco install innosetup" }
+          Write-Host "ISCC: $iscc"
+          $out = "$PWD\out\installer"
+          & $iscc "/DAppVersion=$env:DW_VERSION" "/DFileVersion=$env:DW_FILE_VERSION" `
+            "/DAppSource=$PWD\out\DropWheel" "/DOutputDir=$out" packaging\installer\DropWheel.iss
+          if ($LASTEXITCODE -ne 0) { throw "ISCC: код $LASTEXITCODE" }
+          $name = "DropWheel-Setup-$env:DW_VERSION.exe"
+          $setup = Join-Path $out $name
+          if (-not (Test-Path $setup)) { Get-ChildItem $out; throw "Нет $setup" }
+          Copy-Item $setup $name
+          $sha = (Get-FileHash $name -Algorithm SHA256).Hash
+          "DW_INSTALLER=$name" >> $env:GITHUB_ENV
+          "DW_INSTALLER_SHA256=$sha" >> $env:GITHUB_ENV
+          "{0,8:N1} MB  {1}" -f ((Get-Item $name).Length / 1MB), $name
+          Write-Host "SHA256 установщика (для winget): $sha"
+          "Установщик **$name**`n`nSHA256: ``$sha``" >> $env:GITHUB_STEP_SUMMARY
+      - name: version.json
+        # Тот же формат, что и раньше (build, commit, архивы и их SHA-256), плюс version, channel и установщик.
+        # Старые программы новые поля просто не читают.
+        shell: pwsh
+        run: |
           $manifest = [ordered]@{
             build = [int]$env:GITHUB_RUN_NUMBER
+            version = $env:DW_VERSION
+            channel = $env:DW_CHANNEL
             commit = $env:GITHUB_SHA
-            toolsVersion = $toolsVersion
+            toolsVersion = $env:DW_TOOLS_VERSION
             appZip = "DropWheel-app-win-x64.zip"
             appSha256 = (Get-FileHash DropWheel-app-win-x64.zip -Algorithm SHA256).Hash
             toolsZip = "DropWheel-tools-win-x64.zip"
             toolsSha256 = (Get-FileHash DropWheel-tools-win-x64.zip -Algorithm SHA256).Hash
+            installer = $env:DW_INSTALLER
+            installerSha256 = $env:DW_INSTALLER_SHA256
           }
           $manifest | ConvertTo-Json | Set-Content version.json -Encoding utf8NoBOM
           Get-Content version.json
-          Get-ChildItem *.zip | ForEach-Object { "{0,8:N1} MB  {1}" -f ($_.Length / 1MB), $_.Name }
+      - name: Манифесты winget
+        # Шаблон packaging/winget/<версия> с настоящими SHA256 и адресом. На тестовых сборках — проверка
+        # (адрес на dev-build), к стабильному релизу прикладывается архив. Как отправить в winget — docs/winget.md.
+        shell: pwsh
+        run: |
+          $tag = if ($env:DW_STABLE -eq 'true') { "v$env:DW_VERSION" } else { "dev-build" }
+          $url = "https://github.com/$env:GITHUB_REPOSITORY/releases/download/$tag/$env:DW_INSTALLER"
+          ./build/render-winget.ps1 -Version $env:DW_VERSION -InstallerUrl $url -Sha256 $env:DW_INSTALLER_SHA256 `
+            -ReleaseNotesUrl "https://github.com/$env:GITHUB_REPOSITORY/releases/tag/$tag" -OutDir out/winget
+          Compress-Archive out/winget/manifests "DropWheel-winget-manifests-$env:DW_VERSION.zip"
+      - name: Проверка манифестов winget
+        # Только если на образе есть winget; ошибка здесь не останавливает сборку (окончательно проверит бот winget-pkgs).
+        continue-on-error: true
+        timeout-minutes: 3
+        shell: pwsh
+        run: |
+          $dir = "out/winget/manifests/l/Luchano55/DropWheel/$env:DW_VERSION"
+          if (-not (Get-Command winget -ErrorAction SilentlyContinue)) { Write-Host "winget на образе нет — проверка пропущена"; exit 0 }
+          winget validate --manifest $dir
+          if ($LASTEXITCODE -ne 0) { Write-Warning "winget validate: код $LASTEXITCODE — проверьте манифесты"; exit 1 }
       - uses: actions/upload-artifact@v4
         with:
           name: DropWheel-win-x64
           path: out/DropWheel
+      - name: Установщик — артефакт
+        uses: actions/upload-artifact@v4
+        with:
+          name: DropWheel-Setup
+          path: DropWheel-Setup-*.exe
+          if-no-files-found: error
+      - name: winget — артефакт
+        uses: actions/upload-artifact@v4
+        with:
+          name: winget-manifests
+          path: out/winget/manifests
+          if-no-files-found: error
       - name: Обновить релиз dev-build
         # Сборку для пользователей (релиз dev-build) обновляет только main.
         if: github.ref == 'refs/heads/main'
@@ -148,16 +256,43 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release delete dev-build --yes --cleanup-tag 2>$null
-          gh release create dev-build DropWheel-win-x64.zip DropWheel-app-win-x64.zip DropWheel-tools-win-x64.zip version.json `
+          gh release create dev-build $env:DW_INSTALLER DropWheel-win-x64.zip DropWheel-app-win-x64.zip DropWheel-tools-win-x64.zip version.json `
             --prerelease --target $env:GITHUB_SHA `
-            --title "Тестовая сборка $env:GITHUB_RUN_NUMBER" `
-            --notes "Первая установка — DropWheel-win-x64.zip (всё сразу). Дальше программа обновляется сама (трей → «Обновить»). Сборка $env:GITHUB_RUN_NUMBER, ветка $env:GITHUB_REF_NAME, коммит $env:GITHUB_SHA."
+            --title "Тестовая сборка $env:GITHUB_RUN_NUMBER ($env:DW_VERSION)" `
+            --notes "Тестовая сборка $env:DW_VERSION. Установка — $env:DW_INSTALLER (без прав администратора) или DropWheel-win-x64.zip (распаковать и запустить). Дальше программа обновляется сама (трей → «Обновить»). Сборка $env:GITHUB_RUN_NUMBER, ветка $env:GITHUB_REF_NAME, коммит $env:GITHUB_SHA. SHA256 установщика: $env:DW_INSTALLER_SHA256"
+          if ($LASTEXITCODE -ne 0) { throw "gh release create dev-build: код $LASTEXITCODE" }
+      - name: Стабильный релиз vX.Y.Z
+        # Тег vX.Y.Z → обычный (не prerelease) релиз «DropWheel X.Y.Z»: GitHub считает его latest,
+        # стабильный канал обновлений читает releases/latest/download/version.json. Перезапуск сборки — файлы заменяются.
+        if: env.DW_STABLE == 'true'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $tag = "v$env:DW_VERSION"
+          ./build/release-notes.ps1 -Version $env:DW_VERSION -OutFile release-notes.md `
+            -Footer "SHA256 ($env:DW_INSTALLER): ``$env:DW_INSTALLER_SHA256``"
+          $files = @($env:DW_INSTALLER, "DropWheel-win-x64.zip", "DropWheel-app-win-x64.zip", "DropWheel-tools-win-x64.zip",
+            "version.json", "DropWheel-winget-manifests-$env:DW_VERSION.zip")
+          gh release view $tag *> $null
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "Релиз $tag уже есть — заменяю файлы и описание"
+            gh release upload $tag @files --clobber
+            if ($LASTEXITCODE -ne 0) { throw "gh release upload: код $LASTEXITCODE" }
+            gh release edit $tag --title "DropWheel $env:DW_VERSION" --notes-file release-notes.md --prerelease=false
+          } else {
+            gh release create $tag @files --verify-tag --title "DropWheel $env:DW_VERSION" --notes-file release-notes.md
+          }
+          if ($LASTEXITCODE -ne 0) { throw "gh release: код $LASTEXITCODE" }
+          Write-Host "Релиз: https://github.com/$env:GITHUB_REPOSITORY/releases/tag/$tag"
+          "Релиз: https://github.com/$env:GITHUB_REPOSITORY/releases/tag/$tag" >> $env:GITHUB_STEP_SUMMARY
 
   demo:
     # Настоящий ролик с экрана windows-latest и заодно сквозной тест: проводник → Пробел → колесо →
     # файл рядом с исходником (docs/demo.md). Пока не блокирует сборку и релиз: ошибка видна, но не красит запуск.
     needs: windows
-    if: github.event_name == 'workflow_dispatch' || github.ref_name != github.event.repository.default_branch
+    # На тегах vX.Y.Z (стабильный релиз) ролик не пишем.
+    if: (github.event_name == 'workflow_dispatch' || github.ref_name != github.event.repository.default_branch) && !startsWith(github.ref, 'refs/tags/')
     runs-on: windows-latest
     continue-on-error: true
     timeout-minutes: 30
