@@ -601,7 +601,7 @@ Right-click the tray icon → *Open log*, take the newest `.log` file and attach
 
 **Next:**
 
-- [ ] Built-in editors (inspired by Tangerine): crop with aspect ratios (Free, 1:1, 16:9, 9:16, 4:3, 3:4), background removal, add a background (palette, padding, rounded corners, shadow), annotations
+- [ ] Built-in editors: crop with aspect ratios (Free, 1:1, 16:9, 9:16, 4:3, 3:4), background removal, add a background (palette, padding, rounded corners, shadow), annotations
 - [ ] A smaller download: a custom ffmpeg build with only what DropWheel needs
 
 Have an idea? [Open a feature request](https://github.com/Luchano55/dropwheel/issues/new/choose).

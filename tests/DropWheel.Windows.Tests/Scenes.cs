@@ -29,7 +29,7 @@ internal static class Scenes
     public static FrameworkElement Wallpaper(double width, double height, bool light)
     {
         var canvas = new Canvas { Width = width, Height = height, ClipToBounds = true };
-        // Светлая тема — тёплые оранжевые обои (как в образце Tangerine), тёмная — сине-фиолетовые.
+        // Светлая тема — тёплые оранжевые обои, тёмная — сине-фиолетовые.
         canvas.Background = new LinearGradientBrush(
             light ? Color.FromRgb(0xFF, 0x7E, 0x45) : Color.FromRgb(0x10, 0x2A, 0x4F),
             light ? Color.FromRgb(0xFF, 0xC8, 0x7A) : Color.FromRgb(0x4A, 0x1E, 0x4D), 35);
