@@ -76,6 +76,13 @@ public sealed class WheelWindow : Window
     /// <summary>Прятать колесо при потере фокуса (режим клика из меню проводника).</summary>
     public bool CloseOnDeactivate { get; set; }
 
+    /// <summary>Плотность заливок колеса, % (настройка «Прозрачность колеса»); меняется и у открытого колеса.</summary>
+    public int FillPercent
+    {
+        get => _wheel.FillPercent;
+        set => _wheel.FillPercent = value;
+    }
+
     /// <summary>Колесо открыто и ждёт выбора (во время анимации закрытия — уже false).</summary>
     public bool IsOpen => _open;
 

@@ -59,6 +59,27 @@ public class WheelScreenshots
         });
     }
 
+    /// <summary>
+    /// «Прозрачность колеса» 50 %: плотный диск (эффекты прозрачности выключены) просвечивает, обои видно;
+    /// подписи и наведённый лепесток в цвете акцента — такие же чёткие.
+    /// </summary>
+    [Theory]
+    [InlineData(false, "wheel-dark-opacity-50")]
+    [InlineData(true, "wheel-light-opacity-50")]
+    public void Half_opacity(bool light, string name)
+    {
+        Sta.Run(() =>
+        {
+            var wheel = Make(light, translucent: false);
+            wheel.FillPercent = 50;
+            wheel.Items = EightFormats;
+            wheel.ShowModeDots = true;
+            wheel.IdleText = "1,1\u00A0МБ";
+            wheel.HoverIndex = 2;
+            Save(wheel, light, name);
+        });
+    }
+
     /// <summary>Конвертация, наведено на лепесток — он в цвете акцента, в пилюле имя формата.</summary>
     [Theory]
     [InlineData(false, "wheel-dark-convert-8-hover")]

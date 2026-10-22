@@ -62,6 +62,10 @@ internal static class Strings
         public static string ContextMenuHint => T.ContextMenuHint;
         public static string ClipboardHotkey => T.ClipboardHotkey;
         public static string ClipboardHotkeyHint => T.ClipboardHotkeyHint;
+        public static string WheelOpacityTitle => T.WheelOpacityTitle;
+        public static string WheelOpacityHint => T.WheelOpacityHint;
+        public static string WheelOpacitySolid => T.WheelOpacitySolid;
+        public static string WheelOpacityClear => T.WheelOpacityClear;
         public static string Updates => T.Updates;
         public static string UpdatesHint => T.UpdatesHint;
 

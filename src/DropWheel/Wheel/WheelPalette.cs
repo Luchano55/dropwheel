@@ -66,6 +66,47 @@ public sealed class WheelPalette
         }
     }
 
+    /// <summary>Копия с другой плотностью заливок (диск, лепестки, центр, кольцо); подписи и акцент — как есть.</summary>
+    private WheelPalette(WheelPalette s, int percent)
+    {
+        FillPercent = percent;
+        IsLight = s.IsLight;
+        Accent = s.Accent; OnAccent = s.OnAccent; Pulse = s.Pulse;
+        DiscTint = Scale(s.DiscTint, percent);
+        DiscSolid = Scale(s.DiscSolid, percent);
+        RimHighlight = s.RimHighlight; RimOuter = s.RimOuter; Shadow = s.Shadow;
+        Petal = Scale(s.Petal, percent);
+        PetalText = s.PetalText; PetalIcon = s.PetalIcon; PetalSubtext = s.PetalSubtext;
+        Track = Scale(s.Track, percent);
+        Center = Scale(s.Center, percent);
+        CenterRim = s.CenterRim;
+        Pill = s.Pill; PillHover = s.PillHover; PillRim = s.PillRim;
+        Text = s.Text; TextSecondary = s.TextSecondary; TextTertiary = s.TextTertiary;
+        AcrylicTint = s.AcrylicTint;
+        _base = s;
+    }
+
+    private readonly WheelPalette? _base;
+    private WheelPalette? _scaled;
+
+    /// <summary>Плотность заливок этой палитры, % (см. WheelFill; 88 — исходный вид).</summary>
+    public int FillPercent { get; } = WheelFill.DefaultPercent;
+
+    /// <summary>Та же палитра с плотностью заливок percent (40–100). Последний вариант кэшируется.</summary>
+    public WheelPalette WithFill(int percent)
+    {
+        percent = WheelFill.Clamp(percent);
+        var root = _base ?? this;
+        if (percent == root.FillPercent) return root;
+        if (root._scaled is { } cached && cached.FillPercent == percent) return cached;
+        return root._scaled = new WheelPalette(root, percent);
+    }
+
+    private static Brush Scale(Brush brush, int percent) =>
+        brush is SolidColorBrush { Color: var c }
+            ? MakeBrush(Color.FromArgb(WheelFill.ScaleAlpha(c.A, percent), c.R, c.G, c.B))
+            : brush;
+
     public static WheelPalette Dark(AccentColors? accent = null) => new(false, accent ?? AccentColors.Default);
     public static WheelPalette Light(AccentColors? accent = null) => new(true, accent ?? AccentColors.Default);
 

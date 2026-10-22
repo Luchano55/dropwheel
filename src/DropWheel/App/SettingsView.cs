@@ -374,6 +374,8 @@ public sealed class SettingsView : Border
         languagePanel.Children.Add(languages);
         page.Children.Add(Card(languagePanel));
 
+        page.Children.Add(WheelOpacityCard());
+
         // Windows
         page.Children.Add(SectionTitle(S.SystemTitle));
         page.Children.Add(ToggleCard(S.AutoStart, S.AutoStartHint, _settings.AutoStart,
@@ -384,6 +386,80 @@ public sealed class SettingsView : Border
             on => Change(s => s with { ClipboardHotkey = on })));
         page.Children.Add(ToggleCard(S.Updates, S.UpdatesHint, _settings.CheckForUpdates,
             on => Change(s => s with { CheckForUpdates = on })));
+    }
+
+    /// <summary>
+    /// «Прозрачность колеса»: ползунок «плотнее ↔ прозрачнее» (вправо — прозрачнее; хранится плотность 40–100 %)
+    /// и мини-колесо на цветной «подложке», чтобы было видно, как оно просвечивает. Применяется сразу.
+    /// </summary>
+    private Border WheelOpacityCard()
+    {
+        var p = _palette;
+        var percent = WheelFill.Clamp(_settings.WheelOpacity);
+        // Ползунок — прозрачность: 0 = плотность 100 %, 60 = плотность 40 %.
+        var slider = new ValueSlider(p, 0, WheelFill.MaxPercent - WheelFill.MinPercent, WheelFill.MaxPercent - percent, S.WheelOpacityTitle)
+            { Width = 220, Margin = new Thickness(8, 0, 8, 0) };
+        TextBlock End(string text) => new()
+        {
+            Text = text, FontSize = 12, Foreground = p.TextSecondary, VerticalAlignment = VerticalAlignment.Center,
+        };
+        var sliderRow = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 12, 0, 0) };
+        sliderRow.Children.Add(End(S.WheelOpacitySolid));
+        sliderRow.Children.Add(slider);
+        sliderRow.Children.Add(End(S.WheelOpacityClear));
+
+        var left = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
+        left.Children.Add(Titles(S.WheelOpacityTitle, S.WheelOpacityHint));
+        left.Children.Add(sliderRow);
+
+        // Образец: колесо для фото поверх цветной полосатой «картинки» — прозрачность видна сразу.
+        var ops = WheelGroups.Operations(WheelGroups.Photo);
+        var (convert, tools) = WheelArrangement.Arrange(ops, WheelGroups.Photo, _settings.Wheel);
+        var sample = new WheelControl
+        {
+            Width = WheelWindow.DipSize, Height = WheelWindow.DipSize, IsHitTestVisible = false,
+            Palette = p.IsLight ? WheelPalette.Light(_accent) : WheelPalette.Dark(_accent),
+            Backdrop = WheelBackdrop.Solid, IsPending = false, Mode = OperationMode.Convert,
+            Items = convert, ShowModeDots = convert.Count > 0 && tools.Count > 0,
+            IdleText = S.GroupName(WheelGroups.Photo), FillPercent = percent,
+        };
+        var host = new Border
+        {
+            Width = 132, Height = 132, CornerRadius = new CornerRadius(10), ClipToBounds = true,
+            Background = OpacitySampleBackground(), Padding = new Thickness(4),
+            Child = new Viewbox { Child = sample, Stretch = Stretch.Uniform },
+            Margin = new Thickness(16, 0, 0, 0),
+        };
+
+        slider.ValueChanged += v =>
+        {
+            var fill = WheelFill.MaxPercent - v;
+            sample.FillPercent = fill;
+            Change(s => s with { WheelOpacity = fill });
+        };
+
+        var grid = new Grid();
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        grid.Children.Add(left);
+        Grid.SetColumn(host, 1);
+        grid.Children.Add(host);
+        return Card(grid);
+    }
+
+    /// <summary>Пёстрая подложка образца: диагональные полосы — сквозь прозрачное колесо их видно.</summary>
+    private static Brush OpacitySampleBackground()
+    {
+        var brush = new LinearGradientBrush
+        {
+            StartPoint = new Point(0, 0), EndPoint = new Point(0.25, 0.25), SpreadMethod = GradientSpreadMethod.Repeat,
+        };
+        brush.GradientStops.Add(new GradientStop(Color.FromRgb(0x2F, 0x80, 0xED), 0));
+        brush.GradientStops.Add(new GradientStop(Color.FromRgb(0x2F, 0x80, 0xED), 0.5));
+        brush.GradientStops.Add(new GradientStop(Color.FromRgb(0xF2, 0x99, 0x4A), 0.5));
+        brush.GradientStops.Add(new GradientStop(Color.FromRgb(0xF2, 0x99, 0x4A), 1));
+        brush.Freeze();
+        return brush;
     }
 
     // ---------- Качество ----------
@@ -531,6 +607,7 @@ public sealed class SettingsView : Border
         _preview ??= new WheelControl { Width = WheelWindow.DipSize, Height = WheelWindow.DipSize, IsHitTestVisible = false };
         _preview.Palette = p.IsLight ? WheelPalette.Light(_accent) : WheelPalette.Dark(_accent);
         _preview.Backdrop = WheelBackdrop.Solid;
+        _preview.FillPercent = _settings.WheelOpacity;
         _preview.IsPending = false;
         _preview.Mode = _mode;
         _preview.Items = _mode == OperationMode.Convert ? convert : tools;

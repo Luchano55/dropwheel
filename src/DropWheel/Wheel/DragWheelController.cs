@@ -61,6 +61,13 @@ internal sealed class DragWheelController : IDisposable
     }
 
     /// <summary>Сменить горячую клавишу на ходу (окно настроек).</summary>
+    /// <summary>Плотность заливок колеса, % (настройка «Прозрачность колеса»).</summary>
+    public int FillPercent
+    {
+        get => _wheel.FillPercent;
+        set => _wheel.FillPercent = value;
+    }
+
     public string Hotkey
     {
         set

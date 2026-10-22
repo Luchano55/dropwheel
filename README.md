@@ -343,6 +343,7 @@ Double-click the tray icon (or right click → *Settings…*). Every change appl
 
 - **Hotkey** — <kbd>Space</kbd> (default), <kbd>Ё</kbd>/<kbd>`</kbd>, <kbd>Caps Lock</kbd> or <kbd>F1</kbd>–<kbd>F12</kbd>; works right away, no restart.
 - **Language** — *Same as Windows* (default: Russian on a Russian Windows, English otherwise), *Русский* or *English*; switches right away.
+- **Wheel transparency** — a slider from *solid* to *see-through* with a live preview; labels and the highlighted petal stay crisp.
 - **Where results go** — next to the original, or all into one folder (default `Downloads\DropWheel`).
 - **Quality** — JPG and WebP (50–100), video CRF (18–32, lower = better), MP3 bitrate (128–320 kbps). Applies to new jobs.
 - **Start with Windows**, the Explorer menu item, <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>V</kbd> for the clipboard, the daily update check.

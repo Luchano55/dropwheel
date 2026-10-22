@@ -24,6 +24,8 @@ public sealed record AppSettings
     public bool CheckForUpdates { get; init; } = true;
     /// <summary>Своё колесо: порядок и видимость лепестков по типам файлов, «последний выбор — первым».</summary>
     public WheelPreferences Wheel { get; init; } = new();
+    /// <summary>Плотность заливки колеса, % (40–100; 88 — исходный вид), см. WheelFill.</summary>
+    public int WheelOpacity { get; init; } = WheelFill.DefaultPercent;
     /// <summary>Язык интерфейса: «auto» — как у Windows (русский для русской, иначе английский), «ru», «en».</summary>
     public string Language { get; init; } = Loc.Auto;
 
@@ -94,5 +96,6 @@ public sealed record AppSettings
         Conversion = s.Conversion ?? new(),
         Wheel = (s.Wheel ?? new()).Sanitized(),
         Language = Loc.Normalize(s.Language),
+        WheelOpacity = WheelFill.Clamp(s.WheelOpacity),
     };
 }

@@ -124,7 +124,10 @@ public partial class App : Application
     {
         try
         {
-            _dragWheel = new DragWheelController(Settings.Hotkey, Dispatcher, Queue.Converter, Enqueue, Log, () => Settings.Wheel);
+            _dragWheel = new DragWheelController(Settings.Hotkey, Dispatcher, Queue.Converter, Enqueue, Log, () => Settings.Wheel)
+            {
+                FillPercent = Settings.WheelOpacity,
+            };
             _dragWheel.Start();
         }
         catch (Exception ex)
@@ -323,7 +326,7 @@ public partial class App : Application
 
     private WheelWindow CreateChooser()
     {
-        var wheel = new WheelWindow { CloseOnDeactivate = true };
+        var wheel = new WheelWindow { CloseOnDeactivate = true, FillPercent = Settings.WheelOpacity };
         wheel.ItemChosen += id =>
         {
             var paths = _chooserPaths;
@@ -444,6 +447,11 @@ public partial class App : Application
         {
             if (now.ContextMenuEnabled) ContextMenuInstaller.TryInstall(Log);
             else ContextMenuInstaller.TryUninstall(Log);
+        }
+        if (now.WheelOpacity != old.WheelOpacity)
+        {
+            if (_dragWheel is not null) _dragWheel.FillPercent = now.WheelOpacity;
+            if (_chooser is not null) _chooser.FillPercent = now.WheelOpacity;
         }
         if (now.ClipboardHotkey != old.ClipboardHotkey) SetClipboardHotkey(now.ClipboardHotkey);
         if (now.CheckForUpdates != old.CheckForUpdates)

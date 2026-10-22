@@ -93,6 +93,11 @@ public sealed partial class WheelControl : FrameworkElement
         nameof(Backdrop), typeof(WheelBackdrop), typeof(WheelControl),
         new FrameworkPropertyMetadata(WheelBackdrop.Solid, FrameworkPropertyMetadataOptions.AffectsRender));
 
+    /// <summary>Плотность заливок колеса, % (настройка «Прозрачность колеса», WheelFill: 40–100, 88 — исходный вид).</summary>
+    public static readonly DependencyProperty FillPercentProperty = DependencyProperty.Register(
+        nameof(FillPercent), typeof(int), typeof(WheelControl),
+        new FrameworkPropertyMetadata(WheelFill.DefaultPercent, FrameworkPropertyMetadataOptions.AffectsRender));
+
     public static readonly DependencyProperty DrawShadowProperty = DependencyProperty.Register(
         nameof(DrawShadow), typeof(bool), typeof(WheelControl),
         new FrameworkPropertyMetadata(true, FrameworkPropertyMetadataOptions.AffectsRender));
@@ -202,6 +207,12 @@ public sealed partial class WheelControl : FrameworkElement
     }
 
     /// <summary>Рисовать тень вокруг диска. Окно с размытием выключает её: там тень рисует отдельное окно под колесом.</summary>
+    public int FillPercent
+    {
+        get => (int)GetValue(FillPercentProperty);
+        set => SetValue(FillPercentProperty, value);
+    }
+
     public bool DrawShadow
     {
         get => (bool)GetValue(DrawShadowProperty);
@@ -375,7 +386,7 @@ public sealed partial class WheelControl : FrameworkElement
 
     protected override void OnRender(DrawingContext dc)
     {
-        var p = Palette ?? WheelPalette.FromSystem();
+        var p = (Palette ?? WheelPalette.FromSystem()).WithFill(FillPercent);
         var c = new Point(ActualWidth / 2, ActualHeight / 2);
         var dpi = VisualTreeHelper.GetDpi(this).PixelsPerDip;
 

@@ -128,6 +128,10 @@ public sealed partial class Texts
     public string ClipboardHotkey { get; init; } = "Ctrl+Alt+V — колесо для буфера обмена";
     public string ClipboardHotkeyHint { get; init; } =
         "Скопируйте файлы или снимок экрана и нажмите Ctrl+Alt+V — колесо появится у курсора.";
+    public string WheelOpacityTitle { get; init; } = "Прозрачность колеса";
+    public string WheelOpacityHint { get; init; } = "Насколько сквозь колесо видно окна под ним. Подписи остаются чёткими.";
+    public string WheelOpacitySolid { get; init; } = "плотнее";
+    public string WheelOpacityClear { get; init; } = "прозрачнее";
     public string Updates { get; init; } = "Проверять обновления";
     public string UpdatesHint { get; init; } = "Раз в сутки — единственное обращение программы в интернет.";
     public string WheelIntro { get; init; } =

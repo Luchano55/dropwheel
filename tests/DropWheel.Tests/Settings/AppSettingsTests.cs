@@ -191,6 +191,29 @@ public class AppSettingsTests : IDisposable
         Assert.Equal(new WheelPreferences(), s.Wheel);
         Assert.False(s.Wheel.MruFirst);
         Assert.False(File.Exists(SettingsPath + ".bad"));
+        // Новые настройки, которых в старом файле нет, — по умолчанию.
+        Assert.Equal(WheelFill.DefaultPercent, s.WheelOpacity);
+        Assert.True(s.ClipboardHotkey);
+    }
+
+    [Fact]
+    public void Wheel_opacity_and_clipboard_hotkey_round_trip()
+    {
+        new AppSettings { WheelOpacity = 50, ClipboardHotkey = false }.Save(SettingsPath);
+        var loaded = AppSettings.Load(SettingsPath);
+        Assert.Equal(50, loaded.WheelOpacity);
+        Assert.False(loaded.ClipboardHotkey);
+    }
+
+    [Theory]
+    [InlineData(5, 40)]
+    [InlineData(250, 100)]
+    [InlineData(70, 70)]
+    public void Wheel_opacity_out_of_range_is_clamped(int written, int expected)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(SettingsPath)!);
+        File.WriteAllText(SettingsPath, $$"""{ "wheelOpacity": {{written}} }""");
+        Assert.Equal(expected, AppSettings.Load(SettingsPath).WheelOpacity);
     }
 
     [Fact]
