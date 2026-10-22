@@ -4,6 +4,7 @@ using System.Windows.Media;
 using System.Windows.Media.Effects;
 using DropWheel.App;
 using DropWheel.Conversions;
+using DropWheel.Localization;
 using DropWheel.Settings;
 using DropWheel.Ui;
 using DropWheel.Wheel;
@@ -126,6 +127,53 @@ public class SettingsScreenshots
             view.WheelGroup = WheelGroups.Video;
             view.WheelMode = OperationMode.Tool;
             Save(view, light: false, "settings-dark-wheel-video-tools");
+        });
+    }
+
+    /// <summary>
+    /// Своя горячая клавиша (D-HOTKEY): назначена «Num 5» или окно ждёт нажатия («Нажмите клавишу…»,
+    /// после попытки нажать Ctrl — подсказка, почему нельзя).
+    /// </summary>
+    internal static void CustomHotkey(bool capture, string name)
+    {
+        Sta.Run(() =>
+        {
+            var view = Make(true, SettingsPage.General, Sample() with { Language = Loc.Current == UiLanguage.En ? Loc.English : Loc.Russian, Hotkey = "vk:0x65" });
+            if (capture)
+            {
+                view.BeginHotkeyCapture();
+                Assert.False(view.CaptureHotkey(0xA2)); // левый Ctrl — нельзя
+            }
+            Save(view, light: true, name);
+        });
+    }
+
+    [Theory]
+    [InlineData(false, "settings-light-general-custom-key")]
+    [InlineData(true, "settings-light-general-key-capture")]
+    public void Custom_hotkey(bool capture, string name) => CustomHotkey(capture, name);
+
+    /// <summary>«Своя…»: запрещённые клавиши не принимаются, Esc отменяет, обычная клавиша сохраняется.</summary>
+    [Fact]
+    public void Custom_hotkey_capture()
+    {
+        Sta.Run(() =>
+        {
+            var view = Make(true, SettingsPage.General);
+            view.BeginHotkeyCapture();
+            Assert.False(view.CaptureHotkey(0x10)); // Shift
+            Assert.False(view.CaptureHotkey(0x0D)); // Enter
+            Assert.Equal("Space", view.Settings.Hotkey);
+            Assert.False(view.CaptureHotkey(0x1B)); // Esc — отмена
+            Assert.False(view.CaptureHotkey(0x09)); // уже не ждём
+            Assert.Equal("Space", view.Settings.Hotkey);
+
+            view.BeginHotkeyCapture();
+            Assert.True(view.CaptureHotkey(0x09)); // Tab
+            Assert.Equal("vk:0x09", view.Settings.Hotkey);
+            view.BeginHotkeyCapture();
+            Assert.True(view.CaptureHotkey(0x77)); // F8 — есть в списке, сохраняется по имени
+            Assert.Equal("F8", view.Settings.Hotkey);
         });
     }
 

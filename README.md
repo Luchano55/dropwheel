@@ -448,7 +448,7 @@ Once a day (and when you click *Check for updates*) DropWheel reads a small `ver
 
 Double-click the tray icon (or right click → *Settings…*). Every change applies immediately — no OK button — and is saved to `%AppData%\DropWheel\settings.json`.
 
-- **Hotkey** — <kbd>Space</kbd> (default), <kbd>Ё</kbd>/<kbd>`</kbd>, <kbd>Caps Lock</kbd> or <kbd>F1</kbd>–<kbd>F12</kbd>; works right away, no restart.
+- **Hotkey** — <kbd>Space</kbd> (default), <kbd>Ё</kbd>/<kbd>`</kbd>, <kbd>Caps Lock</kbd>, <kbd>F1</kbd>–<kbd>F12</kbd> or any key of your own (*Custom…*: Tab, Num 5, F13… — not Ctrl/Shift/Alt/Win/Esc/Enter); works right away, no restart.
 - **Language** — *Same as Windows* (default: Russian on a Russian Windows, English otherwise), *Русский* or *English*; switches right away.
 - **Wheel transparency** — a slider from *solid* to *see-through* with a live preview; labels and the highlighted petal stay crisp.
 - **Where results go** — next to the original, or all into one folder (default `Downloads\DropWheel`).
@@ -537,7 +537,7 @@ Yes. The interface is in Russian and English: it follows the Windows display lan
 <details>
 <summary><b>Space is busy in my workflow. Can I use another key?</b></summary>
 
-Yes. Double-click the tray icon → *General* → *Hotkey*: <kbd>`</kbd> / <kbd>Ё</kbd>, <kbd>Caps Lock</kbd> or <kbd>F1</kbd>–<kbd>F12</kbd>. It works right away, no restart needed.
+Yes. Double-click the tray icon → *General* → *Hotkey*: <kbd>`</kbd> / <kbd>Ё</kbd>, <kbd>Caps Lock</kbd>, <kbd>F1</kbd>–<kbd>F12</kbd>, or *Custom…* and press any key you like. It works right away, no restart needed.
 </details>
 
 <details>

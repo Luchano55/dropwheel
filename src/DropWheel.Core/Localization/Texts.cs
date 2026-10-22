@@ -111,6 +111,12 @@ public sealed partial class Texts
     public string HotkeyTitle { get; init; } = "Горячая клавиша";
     public string HotkeyHint { get; init; } =
         "Тащите файл и, не отпуская кнопку мыши, нажмите эту клавишу — появится колесо. Ещё раз — другой режим.";
+    public string HotkeyCustom { get; init; } = "Своя…";
+    public string HotkeyPress { get; init; } = "Нажмите клавишу… (Esc — отмена)";
+    public string HotkeyModifier { get; init; } =
+        "Ctrl, Shift, Alt и Win не подходят: во время перетаскивания ими Windows выбирает «копировать», «переместить» или «ярлык». Нажмите другую клавишу.";
+    public string HotkeyReserved { get; init; } = "«{0}» не подходит: эта клавиша нужна Windows или колесу. Нажмите другую.";
+    public string HotkeyTypes { get; init; } = "Пока вы тащите файл, «{0}» не печатается — её забирает DropWheel. В остальное время клавиша работает как обычно.";
     public string OutputTitle { get; init; } = "Куда класть результат";
     public string OutputBeside { get; init; } = "Рядом с исходником";
     public string OutputShared { get; init; } = "В одну папку";

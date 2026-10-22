@@ -30,6 +30,11 @@ internal static class Strings
         // Горячая клавиша
         public static string HotkeyTitle => T.HotkeyTitle;
         public static string HotkeyHint => T.HotkeyHint;
+        public static string HotkeyCustom => T.HotkeyCustom;
+        public static string HotkeyPress => T.HotkeyPress;
+        public static string HotkeyModifier => T.HotkeyModifier;
+        public static string HotkeyReserved(string key) => Loc.F(T.HotkeyReserved, key);
+        public static string HotkeyTypes(string key) => Loc.F(T.HotkeyTypes, key);
 
         // Куда класть результат
         public static string OutputTitle => T.OutputTitle;
