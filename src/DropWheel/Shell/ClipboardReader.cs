@@ -17,8 +17,11 @@ internal static class ClipboardReader
     /// <summary>Формат «PNG», который кладут браузеры, «Ножницы», Paint, Office: с прозрачностью и без потерь.</summary>
     private const string PngFormat = "PNG";
 
-    /// <summary>Что лежит в буфере: файлы (CF_HDROP) и есть ли картинка.</summary>
-    public sealed record Snapshot(IReadOnlyList<string>? Files, bool HasImage, Forms.IDataObject? Data);
+    /// <summary>
+    /// Что лежит в буфере: файлы (CF_HDROP), есть ли картинка и — если картинки нет — нет ли ссылки на неё
+    /// («Копировать адрес картинки», HTML с &lt;img&gt;): тогда подсказка, как скопировать саму картинку.
+    /// </summary>
+    public sealed record Snapshot(IReadOnlyList<string>? Files, bool HasImage, Forms.IDataObject? Data, bool HasImageLink = false);
 
     public static Snapshot Read() => Retry(() =>
     {
@@ -26,7 +29,7 @@ internal static class ClipboardReader
         if (data is null) return new Snapshot(null, false, null);
         var files = data.GetDataPresent(Forms.DataFormats.FileDrop) ? data.GetData(Forms.DataFormats.FileDrop) as string[] : null;
         var image = data.GetDataPresent(PngFormat) || data.GetDataPresent(Forms.DataFormats.Bitmap);
-        return new Snapshot(files, image, data);
+        return new Snapshot(files, image, data, !image && HasImageLink(data));
     });
 
     /// <summary>
@@ -60,6 +63,23 @@ internal static class ClipboardReader
             try { File.Delete(path); }
             catch (Exception) { }
             throw;
+        }
+    }
+
+    private static bool HasImageLink(Forms.IDataObject data)
+    {
+        try
+        {
+            var html = data.GetDataPresent(Forms.DataFormats.Html) ? data.GetData(Forms.DataFormats.Html) as string : null;
+            var text = data.GetDataPresent(Forms.DataFormats.UnicodeText) ? data.GetData(Forms.DataFormats.UnicodeText) as string : null;
+            // Длинный текст — это не ссылка (и регулярке незачем его разбирать).
+            if (text is { Length: > 2048 }) text = null;
+            return BrowserDrag.CollectUrls(html, null, text?.Trim())
+                .Any(BrowserDrag.IsRemoteImageUrl);
+        }
+        catch (Exception)
+        {
+            return false;
         }
     }
 

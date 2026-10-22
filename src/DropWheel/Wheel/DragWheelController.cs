@@ -3,6 +3,7 @@ using DropWheel.Conversions;
 using DropWheel.Input;
 using DropWheel.Jobs;
 using DropWheel.Logging;
+using DropWheel.Shell;
 
 namespace DropWheel.Wheel;
 
@@ -24,13 +25,17 @@ internal sealed class DragWheelController : IDisposable
     private readonly DispatcherTimer _releaseTimer;
     private readonly Converter _converter;
     private readonly Action<IReadOnlyList<string>, Operation> _enqueue;
+    private readonly Action<DraggedImage, Operation> _enqueueImage;
     private readonly FileLog _log;
     private readonly Func<WheelPreferences> _preferences;
 
     /// <param name="preferences">Своё колесо из настроек (читается при каждом показе — правки применяются сразу).</param>
+    /// <param name="enqueueImage">Картинку из браузера бросили на сектор: сохранить и поставить в очередь (D-BROWSER).</param>
     public DragWheelController(string hotkey, Dispatcher ui, Converter converter,
-        Action<IReadOnlyList<string>, Operation> enqueue, FileLog log, Func<WheelPreferences> preferences)
+        Action<IReadOnlyList<string>, Operation> enqueue, Action<DraggedImage, Operation> enqueueImage,
+        FileLog log, Func<WheelPreferences> preferences)
     {
+        _enqueueImage = enqueueImage;
         _converter = converter;
         _preferences = preferences;
         _enqueue = enqueue;
@@ -40,6 +45,9 @@ internal sealed class DragWheelController : IDisposable
 
         _wheel.FilesEntered += OnFilesEntered;
         _wheel.FilesDropped += OnFilesDropped;
+        _wheel.ImageEntered += OnImageEntered;
+        _wheel.ImageDropped += OnImageDropped;
+        _wheel.Log = log.Write;
         // Колесо закрывается с короткой анимацией, поэтому «закрыто» — по событиям, а не по IsVisible.
         _wheel.Canceled += () => _detector.WheelOpen = false;
 
@@ -115,6 +123,23 @@ internal sealed class DragWheelController : IDisposable
         if (OperationCatalog.Find(operationId) is not { } op) return;
         _log.Write($"Колесо: {op.Id} для {files.Length} файл(ов)");
         _enqueue(files, op);
+    }
+
+    /// <summary>Картинка из браузера: сектора — как у файла её настоящего формата (по байтам, а не по имени).</summary>
+    private void OnImageEntered(DraggedImage image)
+    {
+        string[] like = ["image." + image.Extension];
+        OnFilesEntered(like);
+    }
+
+    private void OnImageDropped(DraggedImage image, string operationId)
+    {
+        _releaseTimer.Stop();
+        _detector.WheelOpen = false;
+        if (OperationCatalog.Find(operationId) is not { } op) return;
+        _log.Write($"Колесо: {op.Id} для картинки из браузера (.{image.Extension})");
+        // Запись файла — после выхода из Drop: источник (браузер) ждёт ответа.
+        _wheel.Dispatcher.InvokeAsync(() => _enqueueImage(image, op));
     }
 
     public void Dispose()
