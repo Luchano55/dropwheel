@@ -22,7 +22,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Luchano55/dropwheel/releases/tag/dev-build"><img src="https://img.shields.io/badge/Download-for%20Windows-0078D4?style=for-the-badge" alt="Download for Windows"></a>
+  <a href="https://github.com/Luchano55/dropwheel/releases"><img src="https://img.shields.io/badge/Download-for%20Windows-0078D4?style=for-the-badge" alt="Download for Windows"></a>
 </p>
 
 <p align="center">
@@ -99,8 +99,8 @@ Not a fan of drag-and-drop? Right-click a file → **Convert…** in the Explore
   </tr>
   <tr>
     <td width="33%" valign="top">
-      <h3>📦 Portable, updates itself</h3>
-      Unzip and run — no installer, no .NET to install. New builds arrive with one click in the tray menu.
+      <h3>📦 Installer or zip, updates itself</h3>
+      A per-user installer without admin rights, or just unzip and run — no .NET to install. New versions arrive with one click in the tray menu.
     </td>
     <td width="33%" valign="top">
       <h3>🔤 Any file name, two languages</h3>
@@ -278,18 +278,43 @@ Password-protected archives aren't supported — you get a clear message.
 
 ## Install
 
-1. Download **`DropWheel-win-x64.zip`** from the [`dev-build` release](https://github.com/Luchano55/dropwheel/releases/tag/dev-build). This full archive (app + tools) is only needed for the first install.
+### Installer (recommended)
+
+1. Download **`DropWheel-Setup-<version>.exe`** from the [latest release](https://github.com/Luchano55/dropwheel/releases/latest).
+2. Run it. No admin rights needed: DropWheel installs for your user only, into `%LocalAppData%\Programs\DropWheel`, and adds a Start menu shortcut. Optional: a desktop shortcut and *Start with Windows*.
+3. DropWheel starts right away — a ring icon appears in the tray (it may hide under the <kbd>^</kbd> arrow next to the clock). Drag a file and press <kbd>Space</kbd>.
+
+**Uninstall:** *Settings → Apps → DropWheel → Uninstall* (or *Add or remove programs*). This closes DropWheel and removes the Explorer menu entry and autostart. Your settings in `%AppData%\DropWheel` are kept — delete that folder if you don't need them.
+
+### Portable zip
+
+1. Download **`DropWheel-win-x64.zip`** from the same [release](https://github.com/Luchano55/dropwheel/releases/latest). The full archive (app + tools) is only needed for the first install.
 2. Unzip it to any folder **you can write to**, for example `C:\DropWheel` or a folder in your user profile — **not** `C:\Program Files`: self-update replaces files in this folder. Keep the `tools` folder next to `DropWheel.exe` — that's where the converters live.
-3. Run **`DropWheel.exe`**. A ring icon appears in the tray (it may hide under the <kbd>^</kbd> arrow next to the clock). That's all — drag a file and press <kbd>Space</kbd>.
+3. Run **`DropWheel.exe`**.
+
+To remove the portable version: right-click the tray icon → untick **“Convert…” in Explorer menu** → **Exit**. Then delete the folder and, if you like, `%AppData%\DropWheel` (settings and logs).
+
+### winget (coming soon)
+
+```
+winget install Luchano55.DropWheel
+```
+
+The package is being submitted to the Windows Package Manager catalog; until it's accepted, use the installer above.
+
+### Stable releases and test builds
+
+- **Stable** — releases tagged `vX.Y.Z` ([latest release](https://github.com/Luchano55/dropwheel/releases/latest)), with release notes from [`docs/CHANGELOG.md`](docs/CHANGELOG.md).
+- **Test builds** — every build from `main`, in the [`dev-build`](https://github.com/Luchano55/dropwheel/releases/tag/dev-build) pre-release (installer and zips too). Newer, but less tested.
+
+The installed app follows the channel it came from; switch any time in *Settings → General → Update channel*.
 
 > [!NOTE]
 > **“Windows protected your PC”?** DropWheel is a personal project and the build isn't code-signed, so Microsoft Defender SmartScreen warns about it. Click **More info → Run anyway**. Every build is made by [GitHub Actions](https://github.com/Luchano55/dropwheel/actions/workflows/build.yml) straight from the source code in this repository.
 
-**Updates are automatic after that:** when a new build is out, the tray menu shows **Update to build N**. One click — DropWheel downloads only the app part (~100 MB; the tools only if they changed), verifies it with SHA-256, waits for running jobs to finish and restarts itself.
+**Updates are automatic after that** (installer and zip alike): when a new build is out, the tray menu shows **Update to build N**. One click — DropWheel downloads only the app part (~100 MB; the tools only if they changed), verifies it with SHA-256, waits for running jobs to finish and restarts itself.
 
 **Requirements:** Windows 10 (1809 or newer) or Windows 11, 64-bit. Nothing else — .NET is built in. Optional: Microsoft Office 2013+ for the Office conversions; a Windows OCR language for text recognition.
-
-**Uninstall:** right-click the tray icon → untick **“Convert…” in Explorer menu** (removes the Explorer menu entry) → **Exit**. Then delete the folder and, if you like, `%AppData%\DropWheel` (settings and logs).
 
 ## Usage
 
@@ -328,7 +353,7 @@ On Windows 11 the item is under **Show more options** (or press <kbd>Shift</kbd>
 
 ### 🔄 Updates
 
-Once a day (and when you click *Check for updates*) DropWheel reads a small `version.json` from the [`dev-build` release](https://github.com/Luchano55/dropwheel/releases/tag/dev-build). If there's a newer build, the tray menu offers **Update to build N** — nothing is downloaded until you click it. Don't want the check at all? Turn off *Check for updates* in the settings window. This is the only time DropWheel goes online.
+Once a day (and when you click *Check for updates*) DropWheel reads a small `version.json` from the [latest stable release](https://github.com/Luchano55/dropwheel/releases/latest) or, on the test channel, from the [`dev-build` release](https://github.com/Luchano55/dropwheel/releases/tag/dev-build) (*Settings → General → Update channel*). If there's a newer build, the tray menu offers **Update to build N** — nothing is downloaded until you click it. Don't want the check at all? Turn off *Check for updates* in the settings window. This is the only time DropWheel goes online.
 
 ### ⚙️ Settings
 
@@ -422,13 +447,13 @@ Yes. Exit DropWheel, open `%AppData%\DropWheel\settings.json` and set `"hotkey"`
 <details>
 <summary><b>Does it start with Windows?</b></summary>
 
-Not yet — autostart arrives with the settings window. Until then press <kbd>Win</kbd>+<kbd>R</kbd>, type `shell:startup` and put a shortcut to `DropWheel.exe` there.
+If you want it to: the installer offers *Start with Windows*, and you can switch it any time in *Settings → General → Start with Windows*.
 </details>
 
 <details>
 <summary><b>How do I update? Which build do I have?</b></summary>
 
-DropWheel checks for a new build once a day and offers *Update to build N* in the tray menu. Right-click the tray icon → *Check for updates* to check right now — it also tells you your current build number. You can always download the full archive again from <a href="https://github.com/Luchano55/dropwheel/releases/tag/dev-build">Releases</a> and unzip it over the old folder.
+DropWheel checks for a new build once a day and offers *Update to build N* in the tray menu. Right-click the tray icon → *Check for updates* to check right now — it also tells you your current build number. You can always run a newer installer over the installed version, or download the full archive again from <a href="https://github.com/Luchano55/dropwheel/releases">Releases</a> and unzip it over the old folder. Stable versions only or every test build — choose in *Settings → General → Update channel*.
 </details>
 
 <details>
@@ -480,7 +505,7 @@ dotnet test
 - The core and the CLI (`src/DropWheel.Core`, `src/DropWheel.Cli`) are cross-platform `net8.0` and are fully tested on Linux too — including the Office-free document libraries. The tray app `src/DropWheel` is WPF (`net8.0-windows`): it builds anywhere thanks to `EnableWindowsTargeting`, but runs only on Windows. Office, Edge and OCR tests run only on Windows (Office tests only where Office is installed).
 - Integration tests need the real tools: `ffmpeg`, ImageMagick (`magick` or `convert`), `qpdf`, `pdftoppm` and `pdftotext` (poppler-utils), `7z` (7-Zip) in `PATH`, or the variables `DROPWHEEL_FFMPEG`, `DROPWHEEL_MAGICK`, `DROPWHEEL_QPDF`, `DROPWHEEL_PDFTOPPM`, `DROPWHEEL_PDFTOTEXT`, `DROPWHEEL_7Z`. Without them those tests are skipped. On Ubuntu: `sudo apt-get install ffmpeg imagemagick libheif-plugin-libde265 libheif-plugin-aomenc librsvg2-bin qpdf poppler-utils 7zip`.
 - Windows builds of the tools: `./build/fetch-tools.ps1 -Destination tools` (PowerShell).
-- Every push runs [`.github/workflows/build.yml`](.github/workflows/build.yml): tests on Linux and Windows, wheel and flyout screenshots, and a self-contained single-file build zipped with `tools/`. Working branches also get the automated demo: a script drives the real app on Windows, records the screen and checks that the results appeared. Builds from `main` are published to the [`dev-build`](https://github.com/Luchano55/dropwheel/releases/tag/dev-build) release together with `version.json` for self-update.
+- Every push runs [`.github/workflows/build.yml`](.github/workflows/build.yml): tests on Linux and Windows, wheel and flyout screenshots, and a self-contained single-file build zipped with `tools/`. Working branches also get the automated demo: a script drives the real app on Windows, records the screen and checks that the results appeared. Builds from `main` are published to the [`dev-build`](https://github.com/Luchano55/dropwheel/releases/tag/dev-build) pre-release together with `version.json` for self-update; a tag `vX.Y.Z` makes a stable release with the Inno Setup installer (`packaging/installer/DropWheel.iss`) and winget manifests (`packaging/winget/`, see [`docs/winget.md`](docs/winget.md)). The version lives in `version.txt`.
 
 ```
 src/DropWheel.Core/   conversion catalog, engines, document libraries, job queue, settings, updates, wheel geometry (no UI)
