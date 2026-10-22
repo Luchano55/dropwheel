@@ -21,7 +21,9 @@ internal sealed class Updater : IDisposable
     private static readonly TimeSpan FirstCheckDelay = TimeSpan.FromSeconds(30);
     private static readonly TimeSpan CheckInterval = TimeSpan.FromHours(24);
 
-    private readonly HttpClient _http = new() { Timeout = TimeSpan.FromMinutes(10) };
+    // Без общего лимита времени: на медленном интернете 110 МБ идут долго. Обрываем, только если данные не идут StallTimeout.
+    private readonly HttpClient _http = new() { Timeout = System.Threading.Timeout.InfiniteTimeSpan };
+    private static readonly TimeSpan StallTimeout = TimeSpan.FromSeconds(60);
     private readonly DispatcherTimer _timer;
     private readonly JobQueue _queue;
     private readonly FileLog _log;
@@ -94,11 +96,11 @@ internal sealed class Updater : IDisposable
             var staging = Directory.CreateDirectory(Path.Combine(work, "staging")).FullName;
 
             status?.Report("Скачиваю программу…");
-            await DownloadAndExtractAsync(manifest.AppZip, manifest.AppSha256, work, staging);
+            await DownloadAndExtractAsync(manifest.AppZip, manifest.AppSha256, work, staging, "Программа", status);
             if (plan.Tools)
             {
                 status?.Report("Скачиваю утилиты…");
-                await DownloadAndExtractAsync(manifest.ToolsZip, manifest.ToolsSha256, work, staging);
+                await DownloadAndExtractAsync(manifest.ToolsZip, manifest.ToolsSha256, work, staging, "Утилиты", status);
             }
 
             // Пока идёт конвертация, ffmpeg/magick заняты — подождём.
@@ -118,12 +120,37 @@ internal sealed class Updater : IDisposable
         }
     }
 
-    private async Task DownloadAndExtractAsync(string zipName, string sha256, string work, string staging)
+    private async Task DownloadAndExtractAsync(string zipName, string sha256, string work, string staging,
+        string what, IProgress<string>? status)
     {
         var zipPath = Path.Combine(work, zipName);
-        await using (var source = await _http.GetStreamAsync(ReleaseUrl + zipName))
-        await using (var file = File.Create(zipPath))
-            await source.CopyToAsync(file);
+        using (var response = await _http.GetAsync(ReleaseUrl + zipName, HttpCompletionOption.ResponseHeadersRead))
+        {
+            response.EnsureSuccessStatusCode();
+            var total = response.Content.Headers.ContentLength ?? 0;
+            await using var source = await response.Content.ReadAsStreamAsync();
+            await using var file = File.Create(zipPath);
+            var buffer = new byte[256 * 1024];
+            long done = 0;
+            var lastPercent = -1;
+            while (true)
+            {
+                // Нет данных StallTimeout — связь пропала, не висим вечно.
+                using var stall = new CancellationTokenSource(StallTimeout);
+                int read;
+                try { read = await source.ReadAsync(buffer, stall.Token); }
+                catch (OperationCanceledException) { throw new IOException("Загрузка остановилась: нет данных больше минуты. Проверьте интернет и повторите."); }
+                if (read == 0) break;
+                await file.WriteAsync(buffer.AsMemory(0, read));
+                done += read;
+                var percent = total > 0 ? (int)(done * 100 / total) : -1;
+                if (percent != lastPercent && percent >= 0)
+                {
+                    lastPercent = percent;
+                    status?.Report($"{what}: {percent}% ({done / 1048576} из {total / 1048576} МБ)");
+                }
+            }
+        }
 
         await using (var check = File.OpenRead(zipPath))
         {

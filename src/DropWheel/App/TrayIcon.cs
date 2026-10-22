@@ -87,9 +87,33 @@ internal sealed partial class TrayIcon : IDisposable
     /// <summary>Показать пункт «Обновить до сборки N» и подсказку.</summary>
     public void SetUpdateAvailable(int build)
     {
-        _updateItem.Text = $"Обновить до сборки {build}";
+        _updateText = $"Обновить до сборки {build}";
+        _updateItem.Text = _updateText;
         _updateItem.Visible = true;
         ShowInfo("Есть новая версия DropWheel", "Правый клик по значку → «Обновить».");
+    }
+
+    private string? _status;
+    private string _updateText = "";
+
+    /// <summary>Строка состояния в подсказке значка (например, ход обновления); null — убрать.</summary>
+    public void SetStatus(string? status)
+    {
+        _status = status;
+        // Подсказка NotifyIcon — не длиннее 127 символов.
+        var text = status is null ? "DropWheel" : "DropWheel — " + status;
+        _icon.Text = text.Length > 127 ? text[..127] : text;
+        // И в меню трея вместо «Обновить до сборки N» — ход загрузки (пункт неактивен, пока идёт).
+        if (status is not null && _updateItem.Visible)
+        {
+            _updateItem.Text = status;
+            _updateItem.Enabled = false;
+        }
+        else if (status is null)
+        {
+            _updateItem.Enabled = true;
+            if (_updateText.Length > 0) _updateItem.Text = _updateText;
+        }
     }
 
     public void ShowInfo(string title, string text) => _icon.ShowBalloonTip(5000, title, text, ToolTipIcon.Info);
@@ -109,7 +133,7 @@ internal sealed partial class TrayIcon : IDisposable
         var old = _busy;
         _busy = active > 0 ? TrayIconArt.CreateIcon(IconSize, active) : null;
         _icon.Icon = _busy ?? _idle;
-        _icon.Text = active > 0 ? $"DropWheel — в работе: {active}" : "DropWheel";
+        if (_status is null) _icon.Text = active > 0 ? $"DropWheel — в работе: {active}" : "DropWheel";
         DestroyIcon(old);
     }
 

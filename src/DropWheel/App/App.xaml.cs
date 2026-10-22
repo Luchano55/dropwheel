@@ -164,12 +164,15 @@ public partial class App : Application
         if (_updater?.Available is not { } manifest) return;
         try
         {
-            _tray?.ShowInfo("Обновление", $"Скачиваю сборку {manifest.Build}… Программа перезапустится сама.");
-            await _updater.InstallAsync(manifest);
+            _tray?.ShowInfo("Обновление", $"Скачиваю сборку {manifest.Build}… Ход загрузки — в подсказке значка в трее. Программа перезапустится сама.");
+            // Progress<T> возвращает отчёты в поток интерфейса.
+            var status = new Progress<string>(text => _tray?.SetStatus("Обновление — " + text));
+            await _updater.InstallAsync(manifest, status);
         }
         catch (Exception ex)
         {
             Log.Write("Обновление не удалось: " + ex);
+            _tray?.SetStatus(null);
             _tray?.ShowInfo("Обновление не удалось", ex.Message);
         }
     }
