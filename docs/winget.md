@@ -15,7 +15,11 @@
    [Actions](https://github.com/Luchano55/dropwheel/actions/workflows/build.yml)).
 2. В `docs/CHANGELOG.md` есть раздел `## 0.3.0` — его текст попадёт в описание релиза.
    В файле `version.txt` — `0.3.0`.
-3. Поставьте тег и отправьте его на GitHub (в папке репозитория, в терминале):
+3. Проще всего — кнопкой на GitHub: [Actions → build](https://github.com/Luchano55/dropwheel/actions/workflows/build.yml)
+   → **Run workflow** → ветка `main`, галочка **«Выпустить стабильную версию…»** → **Run workflow**.
+   Сборка сама создаст тег `v<version.txt>` и релиз. (Так выпускает и Claude: из облачной сессии тег отправить нельзя.)
+
+   Или тег из терминала (в папке репозитория):
    ```
    git checkout main
    git pull

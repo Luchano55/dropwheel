@@ -3,6 +3,11 @@ name: build
 on:
   push:
   workflow_dispatch:
+    inputs:
+      release:
+        description: "Выпустить стабильную версию из version.txt (только из main): создаёт тег vX.Y.Z и релиз"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -95,6 +100,8 @@ jobs:
         # Остальное → тестовая X.Y.Z-dev.<run> из version.txt (канал dev; из main — релиз dev-build).
         # Номер сборки (третья часть AssemblyVersion) — всегда номер запуска CI: по нему программа сравнивает сборки.
         shell: pwsh
+        env:
+          DW_RELEASE_INPUT: ${{ inputs.release }}
         run: |
           $base = (Get-Content version.txt -Raw).Trim()
           if ($base -notmatch '^\d+\.\d+\.\d+$') { throw "version.txt должен быть вида 1.2.3, а там: '$base'" }
@@ -109,6 +116,12 @@ jobs:
             } else {
               Write-Warning "Тег $env:GITHUB_REF_NAME не вида vX.Y.Z — собираю как тестовую сборку, без релиза"
             }
+          }
+          # Ручной запуск «release» из main — то же, что тег v<version.txt> (тег создаст шаг релиза).
+          if ($env:DW_RELEASE_INPUT -eq 'true') {
+            if ($env:GITHUB_REF -ne 'refs/heads/main') { throw "Стабильную версию выпускаем только из main, а запуск из $env:GITHUB_REF" }
+            $version = $base
+            $stable = $true
           }
           if (-not $stable) { $version = "$base-dev.$run" }
           $core = $version.Split('-')[0].Split('.')
@@ -250,7 +263,7 @@ jobs:
           if-no-files-found: error
       - name: Обновить релиз dev-build
         # Сборку для пользователей (релиз dev-build) обновляет только main.
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' && env.DW_STABLE != 'true'
         shell: pwsh
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -281,7 +294,7 @@ jobs:
             if ($LASTEXITCODE -ne 0) { throw "gh release upload: код $LASTEXITCODE" }
             gh release edit $tag --title "DropWheel $env:DW_VERSION" --notes-file release-notes.md --prerelease=false
           } else {
-            gh release create $tag @files --verify-tag --title "DropWheel $env:DW_VERSION" --notes-file release-notes.md
+            gh release create $tag @files --target $env:GITHUB_SHA --title "DropWheel $env:DW_VERSION" --notes-file release-notes.md
           }
           if ($LASTEXITCODE -ne 0) { throw "gh release: код $LASTEXITCODE" }
           Write-Host "Релиз: https://github.com/$env:GITHUB_REPOSITORY/releases/tag/$tag"
