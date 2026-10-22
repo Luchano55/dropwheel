@@ -65,7 +65,7 @@ public partial class App : Application
         // Установщик: закрыть запущенный DropWheel (если есть) и дождаться, пока он отпустит файлы.
         if (args.Exit)
         {
-            Environment.ExitCode = ExitRunningInstance(pipeName) ? 0 : 1;
+            Environment.ExitCode = ExitRunningInstance(pipeName);
             Shutdown(Environment.ExitCode);
             return;
         }
@@ -306,13 +306,14 @@ public partial class App : Application
 
     /// <summary>
     /// «DropWheel.exe --exit»: попросить первый экземпляр закрыться (через канал) и ждать, пока он отпустит Mutex.
-    /// true — DropWheel не запущен (или закрылся); false — не закрылся за отведённое время.
+    /// Код выхода: 0 — DropWheel не был запущен, 2 — был и закрылся (установщик запустит его снова после
+    /// тихого обновления), 1 — не закрылся за отведённое время.
     /// </summary>
-    private static bool ExitRunningInstance(string pipeName)
+    private static int ExitRunningInstance(string pipeName)
     {
         var log = new FileLog(AppPaths.LogsDir);
         using (var probe = SingleInstance.TryAcquire(pipeName))
-            if (probe is not null) return true; // никто не запущен
+            if (probe is not null) return 0; // никто не запущен
 
         log.Write("--exit: прошу запущенный DropWheel закрыться");
         var sent = false;
@@ -331,12 +332,12 @@ public partial class App : Application
             if (instance is not null)
             {
                 log.Write("--exit: DropWheel закрыт");
-                return true;
+                return 2;
             }
             Thread.Sleep(250);
         }
         log.Write("--exit: DropWheel не закрылся");
-        return false;
+        return 1;
     }
 
     private void HandleArgs(CommandLine args, bool fromPipe)

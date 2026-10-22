@@ -125,15 +125,17 @@ begin
   Result := ExpandConstant('{app}\{#AppExeName}');
 end;
 
-{ Запущен ли DropWheel.exe у текущего пользователя: tasklist | find (код 0 — нашёлся). }
-function IsDropWheelRunning: Boolean;
+{ Принудительно завершить все DropWheel.exe, которые можем (свои процессы; чужие без прав администратора
+  taskkill не тронет). Без cmd, tasklist и фильтров: tasklist /FI USERNAME на некоторых ПК зависал,
+  и установщик висел на «Подготовке к установке». true — что-то было запущено и завершено. }
+function KillAllDropWheel: Boolean;
 var
   Code: Integer;
 begin
-  Result := Exec(ExpandConstant('{cmd}'),
-    '/C tasklist /NH /FI "IMAGENAME eq {#AppExeName}" /FI "USERNAME eq ' + GetUserNameString + '" | "'
-      + ExpandConstant('{sys}') + '\find.exe" /I "{#AppExeName}" >nul',
-    '', SW_HIDE, ewWaitUntilTerminated, Code) and (Code = 0);
+  Result := Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM {#AppExeName}', '', SW_HIDE, ewWaitUntilTerminated, Code)
+    and (Code = 0);
+  Log(Format('taskkill finished with code %d', [Code]));
+  if Result then Sleep(1000); { процесс отпускает файлы и Mutex }
 end;
 
 { Принудительно завершить DropWheel.exe только из папки программы (при удалении zip-копию в другой папке не трогаем). }
@@ -152,47 +154,31 @@ begin
   Log(Format('Stop-Process (app folder only) finished with code %d', [Code]));
 end;
 
-{ Закрыть DropWheel: сначала вежливо (--exit через канал первому экземпляру, задачи отменяются, значок убирается),
-  потом принудительно. При установке — любой DropWheel.exe этого пользователя: старый экземпляр (до 0.3.0 нет --exit)
-  или zip-копия из другой папки держит Mutex, и новый не запустится. При удалении — только из папки программы. }
-procedure CloseDropWheel(const ExePath: String; AnyFolder: Boolean);
+{ Вежливо закрыть установленный DropWheel: --exit через канал первому экземпляру (задачи отменяются, значок убирается).
+  Код 2 — был запущен и закрылся, 0 — не был запущен, 1 — не закрылся. true — был запущен. }
+function ExitInstalled: Boolean;
 var
-  Code, I: Integer;
+  Code: Integer;
 begin
-  if FileExists(ExePath) then
+  Result := False;
+  if not FileExists(AppExePath) then Exit;
+  Log('Closing DropWheel: ' + AppExePath + ' --exit');
+  if Exec(AppExePath, '--exit', '', SW_HIDE, ewWaitUntilTerminated, Code) then
   begin
-    Log('Closing DropWheel: ' + ExePath + ' --exit');
-    if Exec(ExePath, '--exit', '', SW_HIDE, ewWaitUntilTerminated, Code) then
-      Log(Format('--exit finished with code %d', [Code]))
-    else
-      Log('--exit could not be started: ' + SysErrorMessage(Code));
-  end;
-
-  if IsDropWheelRunning then
-  begin
-    if AnyFolder then
-    begin
-      Log('DropWheel is still running: taskkill');
-      Exec(ExpandConstant('{sys}\taskkill.exe'),
-        '/F /T /IM {#AppExeName} /FI "USERNAME eq ' + GetUserNameString + '"',
-        '', SW_HIDE, ewWaitUntilTerminated, Code);
-      Log(Format('taskkill finished with code %d', [Code]));
-    end
-    else
-      KillFromAppFolder;
-    for I := 1 to 20 do
-    begin
-      if not IsDropWheelRunning then Break;
-      Sleep(250);
-    end;
-  end;
+    Log(Format('--exit finished with code %d', [Code]));
+    Result := Code <> 0;
+  end
+  else
+    Log('--exit could not be started: ' + SysErrorMessage(Code));
 end;
 
+{ При установке закрываем любой DropWheel.exe: старая версия (до 0.3.0 нет --exit) или zip-копия
+  из другой папки держит Mutex, и новый не запустится. }
 function PrepareToInstall(var NeedsRestart: Boolean): String;
 begin
-  WasRunning := IsDropWheelRunning;
-  Log(Format('DropWheel running before install: %d', [Ord(WasRunning)]));
-  if WasRunning then CloseDropWheel(AppExePath, True);
+  WasRunning := ExitInstalled;
+  if KillAllDropWheel then WasRunning := True;
+  Log(Format('DropWheel was running before install: %d', [Ord(WasRunning)]));
   Result := '';
 end;
 
@@ -227,7 +213,8 @@ var
 begin
   if CurUninstallStep = usUninstall then
   begin
-    CloseDropWheel(AppExePath, False);
+    ExitInstalled;
+    KillFromAppFolder;
     { Пункт «Конвертировать…» в проводнике: программа знает все свои ключи (и старые, по расширениям). }
     if FileExists(AppExePath) then
     begin
