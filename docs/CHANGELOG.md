@@ -17,6 +17,12 @@ Each version section starts with `## <version>`; CI copies it into the GitHub re
   Выбор — «Настройки → Основное → Канал обновлений». Самообновление из трея работает и в установленной версии.
 - Скоро — установка через `winget install Luchano55.DropWheel`.
 
+**Новое в этой версии**
+- Колесо для буфера обмена: Ctrl+Alt+V (или пункт трея «Из буфера обмена…») — для скопированных файлов
+  или снимка экрана. В настройках — папка для картинок из буфера и «Оставлять исходную картинку».
+- Видео: «Повернуть ↻», «Кадры» (кадр в секунду в папку), «JPG (кадр)» — обложка.
+- Прозрачность колеса — ползунок в настройках.
+
 **Что умеет (всё, что сделано до 0.3.0)**
 - Колесо форматов под курсором: тащите файл, нажмите Пробел — бросьте на сектор, рядом появится результат.
   Два режима: «Конвертация» и «Инструменты». Работает в проводнике и на рабочем столе, на нескольких мониторах и при любом масштабе.
@@ -37,6 +43,7 @@ Each version section starts with `## <version>`; CI copies it into the GitHub re
 **English**
 - First stable release: a per-user installer (no admin rights, `%LocalAppData%\Programs\DropWheel`, Start menu
   shortcut, optional desktop shortcut and autostart; uninstall removes the Explorer menu entry and autostart, keeps settings).
+- Clipboard wheel (Ctrl+Alt+V) for copied files or a screenshot, with a folder setting and an option to drop the intermediate PNG; video rotate, frames and poster; wheel transparency slider.
 - Update channels: *Stable* (tagged releases) and *Test builds* (every build from `main`), switchable in Settings.
   Self-update keeps working in the installed version. winget package `Luchano55.DropWheel` is coming soon.
 - Everything built so far: the drag-and-Space format wheel, the Explorer “Convert…” menu, photos (HEIC/AVIF/WebP…),
