@@ -157,6 +157,16 @@ The same three steps work for a **whole folder** (`Vacation` → `Vacation (JPG)
   </tr>
   <tr>
     <td align="center" width="50%">
+      <img src="docs/assets/screenshots/wheel-folder-convert-en.png" alt="The wheel for a whole folder of photos, opened from Explorer: JPG, PNG, WebP, AVIF, PDF and ICO, with JPG highlighted" width="300"><br>
+      <sub><b>A whole folder</b> — <i>Convert…</i> on <code>Vacation</code>: formats for the photos inside, results in <code>Vacation (JPG)</code></sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/assets/screenshots/wheel-browser-webp-en.png" alt="The wheel for a WebP picture dragged out of a browser: JPG, PNG, AVIF, PDF and ICO, with PNG highlighted" width="300"><br>
+      <sub><b>A picture from the browser</b> — drag a WebP off a web page, press <kbd>Space</kbd>, drop it on PNG</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
       <img src="docs/assets/screenshots/trim-en.png" alt="The Trim video window: a frame preview, a thumbnail strip with start and end handles, start, length and end times, and the Frame-accurate checkbox" width="340"><br>
       <sub><b>Trim video</b> — drag the handles; the part between them is kept</sub>
     </td>
@@ -169,6 +179,12 @@ The same three steps work for a **whole folder** (`Vacation` → `Vacation (JPG)
     <td align="center" colspan="2">
       <img src="docs/assets/screenshots/settings-general-en.png" alt="The settings window, General page: hotkey, where to save results, language, and the wheel transparency slider with a live preview" width="640"><br>
       <sub><b>Settings</b> — hotkey, output folder, language, wheel transparency with a live preview; further down — clipboard and browser pictures, autostart, update channel</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" colspan="2">
+      <img src="docs/assets/screenshots/settings-general-lower-en.png" alt="The settings window, General page scrolled down: Start with Windows, the Explorer menu item, Ctrl+Alt+V, the folder for pictures from the clipboard and browser, Keep the original picture, update check and update channel" width="640"><br>
+      <sub><b>Settings, further down</b> — start with Windows, the Explorer menu, the folder for clipboard and browser pictures, <i>Keep the original picture</i>, the update channel</sub>
     </td>
   </tr>
 </table>
@@ -388,7 +404,11 @@ Right-click a folder → **Convert…** (or drag the folder and press <kbd>Space
 | Pick a tool, e.g. **Compress** | `Vacation (compressed)`; the files inside keep their names — the tag is already in the folder name |
 | Pick **One PDF** or **Merge** | one file named after the folder: `Vacation (all).pdf`, `Documents (merged).pdf` |
 
+<img src="docs/assets/screenshots/wheel-folder-tools-en.png" alt="The Tools wheel for a folder of photos: Compress, Half size, Fit 1920 px, No metadata and One PDF" width="220" align="right">
+
 Files that are already in the target format are copied, so `Vacation (JPG)` holds all your photos, not only the former HEICs. Files the operation can't handle are skipped; hidden and system files (`desktop.ini`, `Thumbs.db`) are ignored. You get **one** notification for the whole folder — how many files are done, skipped or failed — with *Open* for the result folder. Up to 1000 files at a time; for a bigger folder DropWheel asks you to pick a smaller one. With *In one folder* in the settings, `Vacation (JPG)` goes there.
+
+<br clear="right">
 
 ### 🌐 Pictures from the browser
 
