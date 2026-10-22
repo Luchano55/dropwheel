@@ -26,6 +26,8 @@ public sealed record AppSettings
     public ConversionSettings Conversion { get; init; } = new();
     /// <summary>Раз в сутки проверять на GitHub, нет ли новой сборки. Единственное обращение программы в сеть.</summary>
     public bool CheckForUpdates { get; init; } = true;
+    /// <summary>Канал обновлений: «auto» — как при сборке (установщик версии — стабильные, dev-build — тестовые), «stable», «dev».</summary>
+    public string UpdateChannel { get; init; } = Updates.UpdateChannels.Auto;
     /// <summary>Своё колесо: порядок и видимость лепестков по типам файлов, «последний выбор — первым».</summary>
     public WheelPreferences Wheel { get; init; } = new();
     /// <summary>Плотность заливки колеса, % (40–100; 88 — исходный вид), см. WheelFill.</summary>
@@ -102,5 +104,6 @@ public sealed record AppSettings
         Language = Loc.Normalize(s.Language),
         WheelOpacity = WheelFill.Clamp(s.WheelOpacity),
         ClipboardFolder = string.IsNullOrWhiteSpace(s.ClipboardFolder) ? null : s.ClipboardFolder,
+        UpdateChannel = Updates.UpdateChannels.Normalize(s.UpdateChannel),
     };
 }

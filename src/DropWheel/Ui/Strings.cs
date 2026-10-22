@@ -1,4 +1,5 @@
 using DropWheel.Localization;
+using DropWheel.Updates;
 using DropWheel.Wheel;
 
 namespace DropWheel.Ui;
@@ -75,6 +76,12 @@ internal static class Strings
         public static string WheelOpacityClear => T.WheelOpacityClear;
         public static string Updates => T.Updates;
         public static string UpdatesHint => T.UpdatesHint;
+        public static string UpdateChannelTitle => T.UpdateChannelTitle;
+        public static string UpdateChannelHint => T.UpdateChannelHint;
+        public static string UpdateChannelStable => T.UpdateChannelStable;
+        public static string UpdateChannelDev => T.UpdateChannelDev;
+        public static string UpdateChannelAuto(UpdateChannel embedded) => Loc.F(T.UpdateChannelAuto,
+            (embedded == UpdateChannel.Stable ? T.UpdateChannelStable : T.UpdateChannelDev).ToLowerInvariant());
 
         // Колесо
         public static string WheelIntro => T.WheelIntro;
@@ -98,7 +105,10 @@ internal static class Strings
         // Низ окна
         public static string OpenLogs => T.OpenLogs;
         public static string CheckUpdates => T.TrayCheckUpdates;
-        public static string Version(int build) => build > 0 ? Loc.F(T.Version, build) : T.VersionDev;
+        public static string Version(int build, string? version = null) =>
+            build <= 0 ? T.VersionDev
+            : string.IsNullOrWhiteSpace(version) ? Loc.F(T.Version, build)
+            : Loc.F(T.VersionWithBuild, version, build);
 
         public static string GroupName(string group) => group switch
         {

@@ -143,6 +143,12 @@ public sealed partial class Texts
     public string WheelOpacityClear { get; init; } = "прозрачнее";
     public string Updates { get; init; } = "Проверять обновления";
     public string UpdatesHint { get; init; } = "Раз в сутки — единственное обращение программы в интернет.";
+    public string UpdateChannelTitle { get; init; } = "Канал обновлений";
+    public string UpdateChannelHint { get; init; } =
+        "Стабильный — проверенные версии. Тестовый — каждая новая сборка раньше всех, но бывают ошибки.";
+    public string UpdateChannelAuto { get; init; } = "Как при установке ({0})";
+    public string UpdateChannelStable { get; init; } = "Стабильный";
+    public string UpdateChannelDev { get; init; } = "Тестовый";
     public string WheelIntro { get; init; } =
         "Какие форматы показывать и в каком порядке. Первый в списке — верхний лепесток, дальше — по часовой стрелке.";
     public string MruFirst { get; init; } = "Последний выбор — первым";
@@ -160,6 +166,7 @@ public sealed partial class Texts
     public string NothingInMode { get; init; } = "В этом режиме для этого типа ничего нет.";
     public string OpenLogs { get; init; } = "Открыть папку журналов";
     public string Version { get; init; } = "DropWheel, сборка {0}";
+    public string VersionWithBuild { get; init; } = "DropWheel {0}, сборка {1}";
     public string VersionDev { get; init; } = "DropWheel, сборка разработчика";
     public string GroupPhoto { get; init; } = "Фото";
     public string GroupVideo { get; init; } = "Видео";

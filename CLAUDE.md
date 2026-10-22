@@ -32,7 +32,7 @@ src/DropWheel/        WPF-приложение DropWheel.exe (net8.0-windows): A
                       Shell (меню у курсора, уведомления, реестр), Input (хуки), Wheel (окно колеса)
 tests/DropWheel.Tests/
 build/fetch-tools.ps1 скачивает ffmpeg, ImageMagick, qpdf, poppler для Windows (используется в CI)
-packaging/            файлы, которые кладутся в архив сборки
+packaging/            файлы в архив сборки (корень), installer/DropWheel.iss (Inno Setup), winget/ (шаблоны манифестов)
 ```
 
 Каталог операций — декларативный: одна запись = id, подпись, входные расширения, движок, шаблон аргументов, выходное расширение.
@@ -48,7 +48,7 @@ packaging/            файлы, которые кладутся в архив 
 
 - Облачная сессия — Linux. Ядро, CLI и тесты собираются и проверяются здесь (нужны .NET 8 SDK, ffmpeg, ImageMagick).
 - WPF-проект собирается на Linux с `EnableWindowsTargeting=true`, но не запускается: UI, хуки, контекстное меню и уведомления Роман проверяет на своём ПК по инструкции.
-- Сборка для Романа: GitHub Actions (`.github/workflows/build.yml`) — тесты на Linux и Windows, архивы в релиз `dev-build` (только из `main`; программа обновляется сама по `version.json`). Отсюда скачать Windows-утилиты нельзя. Рабочие ветки — `claude/*`, в `main` — проверенное CI.
+- Сборка для Романа: GitHub Actions (`.github/workflows/build.yml`) — тесты на Linux и Windows, архивы и установщик в предрелиз `dev-build` (только из `main`; программа обновляется сама по `version.json`). Стабильные версии — тег `vX.Y.Z` → релиз с установщиком Inno Setup и манифестами winget (версия в `version.txt`, что нового — `docs/CHANGELOG.md`, как выпустить — `docs/winget.md`, решение D-RELEASE). Отсюда скачать Windows-утилиты нельзя. Рабочие ветки — `claude/*`, в `main` — проверенное CI.
 - Скриншоты интерфейса (и демо-ролик) CI кладёт в ветку `screenshots` (`git fetch origin screenshots`).
 - .NET здесь: Microsoft SDK 8.0 из packages.microsoft.com (у Ubuntu-сборки нет WindowsDesktop SDK), `/opt/dotnet-ms`, ссылка `/usr/local/bin/dotnet`. Если сессия новая — поставить заново (см. историю коммитов/решение D15).
 - Ручная проверка на Windows — `docs/manual-tests.md`.
