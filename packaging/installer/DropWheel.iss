@@ -116,6 +116,7 @@ Type: dirifempty; Name: "{app}"
 const
   RunKey = 'Software\Microsoft\Windows\CurrentVersion\Run';
   MenuKey = 'Software\Classes\*\shell\DropWheel.Convert';
+  FolderMenuKey = 'Software\Classes\Directory\shell\DropWheel.Convert';
 
 var
   WasRunning: Boolean;
@@ -221,8 +222,9 @@ begin
       Exec(AppExePath, '--unregister', '', SW_HIDE, ewWaitUntilTerminated, Code);
       Log(Format('--unregister finished with code %d', [Code]));
     end;
-    { На случай, если exe не запустился, — основной ключ удаляем сами. }
+    { На случай, если exe не запустился, — основные ключи (файлы и папки) удаляем сами. }
     RegDeleteKeyIncludingSubkeys(HKCU, MenuKey);
+    RegDeleteKeyIncludingSubkeys(HKCU, FolderMenuKey);
     RemoveAutoStart;
   end;
 

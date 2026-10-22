@@ -73,9 +73,11 @@ public sealed class Converter(ToolLocator tools, ConversionSettings settings, IE
     /// PerFile-операция — ровно один вход; Combine — все входы в один результат.
     /// Имя результата — по первому входу или Operation.ResultStem (+ пометка операции).
     /// </summary>
+    /// <param name="target">Своя папка и имя результата (папки целиком, D-FOLDERS); null — как обычно.</param>
     /// <returns>Полный путь готового файла или папки.</returns>
     public async Task<string> ConvertAsync(IReadOnlyList<string> inputs, Operation op,
-        IProgress<double>? progress = null, Action<string>? log = null, CancellationToken ct = default)
+        IProgress<double>? progress = null, Action<string>? log = null, CancellationToken ct = default,
+        OutputTarget? target = null)
     {
         if (inputs.Count == 0) throw new ArgumentException("Нет файлов", nameof(inputs));
         if (op.Inputs == InputMode.PerFile && inputs.Count != 1)
@@ -84,10 +86,13 @@ public sealed class Converter(ToolLocator tools, ConversionSettings settings, IE
             throw new ConversionException(Loc.F(Loc.T.ErrMinFiles, Loc.Label(op), op.MinFiles));
 
         var full = inputs.Select(Path.GetFullPath).ToList();
+        // Файл уже в нужном формате: в папку-результат — копией (только по просьбе target).
+        var copyAsIs = target is { CopySameFormat: true } && full.Count == 1
+            && !op.AppliesTo(Path.GetExtension(full[0])) && op.AlreadyIn(Path.GetExtension(full[0]));
         foreach (var input in full)
         {
             if (!File.Exists(input)) throw new ConversionException(Loc.T.ErrFileNotFound, input);
-            if (!op.AppliesTo(Path.GetExtension(input)))
+            if (!copyAsIs && !op.AppliesTo(Path.GetExtension(input)))
                 throw new ConversionException(Loc.F(Loc.T.ErrNotApplicable, Loc.Label(op)), $"{op.Id}: {input}");
         }
 
@@ -95,11 +100,12 @@ public sealed class Converter(ToolLocator tools, ConversionSettings settings, IE
         var first = full[0];
         var folder = op.Result == ResultKind.Folder;
         var outExt = folder ? "" : op.Output.Resolve(Path.GetExtension(first));
-        var stem = op.ResultStem?.Invoke(full);
-        var suffix = Loc.Suffix(op);
+        var stem = target?.Stem ?? op.ResultStem?.Invoke(full);
+        var suffix = target is { KeepSuffix: false } ? "" : Loc.Suffix(op);
+        var outputFolder = target?.Directory ?? settings.OutputFolder;
         var desired = folder
-            ? OutputNamer.DesiredFolder(first, suffix, settings.OutputFolder, stem)
-            : OutputNamer.DesiredPath(first, outExt, suffix, settings.OutputFolder, stem);
+            ? OutputNamer.DesiredFolder(first, suffix, outputFolder, stem)
+            : OutputNamer.DesiredPath(first, outExt, suffix, outputFolder, stem);
         var dir = Path.GetDirectoryName(desired)!;
         Directory.CreateDirectory(dir);
 
@@ -110,7 +116,8 @@ public sealed class Converter(ToolLocator tools, ConversionSettings settings, IE
         try
         {
             if (folder) Directory.CreateDirectory(temp);
-            await RunEngineAsync(op, full, temp, settings, progress, log, ct);
+            if (copyAsIs) await CopyAsync(first, temp, progress, log, ct);
+            else await RunEngineAsync(op, full, temp, settings, progress, log, ct);
 
             if (folder)
             {
@@ -197,6 +204,18 @@ public sealed class Converter(ToolLocator tools, ConversionSettings settings, IE
         await _runner.RunAsync(kind, args, progress, log, ct);
         // У скана pdftotext «успешно» пишет пустой текст.
         if (kind == EngineKind.Pdftotext) PdfText.EnsureHasText(output);
+    }
+
+    /// <summary>Копия «как есть» (исходник только читается) — во временный файл, дальше как у результата движка.</summary>
+    private static async Task CopyAsync(string input, string output, IProgress<double>? progress, Action<string>? log,
+        CancellationToken ct)
+    {
+        log?.Invoke($"> [копия] {input} → {output}");
+        await using (var source = new FileStream(input, FileMode.Open, FileAccess.Read, FileShare.Read, 81920, useAsync: true))
+        await using (var dest = new FileStream(output, FileMode.CreateNew, FileAccess.Write, FileShare.None, 81920, useAsync: true))
+            await source.CopyToAsync(dest, ct);
+        File.SetLastWriteTimeUtc(output, File.GetLastWriteTimeUtc(input));
+        progress?.Report(1.0);
     }
 
     /// <summary>Имя выбираем в последний момент; если его успели занять — берём следующее.</summary>

@@ -211,6 +211,53 @@ internal sealed class Notifier
                 .AddArgument(ActionKey, GroupAction).AddArgument("id", id).AddArgument("path", paths[0])));
     }
 
+    /// <summary>
+    /// Папка целиком закончилась (D-FOLDERS): одно уведомление на всю пачку — сколько готово, сколько пропущено
+    /// и не получилось; «Открыть» — папка-результат, «Показать в папке» — она же в проводнике.
+    /// Всё отменено — молчим. Вызывать из потока интерфейса.
+    /// </summary>
+    public void FolderDone(Jobs.FolderBatch batch)
+    {
+        var roots = batch.OutputFolders.Where(Directory.Exists).ToList();
+        var names = batch.OutputFolders.Select(p => Path.GetFileName(p.TrimEnd('\\', '/'))).ToList();
+        var title = names.Count == 1 ? names[0] : Loc.Count(names.Count, Loc.T.Folders);
+        var notes = new List<string>();
+        if (batch.Skipped > 0) notes.Add(Loc.F(Loc.T.FolderSkipped, batch.Skipped));
+        if (batch.Failures.Count > 0) notes.Add(Loc.F(Loc.T.FolderFailed, batch.Failures.Count));
+
+        if (batch.Done == 0 || roots.Count == 0)
+        {
+            if (batch.Failures.Count == 0) return;
+            var (input, reason) = batch.Failures[0];
+            Show(() => new ToastContentBuilder()
+                .AddArgument(ActionKey, LogAction)
+                .AddText(Loc.F(Loc.T.NotifyFailed, title))
+                .AddText($"{Path.GetFileName(input)}: {reason}")
+                .AddText(string.Join(" · ", notes))
+                .AddButton(new ToastButton().SetContent(Loc.T.ActionDetails).AddArgument(ActionKey, LogAction)));
+            return;
+        }
+
+        var id = Guid.NewGuid().ToString("N");
+        Groups[id] = roots.ToArray();
+        Show(() =>
+        {
+            var b = new ToastContentBuilder()
+                .AddArgument(ActionKey, OpenAction)
+                .AddArgument("path", roots[0])
+                .AddText(Loc.F(Loc.T.NotifyDone, title))
+                .AddText(Loc.F(Loc.T.FolderResultFiles, batch.Done));
+            if (notes.Count > 0) b.AddText(string.Join(" · ", notes));
+            b.AddButton(new ToastButton().SetContent(Loc.T.ActionOpen)
+                    .AddArgument(ActionKey, OpenAction).AddArgument("path", roots[0]))
+                .AddButton(new ToastButton().SetContent(Loc.T.ActionReveal)
+                    .AddArgument(ActionKey, GroupAction).AddArgument("id", id).AddArgument("path", roots[0]));
+            if (batch.Failures.Count > 0)
+                b.AddButton(new ToastButton().SetContent(Loc.T.ActionDetails).AddArgument(ActionKey, LogAction));
+            return b;
+        });
+    }
+
     private void ShowFailed(string inputPath, string reason) => Show(() => new ToastContentBuilder()
         .AddArgument(ActionKey, LogAction)
         .AddText(Loc.F(Loc.T.NotifyFailed, Path.GetFileName(inputPath)))

@@ -7,12 +7,19 @@ Each version section starts with `## <version>`; CI copies it into the GitHub re
 
 ## 0.4.0
 
+**Новое в этой версии**
+- Папки целиком: правый клик по папке → «Конвертировать…» (или перетащите папку и нажмите Пробел) — колесо для файлов внутри.
+  Результат — в папке рядом: `Отпуск` → `Отпуск (JPG)`, с теми же подпапками; файлы, которые уже в нужном формате, просто копируются,
+  неподходящие пропускаются. «Один PDF» и «Склеить» дают один файл по имени папки. Одно уведомление на всю папку. До 1000 файлов за раз.
 - Картинки из браузера: тащите картинку с сайта (Chrome, Edge, Firefox), нажмите Пробел — колесо форматов,
   как для файла. Картинка сохраняется в ту же папку, что и картинки из буфера (по умолчанию «Изображения\DropWheel»),
   с именем с сайта, результат — рядом. Формат определяется по содержимому (WebP под именем .jpg — это WebP).
   Ничего не скачивается: если браузер дал только ссылку — подсказка. При перетаскивании текста колесо больше не висит.
 
 **English**
+- Whole folders: right-click a folder → “Convert…” (or drag a folder and press Space) to get the wheel for the files inside.
+  Results go to a sibling folder — `Vacation` → `Vacation (JPG)` — with the same subfolders; files already in the target format are copied,
+  unsuitable ones are skipped; “One PDF” and “Merge” make a single file named after the folder. One notification per folder, up to 1000 files.
 - Pictures from the browser: drag an image from a web page (Chrome, Edge, Firefox) and press Space to get the format wheel;
   the picture is saved to the clipboard pictures folder and converted there. Fully offline: a bare link shows a hint instead of downloading.
 

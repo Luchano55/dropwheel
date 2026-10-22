@@ -110,9 +110,11 @@ internal sealed class DragWheelController : IDisposable
 
     private void OnFilesEntered(string[] files)
     {
-        var ops = OperationCatalog.ForFiles(files, _converter.CanRun);
+        // Перетащили папку — операции по файлам внутри (D-FOLDERS); бросок разворачивает её заново (App.Enqueue).
+        var offer = FolderPlan.OfferFor(files, _converter.CanRun);
+        var ops = offer.Operations;
         _converter.Prepare(ops);
-        var (convert, tools) = WheelArrangement.Arrange(ops, WheelGroups.ForFiles(files), _preferences());
+        var (convert, tools) = WheelArrangement.Arrange(ops, offer.Group, _preferences());
         _wheel.SetItems(convert, tools);
     }
 

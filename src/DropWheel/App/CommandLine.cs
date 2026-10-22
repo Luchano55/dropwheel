@@ -37,7 +37,8 @@ internal sealed record CommandLine(IReadOnlyList<string> ConvertPaths, bool? Reg
                     break;
                 default:
                     // Служебные ключи уведомлений Windows (-ToastActivated и т.п.) — не файлы.
-                    if (!arg.StartsWith('-') && File.Exists(arg)) paths.Add(Path.GetFullPath(arg));
+                    // Папки — тоже (пункт меню для папок, D-FOLDERS).
+                    if (!arg.StartsWith('-') && (File.Exists(arg) || Directory.Exists(arg))) paths.Add(Path.GetFullPath(arg));
                     break;
             }
         }
