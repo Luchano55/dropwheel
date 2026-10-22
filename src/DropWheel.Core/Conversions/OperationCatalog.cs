@@ -133,6 +133,8 @@ public static class OperationCatalog
             { Inputs = InputMode.Combine, ResultStem = Engines.ZipEngine.ArchiveName },
         // PDF: текст (poppler pdftotext; у скана текста нет — ошибка, см. PdfText), повернуть все страницы (qpdf).
         new("pdf-to-txt", "TXT (текст)", Conv, Pdf, Pdftotext, "-layout -enc UTF-8 {in} {out}", OutputRule.Fixed("txt")),
+        // Быстрый Markdown: текст pdftotext в порядке чтения (без -layout — абзацы не рвутся колонками), без разметки.
+        new("pdf-to-md-fast", "MD (быстро)", Conv, Pdf, Pdftotext, "-enc UTF-8 {in} {out}", OutputRule.Fixed("md")),
         new("pdf-rotate", "Повернуть ↻", Tool, Pdf, Qpdf, "--rotate=+90 {in} {out}", OutputRule.Fixed("pdf"), " (повёрнуто)"),
 
         // OFFICE — Word / Excel / PowerPoint через COM (OfficeEngine), только если Office установлен.
@@ -161,9 +163,8 @@ public static class OperationCatalog
         // PDF → Word: Word сам переводит PDF в редактируемый документ.
         new("pdf-to-docx",   "DOCX", Conv, Pdf, Office, "", OutputRule.Fixed("docx")),
         // PDF → Markdown: Word перестраивает PDF во временный DOCX, из него — Markdown (как word-to-md).
-        // Без Word — текст pdftotext как есть (шаблон аргументов — для запасного движка). Решение D-OFFICE.
-        new(Engines.OfficeFormats.PdfToMdId, "Markdown", Conv, Pdf, Office, "-layout -enc UTF-8 {in} {out}", OutputRule.Fixed("md"))
-            { Fallback = Pdftotext },
+        // Медленно (Word «распознаёт» PDF), зато с заголовками и таблицами; без Word лепестка нет — есть «MD (быстро)». Решение D-OFFICE.
+        new(Engines.OfficeFormats.PdfToMdId, "Markdown", Conv, Pdf, Office, "", OutputRule.Fixed("md")),
 
         // DOCLIBS — документы без Office (решение D-DOCLIBS): бесплатные библиотеки (DocLibsEngine)
         // и печать HTML в PDF через Edge (WebPdfEngine, только Windows). Word — только DOCX/DOCM.

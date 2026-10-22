@@ -55,19 +55,20 @@ public class OfficeAvailabilityTests : IDisposable
         foreach (var file in new[] { "отчёт.docx", "таблица.xlsx", "доклад.pptx", "данные.csv" })
             Assert.Equal(["zip-pack", "pack-7z"], Offered(converter, file));
         Assert.DoesNotContain("pdf-to-docx", Offered(converter, "скан.pdf"));
-        // PDF → Markdown без Word остаётся — запасной pdftotext (если утилита есть).
-        Assert.Equal(Integration.Tools.Locator.IsAvailable(EngineKind.Pdftotext), Offered(converter, "скан.pdf").Contains("pdf-to-md"));
+        // Без Word — только быстрый Markdown (pdftotext, если утилита есть).
+        Assert.DoesNotContain("pdf-to-md", Offered(converter, "скан.pdf"));
+        Assert.Equal(Integration.Tools.Locator.IsAvailable(EngineKind.Pdftotext), Offered(converter, "скан.pdf").Contains("pdf-to-md-fast"));
     }
 
     [Fact]
-    public void Pdf_to_markdown_uses_word_if_installed_otherwise_pdftotext()
+    public void Pdf_to_markdown_needs_word()
     {
         var op = OperationCatalog.Find("pdf-to-md")!;
         var tools = Integration.Tools.Locator;
         Assert.Equal(EngineKind.Office, new Converter(tools, ConversionSettings.Default, [Office(OfficeApp.Word)]).EngineFor(op, "pdf"));
-        // Без Word (только Excel) — запасной pdftotext, если он есть.
+        // Без Word (только Excel) — не делается: для этого есть «MD (быстро)».
         var noWord = new Converter(tools, ConversionSettings.Default, [Office(OfficeApp.Excel)]);
-        Assert.Equal(tools.IsAvailable(EngineKind.Pdftotext) ? EngineKind.Pdftotext : null, noWord.EngineFor(op, "pdf"));
+        Assert.Null(noWord.EngineFor(op, "pdf"));
     }
 
     [Fact]

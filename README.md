@@ -272,7 +272,8 @@ Tools keep the format for ordinary pictures; HEIC, AVIF, SVG, PSD and RAW come o
 | Convert | → PNG / JPG (pages) | every page as an image (150 dpi) in a folder `report (pages)` | — | `pdf-to-png` `pdf-to-jpg` |
 | Convert | → TXT | the text with its layout (columns, indents); a scan has no text layer — you get a clear message instead of an empty file | — | `pdf-to-txt` |
 | Convert | → DOCX | an editable Word document — Word rebuilds the PDF itself | **Office** (Word) | `pdf-to-docx` |
-| Convert | → Markdown | Word rebuilds the PDF, then headings, lists, bold and tables become Markdown | **Office** (Word); without it — plain text (pdftotext) | `pdf-to-md` |
+| Convert | → Markdown | Word rebuilds the PDF, then headings, lists, bold and tables become Markdown | **Office** (Word) — slow for long PDFs | `pdf-to-md` |
+| Convert | → MD (fast) | instant: the text in reading order as a `.md`, no headings or tables | — | `pdf-to-md-fast` |
 | Tool | Merge (2+ PDFs) | one PDF, in the order the files came → `report (merged).pdf` | — | `pdf-merge` |
 | Tool | Split | one PDF per page in a folder `report (split)` | — | `pdf-split` |
 | Tool | Optimize | lossless: object streams + maximum Flate compression → `report (optimized).pdf` | — | `pdf-optimize` |
@@ -296,7 +297,7 @@ Tools keep the format for ordinary pictures; HEIC, AVIF, SVG, PSD and RAW come o
 | **Excel:** XLS, XLSX, XLSM, ODS, CSV | → PDF (whole workbook) · XLSX · XLS · CSV (first sheet, UTF-8) · ODS | XLSX / XLSM / XLS → **CSV** (first sheet, values as shown in Excel, UTF-8 that Excel opens without garbled letters) | `excel-to-pdf` `excel-to-xlsx` `excel-to-xls` `excel-to-csv` `excel-to-ods` |
 | **CSV** | → XLSX: separator (`;` `,` tab) and encoding (UTF-8 / Windows-1251) detected, numbers and dates become real cells, codes like `007` stay text, formulas are never created — built-in either way | same | `csv-to-xlsx` |
 | **PowerPoint:** PPT, PPTX, PPTM, ODP | → PDF · PPTX · PPT · ODP · Slides PNG (folder `deck (slides)`, 1920 px wide) | — | `ppt-to-pdf` `ppt-to-pptx` `ppt-to-ppt` `ppt-to-odp` `ppt-to-png` |
-| **PDF** | → DOCX · Markdown (see PDF above) | Markdown — plain text | `pdf-to-docx` `pdf-to-md` |
+| **PDF** | → DOCX · Markdown (see PDF above) | “MD (fast)” — plain text | `pdf-to-docx` `pdf-to-md-fast` |
 
 </details>
 

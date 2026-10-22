@@ -58,7 +58,7 @@ public class OfficeCatalogTests : IDisposable
     [InlineData("ppt-to-ppt", "PPT", "ppt", null)]
     [InlineData("ppt-to-odp", "ODP", "odp", null)]
     [InlineData("pdf-to-docx", "DOCX", "docx", null)]
-    [InlineData("pdf-to-md", "Markdown", "md", EngineKind.Pdftotext)]
+    [InlineData("pdf-to-md", "Markdown", "md", null)]
     public void Office_file_operations_shape(string id, string label, string ext, EngineKind? fallback)
     {
         var op = OperationCatalog.Find(id)!;
@@ -84,7 +84,7 @@ public class OfficeCatalogTests : IDisposable
     {
         var ops = OperationCatalog.ForFiles(["Мои фото/тест 1.pdf"]);
         var (convert, _) = DropWheel.Wheel.WheelArrangement.Arrange(ops, DropWheel.Wheel.WheelGroups.Pdf, new DropWheel.Wheel.WheelPreferences());
-        Assert.Equal(["pdf-to-png", "pdf-to-jpg", "pdf-to-txt", "pdf-to-docx", "pdf-to-md"], convert.Select(t => t.Id));
+        Assert.Equal(["pdf-to-png", "pdf-to-jpg", "pdf-to-txt", "pdf-to-md-fast", "pdf-to-docx", "pdf-to-md"], convert.Select(t => t.Id));
         Assert.True(convert.Count <= DropWheel.Wheel.WheelGeometry.MaxSectors);
     }
 

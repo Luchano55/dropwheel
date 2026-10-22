@@ -37,6 +37,7 @@ internal static class OperationTexts
         [Engines.SevenZip.ExtractId] = "Extract",
         [Engines.SevenZip.PackId] = "To 7Z",
         ["pdf-to-txt"] = "TXT (text)",
+        ["pdf-to-md-fast"] = "MD (fast)",
         ["pdf-rotate"] = "Rotate ↻",
         ["ppt-to-png"] = "Slides PNG",
     };
