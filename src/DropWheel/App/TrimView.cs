@@ -213,7 +213,6 @@ public sealed class TrimView : Border
         };
         preview.Children.Add(_overlay);
         _badgeText = new TextBlock { Foreground = Brushes.White, FontSize = 12, FontWeight = FontWeights.SemiBold };
-        System.Windows.Documents.Typography.SetNumeralAlignment(_badgeText, FontNumeralAlignment.Tabular);
         _badge = new Border
         {
             Background = SettingsPalette.B(Color.FromArgb(0xB0, 0, 0, 0)), CornerRadius = new CornerRadius(4),
@@ -294,7 +293,6 @@ public sealed class TrimView : Border
         };
         panel.Children.Add(new TextBlock { Text = label, FontSize = 12, Foreground = _palette.TextSecondary, TextAlignment = textAlign });
         var value = new TextBlock { FontSize = 15, FontWeight = FontWeights.SemiBold, Foreground = _palette.Text, TextAlignment = textAlign };
-        System.Windows.Documents.Typography.SetNumeralAlignment(value, FontNumeralAlignment.Tabular);
         AutomationProperties.SetName(value, label);
         panel.Children.Add(value);
         Grid.SetColumn(panel, column);
