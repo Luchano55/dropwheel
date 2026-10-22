@@ -171,6 +171,15 @@ public class FolderPlanTests : IDisposable
     }
 
     [Fact]
+    public void Folder_of_videos_is_not_offered_trim()
+    {
+        var ops = FolderPlan.Offer(["a.mp4", "b.mov"]).Select(o => o.Id).ToList();
+        Assert.DoesNotContain("video-trim", ops);
+        Assert.DoesNotContain("video-trim-exact", ops);
+        Assert.Contains("video-compress", ops);
+    }
+
+    [Fact]
     public void Combine_needs_enough_files()
     {
         Assert.DoesNotContain(Op("images-to-pdf"), FolderPlan.Offer(["a.jpg"]));

@@ -15,6 +15,10 @@ Each version section starts with `## <version>`; CI copies it into the GitHub re
   как для файла. Картинка сохраняется в ту же папку, что и картинки из буфера (по умолчанию «Изображения\DropWheel»),
   с именем с сайта, результат — рядом. Формат определяется по содержимому (WebP под именем .jpg — это WebP).
   Ничего не скачивается: если браузер дал только ссылку — подсказка. При перетаскивании текста колесо больше не висит.
+- Обрезка видео: «Инструменты» → «Обрезать…» — окно с кадром и полосой миниатюр, ручки «начало» и «конец».
+  По умолчанию мгновенно и без потери качества (`видео (обрезано).mp4`, формат тот же); галочка
+  «Точно по кадру» — ровно с выбранного кадра, с пересжатием. «В 7Z» для видео теперь девятый лепесток —
+  по умолчанию не виден, его можно поднять в «Настройки → Колесо».
 
 **English**
 - Whole folders: right-click a folder → “Convert…” (or drag a folder and press Space) to get the wheel for the files inside.
@@ -22,6 +26,8 @@ Each version section starts with `## <version>`; CI copies it into the GitHub re
   unsuitable ones are skipped; “One PDF” and “Merge” make a single file named after the folder. One notification per folder, up to 1000 files.
 - Pictures from the browser: drag an image from a web page (Chrome, Edge, Firefox) and press Space to get the format wheel;
   the picture is saved to the clipboard pictures folder and converted there. Fully offline: a bare link shows a hint instead of downloading.
+- Video trimming: Tools → “Trim…” opens a window with a frame preview, a thumbnail strip and start/end handles.
+  Instant and lossless by default (same container); “Frame-accurate” re-encodes to start exactly on the chosen frame.
 
 ## 0.3.0
 

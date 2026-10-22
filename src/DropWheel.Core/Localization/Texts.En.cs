@@ -294,5 +294,29 @@ public sealed partial class Texts
         ErrOcrNoLanguage = "No text recognition language is installed in Windows",
         ErrOcrNoText = "No text found",
         ErrOcrCantOpen = "Windows couldn't open the image",
+    
+
+        // обрезка видео
+        TrimTitle = "Trim video",
+        TrimStart = "Start",
+        TrimEnd = "End",
+        TrimLength = "Length",
+        TrimButton = "Trim",
+        TrimExact = "Frame-accurate (slower, re-encodes)",
+        TrimExactHint = "Unchecked — instant and lossless, but the start may move slightly earlier, to the nearest keyframe.",
+        TrimDragHint = "Drag the handles — the part between them is kept.",
+        TrimLoading = "Reading the video…",
+        TrimFailed = "Couldn't read the video",
+        TrimNoFrame = "Can't show this frame, but trimming still works",
+        ErrMissingValues = "“{0}” needs: {1}",
+        CliTrimUsage = """
+            Trimming a video:
+              dropwheel convert <video> video-trim --start 0:05 --end 0:12 [--exact]
+              --start, --end      start and end: 12, 12.5, 0:05, 1:02.5 or 1:00:00
+              --exact             frame-accurate (re-encodes to H.264, slower)
+            """,
+        CliBadTime = "Can't read the time “{0}” (e.g. 0:05 or 1:02.5)",
+        CliTrimRange = "The end (--end) must be after the start (--start)",
+        CliNoParameters = "Operation {0} doesn't take --start, --end or --exact",
     };
 }

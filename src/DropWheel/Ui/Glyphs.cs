@@ -39,6 +39,7 @@ public static class Glyphs
     public const string Up = "\uE70E";
     public const string Down = "\uE70D";
     public const string Undo = "\uE7A7";
+    public const string Trim = "\uE78A";
 }
 
 /// <summary>
@@ -70,6 +71,7 @@ public static class OperationGlyphs
             if (Has(id, "split")) return Glyphs.Split;
             if (Has(id, "merge", "join", "combine")) return Glyphs.Merge;
             if (Has(id, "rotate")) return Glyphs.Rotate;
+            if (Has(id, "trim")) return Glyphs.Trim;
             if (Has(id, "extract", "unpack", "unzip")) return Glyphs.FolderOpen;
             if (Has(id, "pack", "zip", "7z")) return Glyphs.Package;
             if (Has(id, "ocr", "text", "encoding", "utf")) return Glyphs.Text;

@@ -311,4 +311,28 @@ public sealed partial class Texts
     public string ErrOcrNoLanguage { get; init; } = "В Windows не установлен язык для распознавания текста";
     public string ErrOcrNoText { get; init; } = "Текст не найден";
     public string ErrOcrCantOpen { get; init; } = "Windows не смогла открыть картинку";
+
+    // ---------- обрезка видео (D-TRIM) ----------
+    public string TrimTitle { get; init; } = "Обрезать видео";
+    public string TrimStart { get; init; } = "Начало";
+    public string TrimEnd { get; init; } = "Конец";
+    public string TrimLength { get; init; } = "Длина";
+    public string TrimButton { get; init; } = "Обрезать";
+    public string TrimExact { get; init; } = "Точно по кадру (дольше, с пересжатием)";
+    public string TrimExactHint { get; init; } =
+        "Без галочки — мгновенно и без потери качества, но начало может сдвинуться чуть раньше, к ближайшему опорному кадру.";
+    public string TrimDragHint { get; init; } = "Перетащите ручки — останется кусок между ними.";
+    public string TrimLoading { get; init; } = "Читаю видео…";
+    public string TrimFailed { get; init; } = "Не удалось прочитать видео";
+    public string TrimNoFrame { get; init; } = "Кадр не показать, но обрезать можно";
+    public string ErrMissingValues { get; init; } = "Для «{0}» не задано: {1}";
+    public string CliTrimUsage { get; init; } = """
+        Обрезка видео:
+          dropwheel convert <видео> video-trim --start 0:05 --end 0:12 [--exact]
+          --start, --end      начало и конец: 12, 12.5, 0:05, 1:02.5 или 1:00:00
+          --exact             точно по кадру (с пересжатием в H.264, дольше)
+        """;
+    public string CliBadTime { get; init; } = "Не понял время «{0}» (пример: 0:05 или 1:02.5)";
+    public string CliTrimRange { get; init; } = "Конец (--end) должен быть позже начала (--start)";
+    public string CliNoParameters { get; init; } = "Операция {0} не принимает --start, --end и --exact";
 }

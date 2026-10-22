@@ -14,7 +14,7 @@ public class ExtrasCatalogTests
     {
         foreach (var ext in Extensions.All.Concat(TextEngine.InputExtensions))
             foreach (var group in OperationCatalog.ForFile("file." + ext).GroupBy(o => o.Mode))
-                Assert.True(group.Count() <= 8, $"{ext} {group.Key}: {string.Join(", ", group.Select(o => o.Id))}");
+                CatalogTests.AssertFitsWheel(ext, group);
         Assert.All(OperationCatalog.All, o => Assert.True(o.Label.Length <= 16, o.Label));
     }
 

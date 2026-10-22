@@ -95,6 +95,11 @@ public sealed class Converter(ToolLocator tools, ConversionSettings settings, IE
             if (!copyAsIs && !op.AppliesTo(Path.GetExtension(input)))
                 throw new ConversionException(Loc.F(Loc.T.ErrNotApplicable, Loc.Label(op)), $"{op.Id}: {input}");
         }
+        // Параметры задачи (обрезка: начало и конец) — заданы и без «{}»: значения подставляются в шаблон как есть.
+        if (op.MissingValues() is { Count: > 0 } missing)
+            throw new ConversionException(Loc.F(Loc.T.ErrMissingValues, Loc.Label(op), string.Join(", ", missing)));
+        if (op.Values?.Values.Any(v => v.IndexOfAny(['{', '}']) >= 0) == true)
+            throw new ArgumentException("Значение параметра с фигурными скобками", nameof(op));
 
         var settings = Settings;
         var first = full[0];

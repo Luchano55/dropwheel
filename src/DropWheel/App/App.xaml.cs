@@ -441,6 +441,13 @@ public partial class App : Application
     private void Enqueue(IReadOnlyList<string> paths, Operation op, FolderSelection? folders)
     {
         folders ??= ExpandFolders(paths);
+        // Операции с параметрами (обрезка видео) сначала спрашивают их в своём окне (D-TRIM); для папок их нет.
+        if (op.NeedsValues)
+        {
+            if (folders is null) AskValues(paths, op);
+            else Log.Write($"{op.Id}: для папок не поддерживается — пропускаю");
+            return;
+        }
         string group;
         if (folders is not null)
         {
@@ -453,6 +460,34 @@ public partial class App : Application
             group = WheelGroups.ForFiles(paths);
         }
         UpdateSettings(s => s with { Wheel = s.Wheel.WithRecent(group, op.Mode, op.Id) });
+    }
+
+    /// <summary>
+    /// «Обрезать…» — окно обрезки для одного ролика; после «Обрезать» задача уходит в очередь обычным путём.
+    /// Открывается чуть позже: выбор приходит из обработчика броска на колесо, перетаскивание должно закончиться.
+    /// </summary>
+    private void AskValues(IReadOnlyList<string> paths, Operation op)
+    {
+        if (op.Id != VideoTrim.Id || paths.Count != 1)
+        {
+            Log.Write($"{op.Id}: нечем спросить параметры для {paths.Count} файл(ов) — пропускаю");
+            return;
+        }
+        var video = paths[0];
+        var group = WheelGroups.ForFiles(paths);
+        UpdateSettings(s => s with { Wheel = s.Wheel.WithRecent(group, op.Mode, op.Id) });
+        Dispatcher.BeginInvoke(() =>
+        {
+            try
+            {
+                var tools = new ToolLocator { FfmpegPath = Settings.FfmpegPath, MagickPath = Settings.MagickPath };
+                new TrimWindow(video, tools, Log, bound => Queue.EnqueueSelection([video], bound)).ShowAndActivate();
+            }
+            catch (Exception ex)
+            {
+                Log.Write("Окно обрезки не открылось: " + ex);
+            }
+        });
     }
 
     private void OnJobChanged(Job job)

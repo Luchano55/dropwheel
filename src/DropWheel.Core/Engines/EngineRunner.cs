@@ -30,7 +30,7 @@ public sealed class EngineRunner(ToolLocator tools)
 
         using var process = new Process { StartInfo = psi };
         var stderr = new Queue<string>();
-        var ffProgress = new FfmpegProgress();
+        var ffProgress = FfmpegProgress.For(args);
 
         process.ErrorDataReceived += (_, e) =>
         {

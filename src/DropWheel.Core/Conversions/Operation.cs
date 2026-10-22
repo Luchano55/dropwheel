@@ -66,6 +66,34 @@ public sealed record Operation(
     /// null — имя первого входа (photo.heic → photo). Пример: ZIP из нескольких файлов — по имени папки.
     /// </summary>
     public Func<IReadOnlyList<string>, string>? ResultStem { get; init; }
+    /// <summary>Сколько файлов можно максимум (обрезка видео — только один: у окна обрезки один ролик).</summary>
+    public int MaxFiles { get; init; } = int.MaxValue;
+    /// <summary>
+    /// false — операция не предлагается колесом (и не видна в настройках колеса): это вариант другой операции,
+    /// его выбирает её окно или CLI (точная обрезка — галочка в окне «Обрезать…», <c>--exact</c>).
+    /// </summary>
+    public bool OnWheel { get; init; } = true;
+    /// <summary>
+    /// Имена параметров задачи, которые задаёт пользователь (обрезка: start, end). В шаблоне — {имя}.
+    /// Пока значений нет (<see cref="Values"/>), приложение сначала спрашивает их (окно обрезки).
+    /// </summary>
+    public IReadOnlyList<string> Parameters { get; init; } = [];
+    /// <summary>
+    /// Значения параметров одной задачи (см. <see cref="WithValues"/>). Подставляются в шаблон как есть,
+    /// каждое — внутрь своего токена, так что пробелы значений не разбивают аргументы.
+    /// </summary>
+    public IReadOnlyDictionary<string, string>? Values { get; init; }
+
+    /// <summary>Есть параметры, а значений ещё нет — сначала спросить пользователя.</summary>
+    public bool NeedsValues => Parameters.Count > 0 && Values is null;
+
+    /// <summary>Та же операция со значениями параметров для одной задачи (каталог не меняется).</summary>
+    public Operation WithValues(IReadOnlyDictionary<string, string> values) =>
+        this with { Values = new Dictionary<string, string>(values, StringComparer.Ordinal) };
+
+    /// <summary>Параметры, для которых не задано значение (пустые тоже не в счёт).</summary>
+    public IReadOnlyList<string> MissingValues() =>
+        Parameters.Where(p => Values is null || !Values.TryGetValue(p, out var v) || string.IsNullOrWhiteSpace(v)).ToList();
 
     /// <summary>Операция-конвертация не предлагается файлу, который уже в целевом формате.</summary>
     public bool AppliesTo(string inputExtension)

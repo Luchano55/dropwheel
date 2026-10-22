@@ -156,6 +156,8 @@ public static class FolderPlan
         foreach (var op in OperationCatalog.All)
         {
             if (op.Inputs == InputMode.Combine && op.Kind == MediaKind.Any) continue;
+            // Скрытые варианты, операции «для одного файла» и с параметрами (обрезка видео) — не для папок.
+            if (!op.OnWheel || op.MaxFiles != int.MaxValue || op.Parameters.Count > 0) continue;
             var accepted = 0;
             var ok = true;
             foreach (var (ext, count) in extensions)
