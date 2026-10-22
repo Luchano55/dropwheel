@@ -4,6 +4,7 @@ using DropWheel.Conversions;
 using DropWheel.Documents;
 using DropWheel.Engines;
 using Microsoft.Web.WebView2.Core;
+using DropWheel.Localization;
 
 namespace DropWheel.AppEngines;
 
@@ -109,8 +110,8 @@ public sealed class WebPdfEngine : IInternalEngine, IDisposable
         var extension = Extensions.Normalize(Path.GetExtension(input));
         if (!CanRun(op, extension))
             throw new ConversionException(IsAvailable
-                ? $"Edge не печатает в PDF файлы .{extension}"
-                : "Не найден Microsoft Edge WebView2 Runtime", op.Id);
+                ? Loc.F(Loc.T.ErrEdgeExtension, extension)
+                : Loc.T.ErrNoWebView2, op.Id);
 
         // HTML готовим в фоне: разбор DOCX может занять секунды.
         var source = await Task.Run(() => PrepareSource(op, input, extension, ct), ct);
@@ -128,7 +129,7 @@ public sealed class WebPdfEngine : IInternalEngine, IDisposable
                 }
                 catch (OperationCanceledException) when (!ct.IsCancellationRequested)
                 {
-                    throw new ConversionException($"Edge не успел напечатать PDF за {JobTimeout.TotalSeconds:0} секунд", input);
+                    throw new ConversionException(Loc.F(Loc.T.ErrEdgeTimeout, JobTimeout.TotalSeconds.ToString("0", System.Globalization.CultureInfo.InvariantCulture)), input);
                 }
             }
             finally
@@ -214,13 +215,13 @@ public sealed class WebPdfEngine : IInternalEngine, IDisposable
             print.ShouldPrintHeaderAndFooter = false; // без адреса файла и даты на полях
 
             if (!await web.PrintToPdfAsync(pdf, print).WaitAsync(ct))
-                throw new ConversionException("Edge не смог сохранить PDF", source.Uri);
+                throw new ConversionException(Loc.T.ErrEdgeSave, source.Uri);
             // Недогруженную страницу остановили — её события ещё могут прийти; такой Edge не переиспользуем.
             reusable = loaded;
         }
         catch (Exception ex) when (ex is not ConversionException and not OperationCanceledException)
         {
-            throw new ConversionException("Edge (WebView2) не смог напечатать PDF", ex.Message, ex);
+            throw new ConversionException(Loc.T.ErrEdgePrint, ex.Message, ex);
         }
         finally
         {
@@ -250,7 +251,7 @@ public sealed class WebPdfEngine : IInternalEngine, IDisposable
             }
             var result = await done.Task;
             if (!result.IsSuccess && result.WebErrorStatus != CoreWebView2WebErrorStatus.OperationCanceled)
-                throw new ConversionException("Edge не смог открыть файл", $"{result.WebErrorStatus}: {uri}");
+                throw new ConversionException(Loc.T.ErrEdgeOpen, $"{result.WebErrorStatus}: {uri}");
             return true;
         }
         finally

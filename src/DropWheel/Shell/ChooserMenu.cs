@@ -4,6 +4,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Interop;
 using DropWheel.App;
 using DropWheel.Conversions;
+using DropWheel.Localization;
 
 namespace DropWheel.Shell;
 
@@ -34,13 +35,13 @@ internal static class ChooserMenu
         host.Activate();
 
         var menu = new ContextMenu { Placement = PlacementMode.MousePoint, PlacementTarget = host };
-        var title = paths.Count == 1 ? Path.GetFileName(paths[0]) : $"Файлов: {paths.Count}";
+        var title = paths.Count == 1 ? Path.GetFileName(paths[0]) : Loc.F(Loc.T.ChooserFiles, paths.Count);
         menu.Items.Add(new MenuItem { Header = title, IsEnabled = false, FontWeight = FontWeights.SemiBold });
         menu.Items.Add(new Separator());
 
         if (ops.Count == 0)
         {
-            menu.Items.Add(new MenuItem { Header = "Нечего предложить", IsEnabled = false });
+            menu.Items.Add(new MenuItem { Header = Loc.T.WheelNothing, IsEnabled = false });
         }
         else
         {
@@ -58,7 +59,7 @@ internal static class ChooserMenu
     {
         foreach (var op in ops)
         {
-            var item = new MenuItem { Header = prefix + op.Label };
+            var item = new MenuItem { Header = prefix + Loc.Label(op) };
             item.Click += (_, _) => chosen(op);
             menu.Items.Add(item);
         }

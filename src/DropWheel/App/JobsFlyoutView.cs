@@ -196,6 +196,14 @@ public sealed class JobsFlyoutView : Border
         }
     }
 
+    /// <summary>Сменился язык интерфейса: перестроить подписи (строки задач приходят заново через SetRows).</summary>
+    public void Relocalize(string hotkeyName)
+    {
+        _hotkeyName = hotkeyName;
+        Build();
+        SetRows(_rows);
+    }
+
     /// <summary>Сдвиг содержимого при появлении окна (окно «выезжает» от панели задач).</summary>
     public TranslateTransform Slide => _slide;
 
@@ -239,15 +247,15 @@ public sealed class JobsFlyoutView : Border
 
     private static string Summary(IReadOnlyList<JobRowModel> rows)
     {
-        if (rows.Count == 0) return "Задач нет";
+        if (rows.Count == 0) return Loc.T.JobsNone;
         var active = rows.Count(r => r.IsActive);
         var done = rows.Count(r => r.State == JobState.Done);
         var failed = rows.Count(r => r.State == JobState.Failed);
         var parts = new List<string>();
-        if (active > 0) parts.Add($"в работе: {active}");
-        if (done > 0) parts.Add($"готово: {done}");
-        if (failed > 0) parts.Add(Russian.Count(failed, "ошибка", "ошибки", "ошибок"));
-        if (parts.Count == 0) return "Всё отменено";
+        if (active > 0) parts.Add(Loc.F(Loc.T.JobsActive, active));
+        if (done > 0) parts.Add(Loc.F(Loc.T.JobsDone, done));
+        if (failed > 0) parts.Add(Loc.Count(failed, Loc.T.Errors));
+        if (parts.Count == 0) return Loc.T.JobsAllCanceled;
         var text = string.Join(" · ", parts);
         return char.ToUpperInvariant(text[0]) + text[1..];
     }
@@ -287,7 +295,7 @@ public sealed class JobsFlyoutView : Border
         titles.Children.Add(_summary);
         Grid.SetColumn(titles, 1);
         header.Children.Add(titles);
-        _clear = new FlyoutButton(null, "Очистить", "Убрать завершённые из списка", p.Text, p.ButtonHover, p.ButtonPressed,
+        _clear = new FlyoutButton(null, Loc.T.JobsClear, Loc.T.JobsClearHint, p.Text, p.ButtonHover, p.ButtonPressed,
             p.Focus, p.MakeToolTip());
         _clear.Click += () => ClearRequested?.Invoke();
         Grid.SetColumn(_clear, 2);
@@ -346,7 +354,7 @@ public sealed class JobsFlyoutView : Border
         panel.Children.Add(new LogoMark { Size = 44, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 0, 0, 14) });
         panel.Children.Add(new TextBlock
         {
-            Text = "Пока пусто",
+            Text = Loc.T.JobsEmptyTitle,
             FontFamily = UiFonts.Display,
             FontWeight = FontWeights.SemiBold,
             FontSize = 15,
@@ -355,8 +363,7 @@ public sealed class JobsFlyoutView : Border
         });
         panel.Children.Add(new TextBlock
         {
-            Text = $"Потащите файл и, не отпуская кнопку мыши, нажмите {_hotkeyName} — появится колесо форматов. " +
-                   "Или щёлкните по файлу правой кнопкой → «Конвертировать…».",
+            Text = Loc.F(Loc.T.JobsEmptyHint, _hotkeyName),
             FontSize = 12.5,
             LineHeight = 18,
             Foreground = p.TextSecondary,
@@ -521,11 +528,11 @@ internal sealed class JobRowView : Border
         _detail.Foreground = m.State == JobState.Failed ? _p.Error : _p.TextSecondary;
         _detail.Text = m.State switch
         {
-            JobState.Queued => $"{m.Operation} · в очереди",
-            JobState.Running => m.Progress > 0 ? $"{m.Operation} · {Math.Round(m.Progress * 100)} %" : $"{m.Operation} · выполняется…",
-            JobState.Done => m.ResultName is { } result ? $"Готово · {result}" : "Готово",
-            JobState.Failed => m.Error ?? "Не получилось",
-            _ => $"{m.Operation} · отменено",
+            JobState.Queued => Loc.F(Loc.T.JobQueued, m.Operation),
+            JobState.Running => m.Progress > 0 ? $"{m.Operation} · {Math.Round(m.Progress * 100)} %" : Loc.F(Loc.T.JobRunning, m.Operation),
+            JobState.Done => m.ResultName is { } result ? Loc.F(Loc.T.JobDoneResult, result) : Loc.T.JobDone,
+            JobState.Failed => m.Error ?? Loc.T.JobFailed,
+            _ => Loc.F(Loc.T.JobCanceled, m.Operation),
         };
         if (m.State == JobState.Failed && m.Error is { Length: > 0 }) _detail.ToolTip = m.Error;
 
@@ -551,14 +558,14 @@ internal sealed class JobRowView : Border
         switch (state)
         {
             case JobState.Done:
-                _actions.Children.Add(Icon(Glyphs.Open, "Открыть", _owner.RaiseOpen));
-                _actions.Children.Add(Icon(Glyphs.FolderOpen, "Показать в папке", _owner.RaiseReveal));
+                _actions.Children.Add(Icon(Glyphs.Open, Loc.T.ActionOpen, _owner.RaiseOpen));
+                _actions.Children.Add(Icon(Glyphs.FolderOpen, Loc.T.ActionReveal, _owner.RaiseReveal));
                 break;
             case JobState.Queued or JobState.Running:
-                _actions.Children.Add(Icon(Glyphs.Cancel, "Отмена", _owner.RaiseCancel));
+                _actions.Children.Add(Icon(Glyphs.Cancel, Loc.T.Cancel, _owner.RaiseCancel));
                 break;
             case JobState.Failed:
-                var details = new FlyoutButton(null, "Подробнее", "Открыть журнал с подробностями ошибки", _p.Link,
+                var details = new FlyoutButton(null, Loc.T.ActionDetails, Loc.T.ActionDetailsHint, _p.Link,
                     _p.ButtonHover, _p.ButtonPressed, _p.Focus, _p.MakeToolTip());
                 details.Click += () => _owner.RaiseDetails(Model.Key);
                 _actions.Children.Add(details);

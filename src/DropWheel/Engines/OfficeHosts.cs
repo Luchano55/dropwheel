@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using DropWheel.Conversions;
 using DropWheel.Engines;
 using Microsoft.Win32;
+using DropWheel.Localization;
 
 namespace DropWheel.AppEngines;
 
@@ -109,12 +110,12 @@ internal abstract class OfficeHost(Action<string> log)
             // Файл уже открыт в этом экземпляре (бывает только с чужим): Open вернул бы документ пользователя,
             // а мы бы его закрыли.
             if (IsOpen(input))
-                throw new ConversionException($"Файл открыт в {Name} — закройте его и повторите", input);
+                throw new ConversionException(Loc.F(Loc.T.ErrFileOpenIn, Name), input);
             Convert(target, input, output, progress, ct);
         }
         catch (Exception ex) when (ex is not ConversionException and not OperationCanceledException)
         {
-            throw Translate(ex, $"{Name} не смог сконвертировать файл");
+            throw Translate(ex, Loc.F(Loc.T.ErrAppCantConvert, Name));
         }
         finally
         {
@@ -221,7 +222,7 @@ internal abstract class OfficeHost(Action<string> log)
     private void Start()
     {
         var type = Type.GetTypeFromProgID(ProgIdOf(Kind), throwOnError: false)
-            ?? throw new ConversionException($"Не найден Microsoft {Name}", ProgIdOf(Kind));
+            ?? throw new ConversionException(Loc.F(Loc.T.ErrAppNotFound, Name), ProgIdOf(Kind));
         var watch = Stopwatch.StartNew();
         var before = ProcessIds();
         _starting = before;
@@ -259,7 +260,7 @@ internal abstract class OfficeHost(Action<string> log)
             }
             Detach();
             if (ours) EnsureExited(pid);
-            throw ex as ConversionException ?? new ConversionException($"Не удалось запустить {Name}", ex.Message, ex);
+            throw ex as ConversionException ?? new ConversionException(Loc.F(Loc.T.ErrCantStart, Name), ex.Message, ex);
         }
         finally
         {
@@ -399,11 +400,11 @@ internal abstract class OfficeHost(Action<string> log)
     private ConversionException Translate(Exception ex, string message)
     {
         var details = $"{Name}: 0x{ex.HResult:X8} {ex.GetType().Name}: {ex.Message}";
-        if (IsPasswordError(ex)) return new ConversionException("Документ защищён паролем", details, ex);
+        if (IsPasswordError(ex)) return new ConversionException(Loc.T.ErrDocPassword, details, ex);
         if (IsServerGone(ex))
         {
             _dead = true; // в следующий раз — новый экземпляр
-            return new ConversionException($"{Name} неожиданно закрылся", details, ex);
+            return new ConversionException(Loc.F(Loc.T.ErrAppClosed, Name), details, ex);
         }
         return new ConversionException(message, details, ex);
     }
@@ -470,7 +471,7 @@ internal sealed class WordHost(Action<string> log) : OfficeHost(log)
         {
             // Только чтение, без «последних файлов», без вопросов о кодировке и преобразовании;
             // пароль-заглушка — для защищённого файла ошибка вместо окна.
-            var opened = Step<object>("Word не смог открыть файл", () => docs.Open(
+            var opened = Step<object>(Loc.F(Loc.T.ErrAppCantOpen, "Word"), () => docs.Open(
                 FileName: input, ConfirmConversions: false, ReadOnly: true, AddToRecentFiles: false,
                 PasswordDocument: DummyPassword, Revert: false, Visible: false, OpenAndRepair: false,
                 NoEncodingDialog: true));
@@ -479,7 +480,7 @@ internal sealed class WordHost(Action<string> log) : OfficeHost(log)
             ct.ThrowIfCancellationRequested();
 
             dynamic doc = opened;
-            Step("Word не смог сохранить файл", () =>
+            Step(Loc.F(Loc.T.ErrAppCantSave, "Word"), () =>
             {
                 switch (target.Action)
                 {
@@ -495,7 +496,7 @@ internal sealed class WordHost(Action<string> log) : OfficeHost(log)
                         doc.SaveAs2(FileName: output, FileFormat: target.Format, AddToRecentFiles: false);
                         break;
                     default:
-                        throw new ConversionException($"Word не умеет «{target.Action}»");
+                        throw new ConversionException(Loc.F(Loc.T.ErrCantDo, "Word", target.Action));
                 }
             });
         }
@@ -571,7 +572,7 @@ internal sealed class ExcelHost(Action<string> log) : OfficeHost(log)
         {
             // Связи с другими файлами не обновлять; Local — CSV читается и пишется с разделителем
             // из региональных настроек Windows (у русской — «;»), как при открытии файла двойным щелчком.
-            var opened = Step<object>("Excel не смог открыть файл", () => books.Open(
+            var opened = Step<object>(Loc.F(Loc.T.ErrAppCantOpen, "Excel"), () => books.Open(
                 Filename: input, UpdateLinks: UpdateLinksNever, ReadOnly: true, Password: DummyPassword,
                 IgnoreReadOnlyRecommended: true, Notify: false, AddToMru: false, Local: true));
             workbook = opened;
@@ -579,7 +580,7 @@ internal sealed class ExcelHost(Action<string> log) : OfficeHost(log)
             ct.ThrowIfCancellationRequested();
 
             dynamic wb = opened;
-            Step("Excel не смог сохранить файл", () =>
+            Step(Loc.F(Loc.T.ErrAppCantSave, "Excel"), () =>
             {
                 switch (target.Action)
                 {
@@ -594,7 +595,7 @@ internal sealed class ExcelHost(Action<string> log) : OfficeHost(log)
                         wb.SaveAs(Filename: output, FileFormat: target.Format, AddToMru: false);
                         break;
                     default:
-                        throw new ConversionException($"Excel не умеет «{target.Action}»");
+                        throw new ConversionException(Loc.F(Loc.T.ErrCantDo, "Excel", target.Action));
                 }
             });
         }
@@ -663,7 +664,7 @@ internal sealed class PowerPointHost(Action<string> log) : OfficeHost(log)
         object? presentation = null;
         try
         {
-            var opened = Step<object>("PowerPoint не смог открыть файл", () => presentations.Open(
+            var opened = Step<object>(Loc.F(Loc.T.ErrAppCantOpen, "PowerPoint"), () => presentations.Open(
                 FileName: input, ReadOnly: MsoTrue, Untitled: MsoFalse, WithWindow: MsoFalse));
             presentation = opened;
             progress?.Report(0.3);
@@ -674,7 +675,7 @@ internal sealed class PowerPointHost(Action<string> log) : OfficeHost(log)
             else
             {
                 dynamic p = opened;
-                Step("PowerPoint не смог сохранить файл", () => { p.SaveAs(FileName: output, FileFormat: target.Format); });
+                Step(Loc.F(Loc.T.ErrAppCantSave, "PowerPoint"), () => { p.SaveAs(FileName: output, FileFormat: target.Format); });
             }
         }
         finally
@@ -698,7 +699,7 @@ internal sealed class PowerPointHost(Action<string> log) : OfficeHost(log)
     private void ExportSlides(object presentation, string folder, IProgress<double>? progress, CancellationToken ct)
     {
         dynamic p = presentation;
-        var (width, height) = Step("PowerPoint не смог прочитать размер слайдов", () =>
+        var (width, height) = Step(Loc.T.ErrSlideSize, () =>
         {
             dynamic setup = p.PageSetup;
             try
@@ -715,13 +716,13 @@ internal sealed class PowerPointHost(Action<string> log) : OfficeHost(log)
         try
         {
             int count = slides.Count;
-            if (count == 0) throw new ConversionException("В презентации нет слайдов");
+            if (count == 0) throw new ConversionException(Loc.T.ErrNoSlides);
             for (var i = 1; i <= count; i++)
             {
                 ct.ThrowIfCancellationRequested();
                 var number = i;
                 var file = Path.Combine(folder, OfficeFormats.SlideFileName(number, count));
-                Step($"PowerPoint не смог сохранить слайд {number}", () =>
+                Step(Loc.F(Loc.T.ErrSlideSave, number), () =>
                 {
                     dynamic slide = slides[number];
                     try { slide.Export(FileName: file, FilterName: "PNG", ScaleWidth: width, ScaleHeight: height); }

@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
 using DropWheel.Jobs;
+using DropWheel.Localization;
 using DropWheel.Settings;
 using DropWheel.Ui;
 
@@ -17,6 +18,8 @@ internal sealed partial class TrayIcon : IDisposable
     private readonly ContextMenuStrip _menu;
     private readonly ToolStripMenuItem _contextMenuItem;
     private readonly ToolStripMenuItem _updateItem;
+    private readonly ToolStripMenuItem _jobsItem, _settingsItem, _logItem, _checkItem, _exitItem;
+    private int? _updateBuild;
     private readonly Icon _idle;
     private Icon? _busy;
     private int _busyCount = -1;
@@ -24,7 +27,7 @@ internal sealed partial class TrayIcon : IDisposable
     public TrayIcon(App app)
     {
         _idle = TrayIconArt.CreateIcon(IconSize, null);
-        _contextMenuItem = new ToolStripMenuItem("Пункт «Конвертировать…» в проводнике")
+        _contextMenuItem = new ToolStripMenuItem(Loc.T.TrayContextMenu)
         {
             Checked = app.Settings.ContextMenuEnabled,
             CheckOnClick = true,
@@ -43,13 +46,13 @@ internal sealed partial class TrayIcon : IDisposable
         _updateItem = new ToolStripMenuItem { Visible = false, Font = new Font("Segoe UI", 9f, System.Drawing.FontStyle.Bold) };
         _updateItem.Click += (_, _) => app.InstallUpdate();
         _menu.Items.Add(_updateItem);
-        _menu.Items.Add(Item("Задачи", app.ShowJobs));
-        _menu.Items.Add(Item(Strings.Tray.Settings, app.ShowSettings));
+        _menu.Items.Add(_jobsItem = Item(Loc.T.TrayJobs, app.ShowJobs));
+        _menu.Items.Add(_settingsItem = Item(Strings.Tray.Settings, app.ShowSettings));
         _menu.Items.Add(_contextMenuItem);
-        _menu.Items.Add(Item("Открыть журнал", () => OpenFolder(AppPaths.LogsDir)));
-        _menu.Items.Add(Item("Проверить обновления", app.CheckUpdatesManually));
+        _menu.Items.Add(_logItem = Item(Loc.T.TrayOpenLog, () => OpenFolder(AppPaths.LogsDir)));
+        _menu.Items.Add(_checkItem = Item(Loc.T.TrayCheckUpdates, app.CheckUpdatesManually));
         _menu.Items.Add(new ToolStripSeparator());
-        _menu.Items.Add(Item("Выход", app.Quit));
+        _menu.Items.Add(_exitItem = Item(Loc.T.TrayExit, app.Quit));
         foreach (ToolStripItem item in _menu.Items)
             if (item is ToolStripMenuItem) item.Padding = new Padding(4, 5, 8, 5);
         // Тема могла поменяться — перекрашиваем при каждом открытии.
@@ -84,12 +87,26 @@ internal sealed partial class TrayIcon : IDisposable
         finally { _syncing = false; }
     }
 
+    /// <summary>Сменился язык интерфейса — переписать пункты меню и подсказку значка.</summary>
+    public void Relocalize()
+    {
+        _jobsItem.Text = Loc.T.TrayJobs;
+        _settingsItem.Text = Strings.Tray.Settings;
+        _contextMenuItem.Text = Loc.T.TrayContextMenu;
+        _logItem.Text = Loc.T.TrayOpenLog;
+        _checkItem.Text = Loc.T.TrayCheckUpdates;
+        _exitItem.Text = Loc.T.TrayExit;
+        if (_updateBuild is { } build) _updateItem.Text = Loc.F(Loc.T.TrayUpdateTo, build);
+        UpdateText(Math.Max(_busyCount, 0));
+    }
+
     /// <summary>Показать пункт «Обновить до сборки N» и подсказку.</summary>
     public void SetUpdateAvailable(int build)
     {
-        _updateItem.Text = $"Обновить до сборки {build}";
+        _updateBuild = build;
+        _updateItem.Text = Loc.F(Loc.T.TrayUpdateTo, build);
         _updateItem.Visible = true;
-        ShowInfo("Есть новая версия DropWheel", "Правый клик по значку → «Обновить».");
+        ShowInfo(Loc.T.UpdateAvailableTitle, Loc.T.UpdateAvailableText);
     }
 
     public void ShowInfo(string title, string text) => _icon.ShowBalloonTip(5000, title, text, ToolTipIcon.Info);
@@ -97,7 +114,7 @@ internal sealed partial class TrayIcon : IDisposable
     /// <summary>Размер маленького значка Windows (16 при 100 %, 20 при 125 %, 24 при 150 %).</summary>
     private static int IconSize => Math.Clamp(SystemInformation.SmallIconSize.Width, 16, 64);
 
-    public void ShowStartHint(string hotkeyName) => _icon.ShowBalloonTip(5000, "DropWheel работает",
+    public void ShowStartHint(string hotkeyName) => _icon.ShowBalloonTip(5000, Loc.T.TrayRunningTitle,
         Strings.Tray.StartHint(hotkeyName), ToolTipIcon.Info);
 
     public void Update(IReadOnlyList<Job> jobs)
@@ -109,9 +126,11 @@ internal sealed partial class TrayIcon : IDisposable
         var old = _busy;
         _busy = active > 0 ? TrayIconArt.CreateIcon(IconSize, active) : null;
         _icon.Icon = _busy ?? _idle;
-        _icon.Text = active > 0 ? $"DropWheel — в работе: {active}" : "DropWheel";
+        UpdateText(active);
         DestroyIcon(old);
     }
+
+    private void UpdateText(int active) => _icon.Text = active > 0 ? Loc.F(Loc.T.TrayBusy, active) : "DropWheel";
 
     private void ApplyMenuTheme()
     {

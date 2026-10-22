@@ -181,13 +181,13 @@ internal sealed class Notifier
             var b = new ToastContentBuilder()
                 .AddArgument(ActionKey, RevealAction)
                 .AddArgument("path", path)
-                .AddText("Готово: " + Path.GetFileName(path.TrimEnd('\\', '/')))
+                .AddText(Loc.F(Loc.T.NotifyDone, Path.GetFileName(path.TrimEnd('\\', '/'))))
                 .AddText(FolderLine([path]));
             if (preview is not null) b.AddHeroImage(new Uri(preview));
             return b
-                .AddButton(new ToastButton().SetContent("Открыть")
+                .AddButton(new ToastButton().SetContent(Loc.T.ActionOpen)
                     .AddArgument(ActionKey, OpenAction).AddArgument("path", path))
-                .AddButton(new ToastButton().SetContent("Показать в папке")
+                .AddButton(new ToastButton().SetContent(Loc.T.ActionReveal)
                     .AddArgument(ActionKey, RevealAction).AddArgument("path", path));
         });
     }
@@ -199,30 +199,30 @@ internal sealed class Notifier
         var names = paths.Select(p => Path.GetFileName(p.TrimEnd('\\', '/'))).ToList();
         var list = names.Count <= 2
             ? string.Join(", ", names)
-            : $"{names[0]}, {names[1]} и ещё {names.Count - 2}";
+            : Loc.F(Loc.T.NotifyList, names[0], names[1], names.Count - 2);
         Show(() => new ToastContentBuilder()
             .AddArgument(ActionKey, GroupAction)
             .AddArgument("id", id)
             .AddArgument("path", paths[0])
-            .AddText("Готово: " + Russian.Count(paths.Count, "файл", "файла", "файлов"))
+            .AddText(Loc.F(Loc.T.NotifyDone, Loc.Count(paths.Count, Loc.T.Files)))
             .AddText(list)
             .AddText(FolderLine(paths))
-            .AddButton(new ToastButton().SetContent("Показать в папке")
+            .AddButton(new ToastButton().SetContent(Loc.T.ActionReveal)
                 .AddArgument(ActionKey, GroupAction).AddArgument("id", id).AddArgument("path", paths[0])));
     }
 
     private void ShowFailed(string inputPath, string reason) => Show(() => new ToastContentBuilder()
         .AddArgument(ActionKey, LogAction)
-        .AddText("Не получилось: " + Path.GetFileName(inputPath))
+        .AddText(Loc.F(Loc.T.NotifyFailed, Path.GetFileName(inputPath)))
         .AddText(reason)
-        .AddButton(new ToastButton().SetContent("Подробнее").AddArgument(ActionKey, LogAction)));
+        .AddButton(new ToastButton().SetContent(Loc.T.ActionDetails).AddArgument(ActionKey, LogAction)));
 
     private void ShowFailedGroup(IReadOnlyList<(string Input, string Reason)> failed) => Show(() => new ToastContentBuilder()
         .AddArgument(ActionKey, LogAction)
-        .AddText("Не получилось: " + Russian.Count(failed.Count, "файл", "файла", "файлов"))
+        .AddText(Loc.F(Loc.T.NotifyFailed, Loc.Count(failed.Count, Loc.T.Files)))
         .AddText($"{Path.GetFileName(failed[0].Input)}: {failed[0].Reason}")
-        .AddText("Подробности — в журнале DropWheel")
-        .AddButton(new ToastButton().SetContent("Подробнее").AddArgument(ActionKey, LogAction)));
+        .AddText(Loc.T.NotifyDetailsInLog)
+        .AddButton(new ToastButton().SetContent(Loc.T.ActionDetails).AddArgument(ActionKey, LogAction)));
 
     private void Show(Func<ToastContentBuilder> build)
     {
@@ -262,9 +262,9 @@ internal sealed class Notifier
     private static string FolderLine(IReadOnlyList<string> paths)
     {
         var folders = paths.Select(p => Path.GetDirectoryName(p.TrimEnd('\\', '/'))).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
-        if (folders.Count != 1 || folders[0] is not { } folder) return "В разных папках";
+        if (folders.Count != 1 || folders[0] is not { } folder) return Loc.T.NotifyDifferentFolders;
         var name = Path.GetFileName(folder.TrimEnd('\\', '/'));
-        return string.IsNullOrEmpty(name) ? $"На диске {folder}" : $"В папке «{name}»";
+        return string.IsNullOrEmpty(name) ? Loc.F(Loc.T.NotifyOnDrive, folder) : Loc.F(Loc.T.NotifyInFolder, name);
     }
 
     private static bool HasPreview(string path) =>

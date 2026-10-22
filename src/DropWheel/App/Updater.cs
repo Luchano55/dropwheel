@@ -6,6 +6,7 @@ using System.Windows.Threading;
 using DropWheel.Jobs;
 using DropWheel.Logging;
 using DropWheel.Updates;
+using DropWheel.Localization;
 
 namespace DropWheel.App;
 
@@ -93,16 +94,16 @@ internal sealed class Updater : IDisposable
             if (Directory.Exists(work)) Directory.Delete(work, recursive: true);
             var staging = Directory.CreateDirectory(Path.Combine(work, "staging")).FullName;
 
-            status?.Report("Скачиваю программу…");
+            status?.Report(Loc.T.UpdateDownloadingApp);
             await DownloadAndExtractAsync(manifest.AppZip, manifest.AppSha256, work, staging);
             if (plan.Tools)
             {
-                status?.Report("Скачиваю утилиты…");
+                status?.Report(Loc.T.UpdateDownloadingTools);
                 await DownloadAndExtractAsync(manifest.ToolsZip, manifest.ToolsSha256, work, staging);
             }
 
             // Пока идёт конвертация, ffmpeg/magick заняты — подождём.
-            status?.Report("Жду окончания задач…");
+            status?.Report(Loc.T.UpdateWaitingJobs);
             while (_queue.Jobs.Any(j => j.State is JobState.Queued or JobState.Running))
                 await Task.Delay(1000);
 
@@ -129,7 +130,7 @@ internal sealed class Updater : IDisposable
         {
             var actual = Convert.ToHexString(await SHA256.HashDataAsync(check));
             if (!actual.Equals(sha256, StringComparison.OrdinalIgnoreCase))
-                throw new InvalidOperationException($"Контрольная сумма {zipName} не совпала — обновление отменено");
+                throw new InvalidOperationException(Loc.F(Loc.T.UpdateChecksumMismatch, zipName));
         }
 
         // В архивах сборки всё лежит в папке DropWheel/ — её содержимое и есть папка программы.

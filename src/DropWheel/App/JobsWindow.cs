@@ -10,6 +10,7 @@ using DropWheel.Logging;
 using DropWheel.Shell;
 using DropWheel.Ui;
 using DropWheel.Wheel;
+using DropWheel.Localization;
 
 namespace DropWheel.App;
 
@@ -49,7 +50,7 @@ internal sealed class JobsWindow : Window
     {
         _queue = queue;
         _log = log;
-        Title = "DropWheel — задачи";
+        Title = Loc.T.JobsTitle;
         ResizeMode = ResizeMode.NoResize;
         ShowInTaskbar = false;
         Topmost = true;
@@ -95,6 +96,14 @@ internal sealed class JobsWindow : Window
         };
         Deactivated += (_, _) => HideFlyout();
         SystemTheme.Changed += OnThemeChanged;
+    }
+
+    /// <summary>Сменился язык интерфейса: заголовок, подписи и строки задач — заново.</summary>
+    public void Relocalize(string hotkeyName)
+    {
+        Title = Loc.T.JobsTitle;
+        _view.Relocalize(hotkeyName);
+        RefreshNow();
     }
 
     /// <summary>Горячую клавишу сменили в настройках — подсказка в пустом окне называет новую.</summary>
@@ -193,8 +202,9 @@ internal sealed class JobsWindow : Window
     private JobRowModel ModelFor(Job job)
     {
         var name = Path.GetFileName(job.Input);
-        if (job.Inputs.Count > 1) name += $" и ещё {job.Inputs.Count - 1}";
-        var operation = job.Operation.Mode == OperationMode.Convert ? "→ " + job.Operation.Label : job.Operation.Label;
+        if (job.Inputs.Count > 1) name = Loc.F(Loc.T.AndMore, name, job.Inputs.Count - 1);
+        var label = Loc.Label(job.Operation);
+        var operation = job.Operation.Mode == OperationMode.Convert ? "→ " + label : label;
         _thumbs.TryGetValue(job, out var thumb);
         return new JobRowModel(job, name, operation, job.State)
         {

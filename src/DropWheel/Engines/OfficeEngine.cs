@@ -1,5 +1,6 @@
 using DropWheel.Conversions;
 using DropWheel.Engines;
+using DropWheel.Localization;
 
 namespace DropWheel.AppEngines;
 
@@ -88,10 +89,10 @@ public sealed class OfficeEngine : IInternalEngine, IDisposable
     public async Task RunAsync(Operation op, IReadOnlyList<string> inputs, string output, ConversionSettings settings,
         IProgress<double>? progress, CancellationToken ct)
     {
-        var target = OfficeFormats.For(op) ?? throw new ConversionException($"Office не умеет «{op.Label}»", op.Id);
-        if (!IsInstalled(target.App)) throw new ConversionException($"Не найден Microsoft {target.App}");
+        var target = OfficeFormats.For(op) ?? throw new ConversionException(Loc.F(Loc.T.ErrCantDo, "Office", Loc.Label(op)), op.Id);
+        if (!IsInstalled(target.App)) throw new ConversionException(Loc.F(Loc.T.ErrAppNotFound, target.App));
         var input = inputs[0];
-        if (OfficeFormats.IsPasswordProtected(input)) throw new ConversionException("Документ защищён паролем", input);
+        if (OfficeFormats.IsPasswordProtected(input)) throw new ConversionException(Loc.T.ErrDocPassword, input);
 
         var session = CurrentSession();
         var host = session.Hosts[target.App];
@@ -104,11 +105,11 @@ public sealed class OfficeEngine : IInternalEngine, IDisposable
         }
         catch (TimeoutException ex)
         {
-            throw new ConversionException($"{host.Name} не ответил за {timeout.TotalMinutes:0} мин — остановлен", input, ex);
+            throw new ConversionException(Loc.F(Loc.T.ErrAppTimeout, host.Name, timeout.TotalMinutes.ToString("0", System.Globalization.CultureInfo.InvariantCulture)), input, ex);
         }
         catch (StaWorkerStoppedException ex)
         {
-            throw new ConversionException("Office не отвечает — попробуйте ещё раз", input, ex);
+            throw new ConversionException(Loc.T.ErrOfficeNotResponding, input, ex);
         }
         finally
         {

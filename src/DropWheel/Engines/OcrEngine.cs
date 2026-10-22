@@ -5,6 +5,7 @@ using DropWheel.Engines;
 using Windows.Globalization;
 using Windows.Graphics.Imaging;
 using WinOcr = Windows.Media.Ocr.OcrEngine;
+using DropWheel.Localization;
 
 namespace DropWheel.AppEngines;
 
@@ -39,7 +40,7 @@ public sealed class OcrEngine(Action<string>? log = null) : IInternalEngine
     public async Task RunAsync(Operation op, IReadOnlyList<string> inputs, string output, ConversionSettings settings,
         IProgress<double>? progress, CancellationToken ct)
     {
-        if (!CanRun(op)) throw new ConversionException("В Windows не установлен язык для распознавания текста", op.Id);
+        if (!CanRun(op)) throw new ConversionException(Loc.T.ErrOcrNoLanguage, op.Id);
 
         using var bitmap = OnWhite(await LoadAsync(inputs[0], ct));
         progress?.Report(0.3);
@@ -55,7 +56,7 @@ public sealed class OcrEngine(Action<string>? log = null) : IInternalEngine
         progress?.Report(0.9);
 
         var lines = result.Lines.Select(l => l.Text).Where(t => !string.IsNullOrWhiteSpace(t)).ToList();
-        if (lines.Count == 0) throw new ConversionException("Текст не найден", inputs[0]);
+        if (lines.Count == 0) throw new ConversionException(Loc.T.ErrOcrNoText, inputs[0]);
         await File.WriteAllLinesAsync(output, lines, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true), ct);
     }
 
@@ -73,7 +74,7 @@ public sealed class OcrEngine(Action<string>? log = null) : IInternalEngine
         }
         var engine = WinOcr.TryCreateFromUserProfileLanguages()
             ?? languages.Select(WinOcr.TryCreateFromLanguage).FirstOrDefault(e => e is not null)
-            ?? throw new ConversionException("В Windows не установлен язык для распознавания текста");
+            ?? throw new ConversionException(Loc.T.ErrOcrNoLanguage);
         return (engine, null);
     }
 
@@ -92,7 +93,7 @@ public sealed class OcrEngine(Action<string>? log = null) : IInternalEngine
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            throw new ConversionException("Windows не смогла открыть картинку", ex.Message, ex);
+            throw new ConversionException(Loc.T.ErrOcrCantOpen, ex.Message, ex);
         }
 
         var max = WinOcr.MaxImageDimension;

@@ -1,99 +1,104 @@
+using DropWheel.Localization;
 using DropWheel.Wheel;
 
 namespace DropWheel.Ui;
 
 /// <summary>
-/// Подписи окна настроек и связанных пунктов трея — все в одном месте, чтобы потом перевести интерфейс
-/// на английский (раздел 15 ТЗ) одной правкой этого файла. Новые строки интерфейса — сюда.
+/// Подписи окна настроек и трея на текущем языке (решение D-LANG). Сами строки — в ядре
+/// (DropWheel.Localization.Texts: русские и английские); здесь — короткие имена для окна настроек.
 /// </summary>
 internal static class Strings
 {
+    private static Texts T => Loc.T;
+
     public static class Tray
     {
-        public const string Settings = "Настройки…";
-        public static string StartHint(string hotkey) =>
-            $"Значок — здесь, в трее. Потащите файл и нажмите {hotkey} — или правой кнопкой по файлу → «Конвертировать…».";
+        public static string Settings => T.TraySettings;
+        public static string StartHint(string hotkey) => Loc.F(T.TrayStartHint, hotkey);
     }
 
     public static class Settings
     {
-        public const string WindowTitle = "Настройки DropWheel";
+        public static string WindowTitle => T.SettingsTitle;
 
         // Разделы (левая колонка)
-        public const string PageGeneral = "Основное";
-        public const string PageQuality = "Качество";
-        public const string PageWheel = "Колесо";
+        public static string PageGeneral => T.PageGeneral;
+        public static string PageQuality => T.PageQuality;
+        public static string PageWheel => T.PageWheel;
 
         // Горячая клавиша
-        public const string HotkeyTitle = "Горячая клавиша";
-        public const string HotkeyHint =
-            "Тащите файл и, не отпуская кнопку мыши, нажмите эту клавишу — появится колесо. Ещё раз — другой режим.";
+        public static string HotkeyTitle => T.HotkeyTitle;
+        public static string HotkeyHint => T.HotkeyHint;
 
         // Куда класть результат
-        public const string OutputTitle = "Куда класть результат";
-        public const string OutputBeside = "Рядом с исходником";
-        public const string OutputShared = "В одну папку";
-        public const string OutputBrowse = "Выбрать папку…";
-        public const string OutputBrowseTitle = "Папка для результатов DropWheel";
+        public static string OutputTitle => T.OutputTitle;
+        public static string OutputBeside => T.OutputBeside;
+        public static string OutputShared => T.OutputShared;
+        public static string OutputBrowse => T.OutputBrowse;
+        public static string OutputBrowseTitle => T.OutputBrowseTitle;
+
+        // Язык
+        public static string LanguageTitle => T.LanguageTitle;
+        public static string LanguageHint => T.LanguageHint;
+        public static string LanguageAuto => T.LanguageAuto;
 
         // Качество
-        public const string QualityIntro = "Действует на новые задачи сразу. Уже идущие доделываются с прежними настройками.";
+        public static string QualityIntro => T.QualityIntro;
         public const string JpegTitle = "JPG";
-        public const string JpegHint = "Качество фото в JPG и PDF из картинок.";
+        public static string JpegHint => T.JpegHint;
         public const string WebpTitle = "WebP";
-        public const string WebpHint = "Качество картинок WebP.";
-        public const string CrfTitle = "Видео (CRF)";
-        public const string CrfHint = "Меньше — лучше качество и больше файл. 23 — обычно незаметно глазу.";
+        public static string WebpHint => T.WebpHint;
+        public static string CrfTitle => T.CrfTitle;
+        public static string CrfHint => T.CrfHint;
         public const string Mp3Title = "MP3";
-        public const string Mp3Hint = "Битрейт звука в MP3: больше — лучше и больше файл.";
-        public static string Kbps(int value) => $"{value} кбит/с";
+        public static string Mp3Hint => T.Mp3Hint;
+        public static string Kbps(int value) => Loc.F(T.Kbps, value);
 
         // Система
         public const string SystemTitle = "Windows";
-        public const string AutoStart = "Запускать вместе с Windows";
-        public const string AutoStartHint = "DropWheel тихо появится в трее после входа в Windows.";
-        public const string ContextMenu = "Пункт «Конвертировать…» в проводнике";
-        public const string ContextMenuHint = "Правый клик по файлу → «Конвертировать…» — то же колесо, но щелчком.";
-        public const string Updates = "Проверять обновления";
-        public const string UpdatesHint = "Раз в сутки — единственное обращение программы в интернет.";
+        public static string AutoStart => T.AutoStart;
+        public static string AutoStartHint => T.AutoStartHint;
+        public static string ContextMenu => T.ContextMenu;
+        public static string ContextMenuHint => T.ContextMenuHint;
+        public static string Updates => T.Updates;
+        public static string UpdatesHint => T.UpdatesHint;
 
         // Колесо
-        public const string WheelIntro =
-            "Какие форматы показывать и в каком порядке. Первый в списке — верхний лепесток, дальше — по часовой стрелке.";
-        public const string MruFirst = "Последний выбор — первым";
-        public const string MruFirstHint = "Формат, выбранный в прошлый раз для этого типа файлов, встаёт наверх.";
-        public const string ModeConvert = "Конвертация";
-        public const string ModeTools = "Инструменты";
-        public const string Reset = "Сбросить";
-        public const string ResetHint = "Вернуть порядок и видимость для этого типа как было";
-        public const string MoveUp = "Выше";
-        public const string MoveDown = "Ниже";
-        public const string ShowOnWheel = "Показывать на колесе";
-        public const string Preview = "Так будет выглядеть";
-        public const string OverLimit = "На колесе помещается 8 — этот не виден";
-        public const string NeedsOffice = "нужен Microsoft Office";
+        public static string WheelIntro => T.WheelIntro;
+        public static string MruFirst => T.MruFirst;
+        public static string MruFirstHint => T.MruFirstHint;
+        public static string ModeConvert => T.ModeConvert;
+        public static string ModeTools => T.ModeTools;
+        public static string Reset => T.Reset;
+        public static string ResetHint => T.ResetHint;
+        public static string MoveUp => T.MoveUp;
+        public static string MoveDown => T.MoveDown;
+        public static string ShowOnWheel => T.ShowOnWheel;
+        public static string Preview => T.Preview;
+        public static string OverLimit => T.OverLimit;
+        public static string NeedsOffice => T.NeedsOffice;
         public static string OnlyFor(IEnumerable<string> extensions) =>
-            "только " + string.Join(", ", extensions.Select(e => e.ToUpperInvariant()));
-        public static string FromFiles(int count) => $"от {count} файлов";
-        public const string NothingInMode = "В этом режиме для этого типа ничего нет.";
+            Loc.F(T.OnlyFor, string.Join(", ", extensions.Select(e => e.ToUpperInvariant())));
+        public static string FromFiles(int count) => Loc.F(T.FromFiles, count);
+        public static string NothingInMode => T.NothingInMode;
 
         // Низ окна
-        public const string OpenLogs = "Открыть папку журналов";
-        public const string CheckUpdates = "Проверить обновления";
-        public static string Version(int build) => build > 0 ? $"DropWheel, сборка {build}" : "DropWheel, сборка разработчика";
+        public static string OpenLogs => T.OpenLogs;
+        public static string CheckUpdates => T.TrayCheckUpdates;
+        public static string Version(int build) => build > 0 ? Loc.F(T.Version, build) : T.VersionDev;
 
         public static string GroupName(string group) => group switch
         {
-            WheelGroups.Photo => "Фото",
-            WheelGroups.Video => "Видео",
-            WheelGroups.Audio => "Звук",
+            WheelGroups.Photo => T.GroupPhoto,
+            WheelGroups.Video => T.GroupVideo,
+            WheelGroups.Audio => T.GroupAudio,
             WheelGroups.Pdf => "PDF",
             WheelGroups.Word => "Word",
             WheelGroups.Excel => "Excel",
             WheelGroups.PowerPoint => "PowerPoint",
-            WheelGroups.Text => "Текст",
-            WheelGroups.Archive => "Архивы",
-            _ => "Любые файлы",
+            WheelGroups.Text => T.GroupText,
+            WheelGroups.Archive => T.GroupArchive,
+            _ => T.GroupAny,
         };
     }
 }
