@@ -38,6 +38,14 @@ public sealed class DragDetector
     // чьё нажатие мы проглотили (их отпускание тоже глотаем).
     private readonly bool[] _down = new bool[KeyCount];
     private readonly bool[] _swallowed = new bool[KeyCount];
+    private readonly long[] _lastDownMs = new long[KeyCount];
+
+    /// <summary>
+    /// Пауза между «нажатиями без отпускания», после которой это уже не автоповтор, а новое нажатие:
+    /// отпускание потерялось (экран блокировки, окно UAC, окно от администратора) и клавиша «залипла».
+    /// Первый автоповтор Windows приходит не позже чем через ~1 с, дальше — каждые ≤ 0,4 с.
+    /// </summary>
+    internal const long StaleKeyMs = 1500;
     private readonly long _thresholdSquared;
 
     private volatile int _hotkeyVk;
@@ -138,12 +146,21 @@ public sealed class DragDetector
     /// Вне перетаскивания и при закрытом колесе клавиши не трогаем.
     /// Автоповтор (нажатие без отпускания) действий не вызывает, но глотается, если глоталось первое нажатие.
     /// </summary>
-    public (DragAction Action, bool Swallow) KeyDown(int vk)
+    public (DragAction Action, bool Swallow) KeyDown(int vk) => KeyDown(vk, Environment.TickCount64);
+
+    /// <param name="nowMs">Время события, мс (монотонное) — для распознавания «залипшей» клавиши.</param>
+    public (DragAction Action, bool Swallow) KeyDown(int vk, long nowMs)
     {
         if ((uint)vk >= KeyCount) return (DragAction.None, false);
 
-        if (_down[vk]) // автоповтор
-            return (DragAction.None, _swallowed[vk]);
+        var sinceLast = nowMs - _lastDownMs[vk];
+        _lastDownMs[vk] = nowMs;
+        if (_down[vk])
+        {
+            if (sinceLast <= StaleKeyMs) return (DragAction.None, _swallowed[vk]); // автоповтор
+            // Отпускание потерялось — считаем это новым нажатием, иначе горячая клавиша «умирает» навсегда.
+            _swallowed[vk] = false;
+        }
         _down[vk] = true;
 
         var action = DragAction.None;

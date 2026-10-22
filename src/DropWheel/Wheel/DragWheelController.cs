@@ -47,7 +47,7 @@ internal sealed class DragWheelController : IDisposable
             if (_wheel.IsOpen && !_wheel.CloseOnDeactivate) _wheel.Cancel();
         };
 
-        _hooks = new LowLevelHooks(_detector, ui, OnAction);
+        _hooks = new LowLevelHooks(_detector, ui, OnAction, log.Write);
     }
 
     public void Start()

@@ -10,6 +10,19 @@ internal static class NativeMethods
     public const int HC_ACTION = 0;
 
     public const int WM_QUIT = 0x0012;
+    /// <summary>Своё сообщение потоку хуков: переустановить хуки.</summary>
+    public const int WM_APP_REINSTALL = 0x8000 + 0x51;
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct LASTINPUTINFO
+    {
+        public uint cbSize;
+        public uint dwTime;
+    }
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool GetLastInputInfo(ref LASTINPUTINFO info);
     public const int WM_KEYDOWN = 0x0100;
     public const int WM_KEYUP = 0x0101;
     public const int WM_SYSKEYDOWN = 0x0104;
