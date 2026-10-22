@@ -133,6 +133,20 @@ public class AppSettingsTests : IDisposable
         Assert.False(File.Exists(SettingsPath + ".bad"));
     }
 
+    [Theory]
+    [InlineData("vk:0x65", "vk:0x65")] // своя клавиша сохраняется (D-HOTKEY)
+    [InlineData("F8", "F8")]
+    [InlineData("Ctrl", "Space")]       // неизвестная или запрещённая — Пробел
+    [InlineData("vk:0xA2", "Space")]
+    [InlineData("vk:0x1B", "Space")]
+    [InlineData("nonsense", "Space")]
+    public void Hotkey_is_sanitized(string saved, string expected)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(SettingsPath)!);
+        File.WriteAllText(SettingsPath, $$"""{ "hotkey": "{{saved}}" }""");
+        Assert.Equal(expected, AppSettings.Load(SettingsPath).Hotkey);
+    }
+
     [Fact]
     public void Explicit_nulls_fall_back_to_defaults()
     {

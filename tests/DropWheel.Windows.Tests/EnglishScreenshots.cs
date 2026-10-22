@@ -137,6 +137,16 @@ public class EnglishScreenshots
         });
     }
 
+    /// <summary>Своя горячая клавиша (D-HOTKEY): назначена и режим «Press a key…».</summary>
+    [Theory]
+    [InlineData(false, "settings-en-light-general-custom-key")]
+    [InlineData(true, "settings-en-light-general-key-capture")]
+    public void Settings_custom_hotkey(bool capture, string name)
+    {
+        using var _ = Loc.Use(UiLanguage.En);
+        SettingsScreenshots.CustomHotkey(capture, name);
+    }
+
     /// <summary>Колесо для папки «Vacation» из меню проводника (D-FOLDERS).</summary>
     [Theory]
     [InlineData(true, OperationMode.Convert, 0, "wheel-en-light-folder-convert")]

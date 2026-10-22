@@ -427,6 +427,14 @@ public sealed class ChoicePills : WrapPanel
         if (raise && value is not null) SelectionChanged?.Invoke(value);
     }
 
+    /// <summary>Сменить подпись пилюли (своя горячая клавиша: «Своя…» → «Tab»).</summary>
+    public void SetLabel(object value, string label) => Find(value)?.SetLabel(label);
+
+    /// <summary>Дать пилюле фокус клавиатуры — чтобы нажатия шли в окно настроек.</summary>
+    public void FocusPill(object value) => Find(value)?.Focus();
+
+    private Pill? Find(object value) => _pills.FirstOrDefault(p => Equals(p.Value, value));
+
     private sealed class Pill : Pressable
     {
         private readonly TextBlock _text;
@@ -447,6 +455,12 @@ public sealed class ChoicePills : WrapPanel
         }
 
         public object Value { get; }
+
+        public void SetLabel(string label)
+        {
+            _text.Text = label;
+            AutomationProperties.SetName(this, label);
+        }
 
         public bool IsSelected
         {

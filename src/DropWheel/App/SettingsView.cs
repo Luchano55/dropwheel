@@ -46,6 +46,12 @@ public sealed class SettingsView : Border
     private Border _wheelPreviewHost = null!;
     private WheelControl? _preview;
 
+    /// <summary>Значение пилюли «Своя…» горячей клавиши.</summary>
+    private static readonly object CustomHotkey = new();
+    private Action? _startHotkeyCapture;
+    /// <summary>Не null, пока ждём нажатия своей горячей клавиши: код VK → принята ли.</summary>
+    private Func<int, bool>? _hotkeyKey;
+
     /// <param name="build">Номер сборки для подписи внизу (0 — сборка разработчика).</param>
     /// <param name="version">Версия для людей (0.3.0, 0.3.0-dev.57); null — показать только номер сборки.</param>
     /// <param name="embeddedChannel">Канал обновлений, зашитый при сборке, — для подписи «Как при установке».</param>
@@ -66,8 +72,31 @@ public sealed class SettingsView : Border
         TextOptions.SetTextFormattingMode(this, TextFormattingMode.Display);
         System.Windows.Documents.TextElement.SetFontFamily(this, UiFonts.Text);
         System.Windows.Documents.TextElement.SetFontSize(this, 14);
+        PreviewKeyDown += OnPreviewKeyDown;
         Build();
     }
+
+    /// <summary>Ждём свою горячую клавишу: нажатие забираем себе, в элементы окна оно не идёт.</summary>
+    private void OnPreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (_hotkeyKey is null) return;
+        e.Handled = true;
+        if (e.IsRepeat) return;
+        var key = e.Key switch
+        {
+            Key.System => e.SystemKey,
+            Key.ImeProcessed => e.ImeProcessedKey,
+            Key.DeadCharProcessed => e.DeadCharProcessedKey,
+            _ => e.Key,
+        };
+        _hotkeyKey(KeyInterop.VirtualKeyFromKey(key));
+    }
+
+    /// <summary>Нажать «Своя…» (для тестов).</summary>
+    internal void BeginHotkeyCapture() => _startHotkeyCapture?.Invoke();
+
+    /// <summary>Нажата клавиша в режиме «Нажмите клавишу…» (для тестов); true — принята.</summary>
+    internal bool CaptureHotkey(int vk) => _hotkeyKey?.Invoke(vk) ?? false;
 
     /// <summary>
     /// Применить правку к настройкам и вернуть новые. Приложение подставляет свою функцию
@@ -238,6 +267,8 @@ public sealed class SettingsView : Border
             FontFamily = UiFonts.Display, FontWeight = FontWeights.SemiBold, FontSize = 28,
             Foreground = _palette.Text, Margin = new Thickness(0, 0, 0, 18),
         });
+        _hotkeyKey = null;
+        _startHotkeyCapture = null;
         switch (_page)
         {
             case SettingsPage.Quality: BuildQuality(page); break;
@@ -324,13 +355,71 @@ public sealed class SettingsView : Border
         var p = _palette;
 
         // Горячая клавиша
-        var hotkeys = new ChoicePills(p, Hotkeys.Names.Select(n => ((object)n, Hotkeys.DisplayName(n))),
-            Hotkeys.Names.FirstOrDefault(n => string.Equals(n, _settings.Hotkey, StringComparison.OrdinalIgnoreCase)) ?? Hotkeys.Default,
-            S.HotkeyTitle) { Margin = new Thickness(0, 12, 0, -6) };
-        hotkeys.SelectionChanged += v => Change(s => s with { Hotkey = (string)v });
+        // Готовые клавиши + «Своя…» (D-HOTKEY): щелчок → «Нажмите клавишу…», следующее нажатие в окне — новая клавиша.
+        static string Valid(string? name) => Hotkeys.ToVirtualKey(name) is null ? Hotkeys.Default : name!;
+        static string? Preset(string name) =>
+            Hotkeys.Names.FirstOrDefault(n => string.Equals(n, name, StringComparison.OrdinalIgnoreCase));
+        var current = Valid(_settings.Hotkey);
+        var hotkeys = new ChoicePills(p, Hotkeys.Names.Select(n => ((object)n, Hotkeys.DisplayName(n)))
+                .Append((CustomHotkey, Preset(current) is null ? Hotkeys.DisplayName(current) : S.HotkeyCustom)),
+            (object?)Preset(current) ?? CustomHotkey, S.HotkeyTitle) { Margin = new Thickness(0, 12, 0, -6) };
+        var hotkeyNote = new TextBlock
+        {
+            FontSize = 12, Foreground = p.TextSecondary, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 8, 0, 0),
+        };
+        void Note(string? text)
+        {
+            hotkeyNote.Text = text ?? "";
+            hotkeyNote.Visibility = text is null ? Visibility.Collapsed : Visibility.Visible;
+        }
+        // Буква или цифра: работает, но во время перетаскивания не печатается — предупредить.
+        void Show(string name)
+        {
+            _hotkeyKey = null;
+            var preset = Preset(name);
+            hotkeys.SetLabel(CustomHotkey, preset is null ? Hotkeys.DisplayName(name) : S.HotkeyCustom);
+            hotkeys.Select((object?)preset ?? CustomHotkey, raise: false);
+            Note(Hotkeys.ToVirtualKey(name) is { } vk && Hotkeys.Types(vk) ? S.HotkeyTypes(Hotkeys.DisplayName(name)) : null);
+        }
+        _startHotkeyCapture = () =>
+        {
+            hotkeys.Select(CustomHotkey, raise: false);
+            hotkeys.SetLabel(CustomHotkey, S.HotkeyPress);
+            Note(null);
+            hotkeys.FocusPill(CustomHotkey);
+            _hotkeyKey = vk =>
+            {
+                if (vk == Hotkeys.Escape)
+                {
+                    Show(Valid(_settings.Hotkey));
+                    return false;
+                }
+                switch (Hotkeys.Check(vk))
+                {
+                    case HotkeyCheck.Modifier: Note(S.HotkeyModifier); return false;
+                    case HotkeyCheck.Reserved: Note(S.HotkeyReserved(Hotkeys.KeyName(vk))); return false;
+                }
+                var name = Hotkeys.FromVirtualKey(vk)!;
+                Change(s => s with { Hotkey = name });
+                Show(name);
+                return true;
+            };
+        };
+        hotkeys.SelectionChanged += v =>
+        {
+            if (ReferenceEquals(v, CustomHotkey))
+            {
+                _startHotkeyCapture();
+                return;
+            }
+            Change(s => s with { Hotkey = (string)v });
+            Show((string)v);
+        };
+        Show(current);
         var hotkeyPanel = new StackPanel();
         hotkeyPanel.Children.Add(Titles(S.HotkeyTitle, S.HotkeyHint));
         hotkeyPanel.Children.Add(hotkeys);
+        hotkeyPanel.Children.Add(hotkeyNote);
         page.Children.Add(Card(hotkeyPanel));
 
         // Куда класть результат

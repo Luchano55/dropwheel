@@ -5,6 +5,14 @@
 
 Each version section starts with `## <version>`; CI copies it into the GitHub release notes.
 
+## 1.1.0
+
+- Своя горячая клавиша: «Основное» → «Горячая клавиша» → «Своя…» → нажмите любую клавишу (Tab, Num 5, F13, буква…).
+  Ctrl, Shift, Alt, Win, Esc, Enter и Print Screen не принимаются — окно объясняет почему.
+
+**English**
+- Custom hotkey: General → Hotkey → Custom… → press any key. Ctrl, Shift, Alt, Win, Esc, Enter and Print Screen are not accepted.
+
 ## 1.0.0
 
 Первый полноценный выпуск: всё из 0.3.0 плюс папки целиком, картинки из браузера и обрезка видео.

@@ -9,7 +9,7 @@ namespace DropWheel.Settings;
 /// <summary>Настройки приложения (раздел 10 ТЗ), хранятся в settings.json.</summary>
 public sealed record AppSettings
 {
-    /// <summary>Горячая клавиша колеса (имя клавиши).</summary>
+    /// <summary>Горячая клавиша колеса: имя из <see cref="Input.Hotkeys.Names"/> или своя клавиша «vk:0x65» (D-HOTKEY).</summary>
     public string Hotkey { get; init; } = "Space";
     public bool ContextMenuEnabled { get; init; } = true;
     /// <summary>Ctrl+Alt+V — колесо для файлов или картинки из буфера обмена (решение D-CLIPBOARD).</summary>
@@ -98,7 +98,7 @@ public sealed record AppSettings
     /// <summary>Явный null в JSON затирает значение по умолчанию — возвращаем его.</summary>
     private static AppSettings Sanitize(AppSettings s) => s with
     {
-        Hotkey = string.IsNullOrWhiteSpace(s.Hotkey) ? new AppSettings().Hotkey : s.Hotkey,
+        Hotkey = Input.Hotkeys.ToVirtualKey(s.Hotkey) is null ? new AppSettings().Hotkey : s.Hotkey, // неизвестная или запрещённая → Пробел
         Conversion = s.Conversion ?? new(),
         Wheel = (s.Wheel ?? new()).Sanitized(),
         Language = Loc.Normalize(s.Language),
