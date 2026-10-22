@@ -8,12 +8,14 @@
 
 <p align="center">
   <b>DropWheel</b> is a free, offline file converter for Windows that lives in your tray:<br>
-  drag a file, press <kbd>Space</kbd>, drop it on a format — the converted file appears right next to the original.
+  drag a file, press <kbd>Space</kbd>, drop it on a format — the converted file appears right next to the original.<br>
+  Works for whole folders and for pictures dragged straight out of your browser, too.
 </p>
 
 <p align="center">
   <a href="https://github.com/Luchano55/dropwheel/actions/workflows/build.yml"><img src="https://img.shields.io/github/actions/workflow/status/Luchano55/dropwheel/build.yml?label=build&logo=githubactions&logoColor=white" alt="Build status"></a>
-  <a href="https://github.com/Luchano55/dropwheel/releases/tag/dev-build"><img src="https://img.shields.io/github/v/release/Luchano55/dropwheel?include_prereleases&sort=date&display_name=tag&label=latest%20build&color=0078D4" alt="Latest build"></a>
+  <a href="https://github.com/Luchano55/dropwheel/releases/latest"><img src="https://img.shields.io/github/v/release/Luchano55/dropwheel?label=version&color=0078D4" alt="Latest version"></a>
+  <a href="https://github.com/Luchano55/dropwheel/releases/tag/dev-build"><img src="https://img.shields.io/github/v/release/Luchano55/dropwheel?include_prereleases&sort=date&display_name=tag&label=test%20build&color=6e7781" alt="Latest test build"></a>
   <a href="#install"><img src="https://img.shields.io/badge/Windows-10%20%7C%2011%20(x64)-0078D4" alt="Windows 10 | 11"></a>
   <a href="https://dotnet.microsoft.com/download/dotnet/8.0"><img src="https://img.shields.io/badge/.NET-8-512BD4?logo=dotnet&logoColor=white" alt=".NET 8"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="License: MIT"></a>
@@ -22,12 +24,13 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Luchano55/dropwheel/releases"><img src="https://img.shields.io/badge/Download-for%20Windows-0078D4?style=for-the-badge" alt="Download for Windows"></a>
+  <a href="https://github.com/Luchano55/dropwheel/releases/latest"><img src="https://img.shields.io/badge/Download%201.0-for%20Windows-0078D4?style=for-the-badge" alt="Download DropWheel 1.0 for Windows"></a>
 </p>
 
 <p align="center">
   <a href="#how-it-works">How it works</a> ·
   <a href="#features">Features</a> ·
+  <a href="#screenshots">Screenshots</a> ·
   <a href="#supported-formats">Formats</a> ·
   <a href="#install">Install</a> ·
   <a href="#usage">Usage</a> ·
@@ -51,6 +54,8 @@
 3. **Drop** the file on a petal. That's it — `photo.heic` becomes `photo.jpg` in the same folder, and a notification with a preview tells you when it's done.
 
 Not a fan of drag-and-drop? Right-click a file → **Convert…** in the Explorer menu opens the same wheel — just click a petal.
+
+The same three steps work for a **whole folder** (`Vacation` → `Vacation (JPG)`), for a **picture dragged out of Chrome, Edge or Firefox**, and for whatever you've copied: <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>V</kbd> opens the wheel for the clipboard.
 
 ## Features
 
@@ -99,8 +104,22 @@ Not a fan of drag-and-drop? Right-click a file → **Convert…** in the Explore
   </tr>
   <tr>
     <td width="33%" valign="top">
+      <h3>📁 Whole folders</h3>
+      Right-click a folder → <i>Convert…</i>, or drag it and press <kbd>Space</kbd>. Up to 1000 files, subfolders included; results land in <code>Vacation (JPG)</code> next to it, with one notification for the lot.
+    </td>
+    <td width="33%" valign="top">
+      <h3>🌐 Pictures from the browser</h3>
+      Drag an image off a web page in Chrome, Edge or Firefox and press <kbd>Space</kbd>. No “Save image as…” first — and still offline: DropWheel takes the picture the browser hands over, it never downloads anything.
+    </td>
+    <td width="33%" valign="top">
+      <h3>✂️ Video trimming</h3>
+      <i>Tools → Trim…</i> opens a small window with a frame preview, a thumbnail strip and two handles. Instant and lossless by default, frame-accurate when you need it.
+    </td>
+  </tr>
+  <tr>
+    <td width="33%" valign="top">
       <h3>📦 Installer or zip, updates itself</h3>
-      A per-user installer without admin rights, or just unzip and run — no .NET to install. New versions arrive with one click in the tray menu.
+      A per-user installer without admin rights, or just unzip and run — no .NET to install. New versions arrive with one click in the tray menu; stable releases or every test build — your choice.
     </td>
     <td width="33%" valign="top">
       <h3>🔤 Any file name, two languages</h3>
@@ -118,11 +137,11 @@ Not a fan of drag-and-drop? Right-click a file → **Convert…** in the Explore
 <table>
   <tr>
     <td align="center" width="50%">
-      <img src="docs/assets/screenshots/wheel-photo-convert.png" alt="The wheel for a photo in Convert mode: image formats as petals around a size pill" width="300"><br>
+      <img src="docs/assets/screenshots/wheel-photo-convert-en.png" alt="The wheel for a photo in Convert mode: JPG, PNG, WebP, AVIF, PDF and ICO as petals around the centre" width="300"><br>
       <sub><b>Photo → Convert</b> — the petal under the cursor lights up in your accent colour</sub>
     </td>
     <td align="center" width="50%">
-      <img src="docs/assets/screenshots/wheel-photo-tools.png" alt="The wheel for a photo in Tools mode: compress, downscale, fit to 1920 px, strip metadata" width="300"><br>
+      <img src="docs/assets/screenshots/wheel-photo-tools-en.png" alt="The wheel for a photo in Tools mode: compress, half size, fit 1920 px, no metadata, to ZIP, to 7Z" width="300"><br>
       <sub><b>Photo → Tools</b> — press <kbd>Space</kbd> again to switch</sub>
     </td>
   </tr>
@@ -137,18 +156,30 @@ Not a fan of drag-and-drop? Right-click a file → **Convert…** in the Explore
     </td>
   </tr>
   <tr>
-    <td align="center" colspan="2">
-      <img src="docs/assets/screenshots/jobs-light.png" alt="The jobs flyout above the tray: thumbnails, progress bars, Open and Show in folder buttons" width="360"><br>
+    <td align="center" width="50%">
+      <img src="docs/assets/screenshots/trim-en.png" alt="The Trim video window: a frame preview, a thumbnail strip with start and end handles, start, length and end times, and the Frame-accurate checkbox" width="340"><br>
+      <sub><b>Trim video</b> — drag the handles; the part between them is kept</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/assets/screenshots/jobs-light-en.png" alt="The jobs flyout above the tray: thumbnails, progress bars, Open and Show in folder buttons, an error with Details" width="300"><br>
       <sub><b>Jobs flyout</b> — click the tray icon: progress, <i>Cancel</i>, <i>Open</i>, <i>Show in folder</i></sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" colspan="2">
+      <img src="docs/assets/screenshots/settings-general-en.png" alt="The settings window, General page: hotkey, where to save results, language, and the wheel transparency slider with a live preview" width="640"><br>
+      <sub><b>Settings</b> — hotkey, output folder, language, wheel transparency with a live preview; further down — clipboard and browser pictures, autostart, update channel</sub>
     </td>
   </tr>
 </table>
 
-<sub>Interface: Russian and English (follows the Windows language; switch in Settings). The screenshots show the Russian interface — format names are the same in both.</sub>
+<sub>Interface: English and Russian (follows the Windows language; switch in Settings). The video and PDF wheels above show the Russian interface — format names are the same in both.</sub>
 
 ## Supported formats
 
-The wheel only offers what makes sense for the file you are dragging: a `.jpg` never gets “→ JPG”, a video never gets “→ PDF”. With several files of different types you get the operations they have in common.
+The wheel only offers what makes sense for the file you are dragging: a `.jpg` never gets “→ JPG”, a video never gets “→ PDF”. With several files of different types you get the operations they have in common. Result names below are as in the English interface; in the Russian interface the tags are Russian (`photo (сжато).jpg`).
+
+**Folders** get the operations for the kind of file they mostly contain (a folder of photos → the photo wheel). The operation is applied to every file inside that it fits, subfolders included; results go to a new folder next to it — `Vacation` → `Vacation (JPG)`, `Vacation (compressed)` — with the same subfolders. Files already in the target format are copied as they are, unsuitable files are skipped and counted in the notification. *One PDF* and *Merge* make a single file named after the folder (`Vacation (all).pdf`). ZIP and 7Z aren't offered for folders.
 
 **Needs:** — = nothing, works on any PC right after unzipping · **Office** = Microsoft Office 2013 or newer installed · **Edge** = Edge WebView2 Runtime, already part of Windows 10/11 · **OCR** = a Windows OCR language (see [Known limitations](#known-limitations)). Office, Edge and OCR operations are done by the tray app, not by `dropwheel-cli`.
 
@@ -166,11 +197,11 @@ The wheel only offers what makes sense for the file you are dragging: a `.jpg` n
 | Convert | → ICO | a Windows icon: the picture centred in a transparent square, sizes 256…16 px | — | `img-ico` |
 | Convert | → Text (OCR) | the recognised text in `scan.txt` (from JPG, PNG, BMP, TIFF) | **OCR** | `img-ocr` |
 | Convert | GIF → MP4 · WebM | an animated GIF as a real video (H.264 / VP9, no sound) — much smaller | — | `gif-to-mp4` `gif-to-webm` |
-| Tool | Compress | JPG/WebP at quality 80 → `photo (сжато).jpg` | — | `img-compress` |
+| Tool | Compress | JPG/WebP at quality 80 → `photo (compressed).jpg` | — | `img-compress` |
 | Tool | Downscale ×2 | half the width and height → `photo (50%).jpg` | — | `img-half` |
 | Tool | Fit to 1920 px | longest side ≤ 1920 px, small pictures are left as is → `photo (1920).jpg` | — | `img-1920` |
-| Tool | Strip metadata | removes EXIF, GPS location, camera info → `photo (без метаданных).jpg` | — | `img-strip` |
-| Tool | One PDF (2+ images) | every image becomes a page → `photo (все).pdf` | — | `images-to-pdf` |
+| Tool | Strip metadata | removes EXIF, GPS location, camera info → `photo (no metadata).jpg` | — | `img-strip` |
+| Tool | One PDF (2+ images) | every image becomes a page → `photo (all).pdf` | — | `images-to-pdf` |
 
 Tools keep the format for ordinary pictures; HEIC, AVIF, SVG, PSD and RAW come out as JPG.
 
@@ -190,9 +221,9 @@ Tools keep the format for ordinary pictures; HEIC, AVIF, SVG, PSD and RAW come o
 | Convert | → GIF | 15 fps, up to 640 px wide, optimised palette | — | `to-gif` |
 | Convert | → MP3 | just the soundtrack | — | `video-to-mp3` |
 | Convert | → JPG (frame) | a poster: the frame at 1 s (the last one for shorter clips) → `clip (frame).jpg` | — | `video-poster` |
-| Tool | Compress | H.264 at CRF 28 → `clip (сжато).mp4` | — | `video-compress` |
+| Tool | Compress | H.264 at CRF 28 → `clip (compressed).mp4` | — | `video-compress` |
 | Tool | 720p | short side ≤ 720 px, vertical videos stay vertical → `clip (720p).mp4` | — | `video-720p` |
-| Tool | Mute | removes the audio without re-encoding → `clip (без звука).mp4` | — | `video-mute` |
+| Tool | Mute | removes the audio without re-encoding → `clip (muted).mp4` | — | `video-mute` |
 | Tool | Rotate ↻ | 90° clockwise, re-encoded to H.264 + AAC → `clip (rotated).mp4` | — | `video-rotate-cw` |
 | Tool | Trim… | a window with start/end handles over a thumbnail strip → `clip (trimmed).mp4`, same container, instant and lossless (starts at a keyframe); “Frame-accurate” re-encodes to H.264 + AAC. One video at a time. CLI: `--start 0:05 --end 0:12 [--exact]` | — | `video-trim` |
 | Tool | Frames | one JPG per second (up to 300) → folder `clip (frames)` with `frame-001.jpg`… | — | `video-frames` |
@@ -210,7 +241,7 @@ Tools keep the format for ordinary pictures; HEIC, AVIF, SVG, PSD and RAW come o
 | | Operation | What you get | Needs | CLI id |
 |---|---|---|---|---|
 | Convert | → MP3 · M4A · WAV · FLAC · OGG | MP3 at 192 kbps, the rest with sensible defaults | — | `to-mp3` `to-m4a` `to-wav` `to-flac` `to-ogg` |
-| Tool | Normalize loudness | EBU R128 loudness normalisation (−16 LUFS), same format → `song (норм).flac` | — | `audio-normalize` |
+| Tool | Normalize loudness | EBU R128 loudness normalisation (−16 LUFS), same format → `song (normalized).flac` | — | `audio-normalize` |
 
 </details>
 
@@ -221,13 +252,13 @@ Tools keep the format for ordinary pictures; HEIC, AVIF, SVG, PSD and RAW come o
 
 | | Operation | What you get | Needs | CLI id |
 |---|---|---|---|---|
-| Convert | → PNG / JPG (pages) | every page as an image (150 dpi) in a folder `report (страницы)` | — | `pdf-to-png` `pdf-to-jpg` |
+| Convert | → PNG / JPG (pages) | every page as an image (150 dpi) in a folder `report (pages)` | — | `pdf-to-png` `pdf-to-jpg` |
 | Convert | → TXT | the text with its layout (columns, indents); a scan has no text layer — you get a clear message instead of an empty file | — | `pdf-to-txt` |
 | Convert | → DOCX | an editable Word document — Word rebuilds the PDF itself | **Office** (Word) | `pdf-to-docx` |
-| Tool | Merge (2+ PDFs) | one PDF, in the order the files came → `report (объединено).pdf` | — | `pdf-merge` |
-| Tool | Split | one PDF per page in a folder `report (по страницам)` | — | `pdf-split` |
-| Tool | Optimize | lossless: object streams + maximum Flate compression → `report (оптим.).pdf` | — | `pdf-optimize` |
-| Tool | Rotate ↻ | all pages 90° clockwise, nothing re-encoded → `report (повёрнуто).pdf` | — | `pdf-rotate` |
+| Tool | Merge (2+ PDFs) | one PDF, in the order the files came → `report (merged).pdf` | — | `pdf-merge` |
+| Tool | Split | one PDF per page in a folder `report (split)` | — | `pdf-split` |
+| Tool | Optimize | lossless: object streams + maximum Flate compression → `report (optimized).pdf` | — | `pdf-optimize` |
+| Tool | Rotate ↻ | all pages 90° clockwise, nothing re-encoded → `report (rotated).pdf` | — | `pdf-rotate` |
 
 </details>
 
@@ -246,7 +277,7 @@ Tools keep the format for ordinary pictures; HEIC, AVIF, SVG, PSD and RAW come o
 | **Word:** DOCX, DOCM | → HTML (self-contained, images inside) · Markdown — built-in libraries either way | same | `word-to-html` `word-to-md` |
 | **Excel:** XLS, XLSX, XLSM, ODS, CSV | → PDF (whole workbook) · XLSX · XLS · CSV (first sheet, UTF-8) · ODS | XLSX / XLSM / XLS → **CSV** (first sheet, values as shown in Excel, UTF-8 that Excel opens without garbled letters) | `excel-to-pdf` `excel-to-xlsx` `excel-to-xls` `excel-to-csv` `excel-to-ods` |
 | **CSV** | → XLSX: separator (`;` `,` tab) and encoding (UTF-8 / Windows-1251) detected, numbers and dates become real cells, codes like `007` stay text, formulas are never created — built-in either way | same | `csv-to-xlsx` |
-| **PowerPoint:** PPT, PPTX, PPTM, ODP | → PDF · PPTX · PPT · ODP · Slides PNG (folder `deck (слайды)`, 1920 px wide) | — | `ppt-to-pdf` `ppt-to-pptx` `ppt-to-ppt` `ppt-to-odp` `ppt-to-png` |
+| **PowerPoint:** PPT, PPTX, PPTM, ODP | → PDF · PPTX · PPT · ODP · Slides PNG (folder `deck (slides)`, 1920 px wide) | — | `ppt-to-pdf` `ppt-to-pptx` `ppt-to-ppt` `ppt-to-odp` `ppt-to-png` |
 | **PDF** | → DOCX (see PDF above) | — | `pdf-to-docx` |
 
 </details>
@@ -304,7 +335,7 @@ To remove the portable version: right-click the tray icon → untick **“Conver
 winget install Luchano55.DropWheel
 ```
 
-The package is being submitted to the Windows Package Manager catalog; until it's accepted, use the installer above.
+The package `Luchano55.DropWheel` has been submitted to the Windows Package Manager catalog and is waiting for review — the command will work once it's accepted. Until then, use the installer above.
 
 ### Stable releases and test builds
 
@@ -347,9 +378,38 @@ Right-click one or more files → **Convert…** → the same wheel opens at the
 
 On Windows 11 the item is under **Show more options** (or press <kbd>Shift</kbd>+<kbd>F10</kbd>). If DropWheel isn't running, it starts automatically.
 
+### 📁 Whole folders
+
+Right-click a folder → **Convert…** (or drag the folder and press <kbd>Space</kbd>). The wheel shows the operations for the kind of file the folder mostly holds — photos, videos, PDFs…
+
+| You do | DropWheel does |
+|---|---|
+| Pick **JPG** for `Vacation` | creates `Vacation (JPG)` next to it, with the same subfolders: `Vacation\2023\a.heic` → `Vacation (JPG)\2023\a.jpg` |
+| Pick a tool, e.g. **Compress** | `Vacation (compressed)`; the files inside keep their names — the tag is already in the folder name |
+| Pick **One PDF** or **Merge** | one file named after the folder: `Vacation (all).pdf`, `Documents (merged).pdf` |
+
+Files that are already in the target format are copied, so `Vacation (JPG)` holds all your photos, not only the former HEICs. Files the operation can't handle are skipped; hidden and system files (`desktop.ini`, `Thumbs.db`) are ignored. You get **one** notification for the whole folder — how many files are done, skipped or failed — with *Open* for the result folder. Up to 1000 files at a time; for a bigger folder DropWheel asks you to pick a smaller one. With *In one folder* in the settings, `Vacation (JPG)` goes there.
+
+### 🌐 Pictures from the browser
+
+Drag a picture off a web page in **Chrome, Edge or Firefox**, press <kbd>Space</kbd> and drop it on a format — just like a file. The picture is first saved to the same folder as clipboard pictures (`Pictures\DropWheel` by default) under its name from the website, and the result appears next to it.
+
+- The format is recognised from the picture itself: plenty of sites serve WebP under a `.jpg` name — DropWheel sees that it's WebP and saves it as `.webp`.
+- **Nothing is downloaded.** DropWheel uses the picture data the browser hands over while you drag. If the browser only gives a link (a background image, a link to a picture), the wheel says so — save the picture and drag the file instead.
+- Dragging text or a link to a page doesn't bring up the wheel.
+
+### ✂️ Trimming a video
+
+Drag a video → **Tools** → **Trim…** (it's on the Explorer-menu and clipboard wheels too). A window opens:
+
+- the frame at the handle you are moving, a strip of thumbnails and two handles — **start** and **end**; start, length and end times are shown below;
+- <kbd>←</kbd>/<kbd>→</kbd> move a handle by 0.1 s, with <kbd>Shift</kbd> by 1 s; <kbd>Home</kbd>/<kbd>End</kbd>; <kbd>Tab</kbd> switches handles; <kbd>Enter</kbd> trims, <kbd>Esc</kbd> cancels.
+
+By default the cut is **instant and lossless** — `clip (trimmed).mp4`, same format and quality; the start snaps to the nearest keyframe, so the clip may begin a fraction of a second earlier. Tick **Frame-accurate** to start exactly on the chosen frame: this re-encodes to H.264 + AAC (`.mp4`) and takes longer. One video at a time.
+
 ### 📋 From the clipboard: <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>V</kbd>
 
-Copy files in Explorer (<kbd>Ctrl</kbd>+<kbd>C</kbd>) or take a screenshot (<kbd>Win</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd>, “Copy image” in a browser), then press <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>V</kbd> — or right-click the tray icon → **From clipboard…**. The wheel opens at the cursor: for copied files — the same as **Convert…**; a picture is first saved as `Clipboard 2026-10-22 10-31-05.png` in `Pictures\DropWheel` (or your shared output folder), then you pick JPG, WebP, PDF, ICO, text (OCR)… Only text in the clipboard → a short hint. The shortcut can be turned off in the settings; if another program already uses it, DropWheel works without it (the tray item stays).
+Copy files in Explorer (<kbd>Ctrl</kbd>+<kbd>C</kbd>) or take a screenshot (<kbd>Win</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd>, “Copy image” in a browser), then press <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>V</kbd> — or right-click the tray icon → **From clipboard…**. The wheel opens at the cursor: for copied files — the same as **Convert…**; a picture is first saved as `Clipboard 2026-10-22 10-31-05.png` in `Pictures\DropWheel` (or your shared output folder), then you pick JPG, WebP, PDF, ICO, text (OCR)… Only text in the clipboard → a short hint. In *Settings → General → Pictures from the clipboard and browser* you can choose your own folder for these pictures and turn off **Keep the original picture** — then only the result (say, the JPG) stays, and the intermediate PNG is deleted after a successful conversion. The shortcut can be turned off in the settings; if another program already uses it, DropWheel works without it (the tray item stays). Copied folders aren't picked up from the clipboard — use **Convert…** on the folder instead.
 
 ### 🔔 Tray, jobs and notifications
 
@@ -357,7 +417,7 @@ Copy files in Explorer (<kbd>Ctrl</kbd>+<kbd>C</kbd>) or take a screenshot (<kbd
 - **Double click** — the settings window.
 - **Right click** — *Jobs*, *From clipboard…*, *Settings…*, the Explorer menu on/off switch, *Open log*, *Check for updates*, *Exit*.
 - While something is being converted, the icon shows an orange badge with the number of jobs.
-- **Notifications** show a preview of the result with *Open* and *Show in folder*. Several files finished together → one notification “Готово: N файлов” (Done: N files).
+- **Notifications** show a preview of the result with *Open* and *Show in folder*. Several files finished together → one notification “Done: N files”; a whole folder → one notification for the folder.
 
 ### 🔄 Updates
 
@@ -372,7 +432,8 @@ Double-click the tray icon (or right click → *Settings…*). Every change appl
 - **Wheel transparency** — a slider from *solid* to *see-through* with a live preview; labels and the highlighted petal stay crisp.
 - **Where results go** — next to the original, or all into one folder (default `Downloads\DropWheel`).
 - **Quality** — JPG and WebP (50–100), video CRF (18–32, lower = better), MP3 bitrate (128–320 kbps). Applies to new jobs.
-- **Start with Windows**, the Explorer menu item, <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>V</kbd> for the clipboard, the daily update check.
+- **Pictures from the clipboard and browser** — the default folder or your own; **Keep the original picture** on or off.
+- **Start with Windows**, the Explorer menu item, <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>V</kbd> for the clipboard, the daily update check and the **update channel** (stable or test builds).
 - **Your own wheel** — for each file type (photo, video, audio, PDF, Word, Excel, PowerPoint, text, archives, any file): reorder the formats (drag or ↑/↓), hide the ones you never use, with a live preview of the wheel. **Last choice first** puts the format you picked last time for that type on top.
 
 ### ⌨️ Command line
@@ -382,6 +443,8 @@ The archive also contains `dropwheel-cli.exe` for scripts and testing (everythin
 ```bat
 dropwheel-cli.exe list "C:\Мои фото\тест 1.heic"
 dropwheel-cli.exe convert "C:\Мои фото\тест 1.heic" to-jpg
+dropwheel-cli.exe convert "C:\Photos\Vacation" to-jpg
+dropwheel-cli.exe convert clip.mp4 video-trim --start 0:05 --end 0:12
 ```
 
 Messages follow the system language; `--lang en` or `--lang ru` picks one explicitly.
@@ -393,6 +456,7 @@ Or simply drag a file onto `try-dropwheel.cmd`: it lists the available operation
 - **100% offline.** Every conversion happens on your PC. Your files are never uploaded anywhere — there is no server to upload them to.
 - **No telemetry, no analytics, no account, no ads.**
 - **The only thing DropWheel does online** is the update check: once a day (and when you click *Check for updates*) it reads a small `version.json` from this repository's [releases](https://github.com/Luchano55/dropwheel/releases/tag/dev-build). It sends no files and no personal data, and an update is only installed when you click it — the download is verified with SHA-256. Don't want even that? Set `"checkForUpdates": false` in `%AppData%\DropWheel\settings.json`.
+- **Pictures dragged from a browser** are taken from what the browser hands over during the drag — DropWheel never fetches a link.
 - Microsoft Office, Edge WebView2 and Windows OCR, when used, run locally too.
 - Settings and logs stay on your computer in `%AppData%\DropWheel`. Logs contain file paths and error messages — have a quick look before attaching one to a bug report.
 
@@ -403,7 +467,9 @@ Or simply drag a file onto `try-dropwheel.cmd`: it lists the available operation
 - **OCR needs a Windows OCR language.** It comes with a Windows display language, or add one in *Settings → Time & language → Language & region*. Without any, the “Text (OCR)” petal simply doesn't appear. OCR reads JPG, PNG, BMP and TIFF — convert other formats to PNG first.
 - **Scanned PDFs have no text**, so PDF → TXT reports it: export the pages as PNG and use OCR.
 - **Password-protected** archives and documents aren't supported.
-- Files dragged from a browser are often not on disk yet — save them first.
+- **From a browser — pictures only.** Dragging a picture works in Chrome, Edge and Firefox; other things on a page (videos, PDFs) aren't picked up — download them first. If the browser offers only a link to the picture, DropWheel shows a hint instead of downloading it.
+- **Folders: up to 1000 files at a time**, and ZIP / 7Z aren't offered for folders (Windows' own *Send to → Compressed (zipped) folder* keeps the subfolders). Folders copied to the clipboard are ignored by <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>V</kbd>.
+- **Trim** works on one video at a time; the instant mode starts at the nearest keyframe (tick *Frame-accurate* for an exact start). The trim window shows frames, it doesn't play the video.
 - Log files are written in Russian (they are for bug reports, not for reading every day).
 
 ## FAQ
@@ -421,9 +487,9 @@ Never. The result is written to a temporary file first and only then renamed, so
 </details>
 
 <details>
-<summary><b>Where does the converted file go? What are the tags like “(сжато)”?</b></summary>
+<summary><b>Where does the converted file go? What are the tags like “(compressed)”?</b></summary>
 
-Right next to the original: `photo.heic` → `photo.jpg`. Tools keep the format, so they add a short tag (in Russian, for now) to the name: `photo (сжато).jpg` = compressed, `clip (720p).mp4`, `song (норм).flac` = normalised, `clip (без звука).mp4` = muted, `report (повёрнуто).pdf` = rotated, `notes (UTF-8).txt`.
+Right next to the original: `photo.heic` → `photo.jpg`. Tools keep the format, so they add a short tag to the name: `photo (compressed).jpg`, `clip (720p).mp4`, `clip (trimmed).mp4`, `song (normalized).flac`, `report (rotated).pdf`, `notes (UTF-8).txt`. Tags follow the interface language — in Russian it's `photo (сжато).jpg`. A whole folder goes to a sibling folder such as `Vacation (JPG)`. Want everything in one place? *Settings → General → Where to save results → In one folder*.
 </details>
 
 <details>
@@ -435,7 +501,7 @@ No. Without Office you still get DOCX → PDF / TXT / HTML / Markdown, XLSX / XL
 <details>
 <summary><b>Is the interface available in English?</b></summary>
 
-Yes. The interface is in Russian and English: it follows the Windows display language — Russian on a Russian Windows, English everywhere else. To switch, double-click the tray icon → *General* → *Language* (*Same as Windows* / *Русский* / *English*); the tray menu, the wheel and the windows change right away. Result names follow the language too: `photo (compressed).jpg` instead of `photo (сжато).jpg`. The command line uses the system language; add `--lang en` or `--lang ru` to choose.
+Yes. The interface is in Russian and English: it follows the Windows display language — Russian on a Russian Windows, English everywhere else. To switch, double-click the tray icon → *General* → *Language* (*Same as Windows* / *Русский* / *English*); the tray menu, the wheel and the windows change right away. Result names follow the language too: `photo (compressed).jpg` instead of `photo (compressed).jpg`. The command line uses the system language; add `--lang en` or `--lang ru` to choose.
 </details>
 
 <details>
@@ -444,13 +510,25 @@ Yes. The interface is in Russian and English: it follows the Windows display lan
 - Make sure DropWheel is running (ring icon in the tray).
 - Press <kbd>Space</kbd> <i>while</i> you are still holding the mouse button and dragging the file.
 - Dragging from a window that runs as administrator doesn't work (see <a href="#known-limitations">Known limitations</a>).
-- Files dragged from a browser are not always real files on disk yet — save them first.
+- From a browser, only pictures bring up the wheel — not text, page links or other downloads.
 </details>
 
 <details>
 <summary><b>Space is busy in my workflow. Can I use another key?</b></summary>
 
-Yes. Exit DropWheel, open `%AppData%\DropWheel\settings.json` and set `"hotkey"` to `"Backquote"` (the <kbd>`</kbd> / <kbd>Ё</kbd> key), `"CapsLock"` or `"F1"`…`"F12"`, then start DropWheel again. A settings window is coming.
+Yes. Double-click the tray icon → *General* → *Hotkey*: <kbd>`</kbd> / <kbd>Ё</kbd>, <kbd>Caps Lock</kbd> or <kbd>F1</kbd>–<kbd>F12</kbd>. It works right away, no restart needed.
+</details>
+
+<details>
+<summary><b>Can I convert a whole folder?</b></summary>
+
+Yes — right-click the folder → *Convert…*, or drag it and press <kbd>Space</kbd>. The results go to a new folder next to it (`Vacation` → `Vacation (JPG)`) with the same subfolders; your folder stays as it was. Up to 1000 files at a time. See [Whole folders](#-whole-folders).
+</details>
+
+<details>
+<summary><b>Does it download pictures from the internet?</b></summary>
+
+No. When you drag a picture out of a browser, the browser itself hands over the picture data, and DropWheel saves exactly that. If all it gets is a link, you see a hint — nothing is fetched. The only network request DropWheel ever makes is the update check.
 </details>
 
 <details>
@@ -462,7 +540,7 @@ If you want it to: the installer offers *Start with Windows*, and you can switch
 <details>
 <summary><b>How do I update? Which build do I have?</b></summary>
 
-DropWheel checks for a new build once a day and offers *Update to build N* in the tray menu. Right-click the tray icon → *Check for updates* to check right now — it also tells you your current build number. You can always run a newer installer over the installed version, or download the full archive again from <a href="https://github.com/Luchano55/dropwheel/releases">Releases</a> and unzip it over the old folder. Stable versions only or every test build — choose in *Settings → General → Update channel*.
+DropWheel checks for a new build once a day and offers *Update to build N* in the tray menu. Right-click the tray icon → *Check for updates* to check right now — it also tells you your current build number; the version and build are also shown at the bottom of the settings window. You can always run a newer installer over the installed version, or download the full archive again from <a href="https://github.com/Luchano55/dropwheel/releases">Releases</a> and unzip it over the old folder. Stable versions only or every test build — choose in *Settings → General → Update channel*.
 </details>
 
 <details>
@@ -479,9 +557,11 @@ Right-click the tray icon → *Open log*, take the newest `.log` file and attach
 
 ## Roadmap
 
+**Done in 1.0:**
+
 - [x] Conversion core: images, video, audio — ffmpeg + ImageMagick, background queue, safe file naming
 - [x] Tray app, jobs flyout, notifications with preview
-- [x] The wheel: drag + <kbd>Space</kbd>, Convert/Tools modes, multi-monitor and high-DPI aware, light/dark theme and accent colour
+- [x] The wheel: drag + <kbd>Space</kbd>, Convert/Tools modes, multi-monitor and high-DPI aware, light/dark theme and accent colour, adjustable transparency
 - [x] “Convert…” in the Explorer menu opens the same wheel in click mode
 - [x] PDF: merge, split, rotate, lossless optimize, pages → images, → TXT
 - [x] Office documents via installed Microsoft Office, pre-warmed in the background
@@ -489,14 +569,20 @@ Right-click the tray icon → *Open log*, take the newest `.log` file and attach
 - [x] OCR with the Windows recognition engine
 - [x] Archives: ZIP built in; 7Z, RAR, TAR, GZ, BZ2, XZ via 7-Zip; pack to ZIP / 7Z
 - [x] Icons (ICO), SVG / PSD / RAW input, GIF → MP4 / WebM, subtitles → SRT, text → UTF-8
-- [x] Self-update from GitHub Releases: only the changed parts, verified with SHA-256
+- [x] Whole folders: Explorer menu or drag + <kbd>Space</kbd>, subfolders mirrored, one notification per folder
+- [x] Pictures dragged from Chrome, Edge and Firefox — offline, nothing downloaded
+- [x] Video: trim (lossless or frame-accurate), frames, poster, rotate
+- [x] Clipboard wheel (<kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>V</kbd>) for copied files and screenshots
+- [x] Settings window: hotkey, output folder, quality, language, transparency, autostart, clipboard pictures, update channel; your own wheel (order, hidden formats, last choice first)
+- [x] Interface in English and Russian (follows the Windows language; switch in Settings)
+- [x] Installer without admin rights, version numbers, stable and test update channels; self-update verified with SHA-256
 - [x] Automated demo recording and end-to-end test on a real Windows machine in CI
-- [ ] Built-in editors (inspired by Tangerine): crop with aspect ratios (Free, 1:1, 16:9, 9:16, 4:3, 3:4), add a background (palette, padding, rounded corners, shadow), annotations
-- [x] Settings window: hotkey, output folder, quality, autostart; your own wheel (order, hidden formats, last choice first)
-- [x] Interface in Russian and English (follows the Windows language; switch in Settings)
-- [ ] Whole-folder batch processing
-- [ ] Video trimming and cropping
-- [ ] E-books: EPUB, FB2
+- [ ] winget package `Luchano55.DropWheel` — submitted, waiting for review
+
+**Next:**
+
+- [ ] Built-in editors (inspired by Tangerine): crop with aspect ratios (Free, 1:1, 16:9, 9:16, 4:3, 3:4), background removal, add a background (palette, padding, rounded corners, shadow), annotations
+- [ ] A smaller download: a custom ffmpeg build with only what DropWheel needs
 
 Have an idea? [Open a feature request](https://github.com/Luchano55/dropwheel/issues/new/choose).
 
