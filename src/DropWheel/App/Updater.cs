@@ -11,14 +11,14 @@ using DropWheel.Localization;
 namespace DropWheel.App;
 
 /// <summary>
-/// Самообновление из релиза GitHub (dev-build): раз в сутки и по кнопке в трее читаем version.json,
+/// Самообновление из релизов GitHub: раз в сутки и по кнопке в трее читаем version.json своего канала
+/// (тестовые сборки — релиз dev-build, стабильные — последний релиз vX.Y.Z; решение D-RELEASE),
 /// если сборка новее — качаем архив программы (и утилит, если их набор сменился), сверяем SHA-256,
 /// ждём, пока нет активных задач, раскладываем файлы (UpdateApplier) и перезапускаемся.
 /// Это единственное обращение программы в сеть; конвертация всегда офлайн.
 /// </summary>
 internal sealed class Updater : IDisposable
 {
-    private const string ReleaseUrl = "https://github.com/Luchano55/dropwheel/releases/download/dev-build/";
     private static readonly TimeSpan FirstCheckDelay = TimeSpan.FromSeconds(30);
     private static readonly TimeSpan CheckInterval = TimeSpan.FromHours(24);
 
@@ -30,10 +30,15 @@ internal sealed class Updater : IDisposable
     private readonly FileLog _log;
     private readonly Action<UpdateManifest> _onAvailable;
     private readonly Action _beforeRestart;
+    private readonly Func<UpdateChannel> _channel;
+    private UpdateChannel _availableChannel;
     private int _busy;
 
-    public Updater(Dispatcher ui, JobQueue queue, FileLog log, Action<UpdateManifest> onAvailable, Action beforeRestart)
+    /// <param name="channel">Текущий канал (настройка может смениться на ходу — спрашиваем при каждой проверке).</param>
+    public Updater(Dispatcher ui, JobQueue queue, FileLog log, Action<UpdateManifest> onAvailable, Action beforeRestart,
+        Func<UpdateChannel> channel)
     {
+        _channel = channel;
         _queue = queue;
         _log = log;
         _onAvailable = onAvailable;
@@ -54,6 +59,9 @@ internal sealed class Updater : IDisposable
 
     public void Start() => _timer.Start();
 
+    /// <summary>Сменили канал: найденное раньше обновление относится к другому каналу.</summary>
+    public void Forget() => Available = null;
+
     /// <summary>Выключили «Проверять обновления» — больше не проверять по расписанию.</summary>
     public void Stop() => _timer.Stop();
 
@@ -62,24 +70,28 @@ internal sealed class Updater : IDisposable
     {
         try
         {
-            var json = await _http.GetStringAsync(ReleaseUrl + "version.json");
+            var channel = _channel();
+            var url = UpdateChannels.ManifestUrl(channel);
+            var json = await _http.GetStringAsync(url);
             var manifest = UpdateManifest.Parse(json);
             if (manifest is null)
             {
-                _log.Write("Обновления: version.json не разобран");
+                _log.Write($"Обновления: version.json не разобран ({url})");
                 return false;
             }
             var plan = UpdatePlan.For(manifest, AppVersion.CurrentBuild, ReadLocalToolsVersion());
-            _log.Write($"Обновления: у нас {AppVersion.CurrentBuild}, в релизе {manifest.Build}, план {plan}");
+            _log.Write($"Обновления ({channel}): у нас {AppVersion.CurrentBuild} {AppVersion.CurrentDisplay}, " +
+                       $"в релизе {manifest.Build} {manifest.Version}, план {plan}");
             if (!plan.Any) return false;
             Available = manifest;
+            _availableChannel = channel;
             _onAvailable(manifest);
             return true;
         }
         catch (Exception ex)
         {
             // Нет интернета — это нормально для офлайн-программы; молчим, если проверка не ручная.
-            _log.Write("Обновления: проверка не удалась: " + ex.Message);
+            _log.Write($"Обновления ({_channel()}): проверка не удалась: " + ex.Message);
             if (manual) throw;
             return false;
         }
@@ -97,11 +109,11 @@ internal sealed class Updater : IDisposable
             var staging = Directory.CreateDirectory(Path.Combine(work, "staging")).FullName;
 
             status?.Report(Loc.T.UpdateDownloadingApp);
-            await DownloadAndExtractAsync(manifest.AppZip, manifest.AppSha256, work, staging, Loc.T.UpdateDownloadingApp, status);
+            await DownloadAndExtractAsync(manifest, manifest.AppZip, manifest.AppSha256, work, staging, Loc.T.UpdateDownloadingApp, status);
             if (plan.Tools)
             {
                 status?.Report(Loc.T.UpdateDownloadingTools);
-                await DownloadAndExtractAsync(manifest.ToolsZip, manifest.ToolsSha256, work, staging, Loc.T.UpdateDownloadingTools, status);
+                await DownloadAndExtractAsync(manifest, manifest.ToolsZip, manifest.ToolsSha256, work, staging, Loc.T.UpdateDownloadingTools, status);
             }
 
             // Пока идёт конвертация, ffmpeg/magick заняты — подождём.
@@ -121,11 +133,13 @@ internal sealed class Updater : IDisposable
         }
     }
 
-    private async Task DownloadAndExtractAsync(string zipName, string sha256, string work, string staging,
+    private async Task DownloadAndExtractAsync(UpdateManifest manifest, string zipName, string sha256, string work, string staging,
         string what, IProgress<string>? status)
     {
         var zipPath = Path.Combine(work, zipName);
-        using (var response = await _http.GetAsync(ReleaseUrl + zipName, HttpCompletionOption.ResponseHeadersRead))
+        var url = UpdateChannels.AssetUrl(_availableChannel, manifest, zipName);
+        _log.Write("Обновления: скачиваю " + url);
+        using (var response = await _http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead))
         {
             response.EnsureSuccessStatusCode();
             var total = response.Content.Headers.ContentLength ?? 0;

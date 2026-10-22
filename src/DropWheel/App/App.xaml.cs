@@ -57,6 +57,15 @@ public partial class App : Application
         }
 
         var pipeName = PipeNames.ForCurrentUser("DropWheel");
+
+        // Установщик: закрыть запущенный DropWheel (если есть) и дождаться, пока он отпустит файлы.
+        if (args.Exit)
+        {
+            Environment.ExitCode = ExitRunningInstance(pipeName) ? 0 : 1;
+            Shutdown(Environment.ExitCode);
+            return;
+        }
+
         _instance = SingleInstance.TryAcquire(pipeName);
         // После обновления старый экземпляр ещё закрывается — подождём его, а не отдадим ему аргументы.
         for (var i = 0; _instance is null && args.AfterUpdate is not null && i < 50; i++)
@@ -143,7 +152,10 @@ public partial class App : Application
 
         _updater = new Updater(Dispatcher, Queue, Log,
             onAvailable: m => Dispatcher.BeginInvoke(() => _tray?.SetUpdateAvailable(m.Build)),
-            beforeRestart: ReleaseForRestart);
+            beforeRestart: ReleaseForRestart,
+            channel: () => UpdateChannels.Resolve(Settings.UpdateChannel, UpdateChannels.Embedded));
+        Log.Write($"Версия {AppVersion.CurrentDisplay ?? "разработчика"}, сборка {AppVersion.CurrentBuild}, " +
+                  $"канал при сборке {UpdateChannels.Embedded}, настройка канала {Settings.UpdateChannel}");
         if (Settings.CheckForUpdates) _updater.Start();
     }
 
@@ -205,8 +217,49 @@ public partial class App : Application
         }
     }
 
+    /// <summary>
+    /// «DropWheel.exe --exit»: попросить первый экземпляр закрыться (через канал) и ждать, пока он отпустит Mutex.
+    /// true — DropWheel не запущен (или закрылся); false — не закрылся за отведённое время.
+    /// </summary>
+    private static bool ExitRunningInstance(string pipeName)
+    {
+        var log = new FileLog(AppPaths.LogsDir);
+        using (var probe = SingleInstance.TryAcquire(pipeName))
+            if (probe is not null) return true; // никто не запущен
+
+        log.Write("--exit: прошу запущенный DropWheel закрыться");
+        var sent = false;
+        for (var attempt = 0; attempt < 5 && !sent; attempt++)
+        {
+            sent = PipeClient.TrySend(pipeName, [CommandLine.ExitArgument], timeoutMs: 1000);
+            if (!sent) Thread.Sleep(200);
+        }
+        if (!sent) log.Write("--exit: запущенный экземпляр не ответил по каналу (старая версия или завис)");
+
+        // Задачи отменяются, движки (Office) закрываются — даём до 20 секунд.
+        var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(sent ? 20 : 2);
+        while (DateTime.UtcNow < deadline)
+        {
+            using var instance = SingleInstance.TryAcquire(pipeName);
+            if (instance is not null)
+            {
+                log.Write("--exit: DropWheel закрыт");
+                return true;
+            }
+            Thread.Sleep(250);
+        }
+        log.Write("--exit: DropWheel не закрылся");
+        return false;
+    }
+
     private void HandleArgs(CommandLine args, bool fromPipe)
     {
+        if (args.Exit)
+        {
+            Log.Write("Получена команда --exit (установщик): закрываюсь");
+            Dispatcher.BeginInvoke(Quit);
+            return;
+        }
         if (args.ConvertPaths.Count > 0) _batcher?.Add(args.ConvertPaths);
         // Повторный запуск DropWheel.exe без файлов — показать окно задач.
         else if (fromPipe) Dispatcher.BeginInvoke(ShowJobs);
@@ -303,7 +356,7 @@ public partial class App : Application
                 // Автозапуск показываем по реестру — его могли поменять в обход программы.
                 Settings = Settings with { AutoStart = AutoStartInstaller.IsEnabled() };
                 var window = new SettingsWindow(Settings, change => UpdateSettings(change, fromWindow: true),
-                    AppVersion.CurrentBuild, Log);
+                    AppVersion.CurrentBuild, Log, AppVersion.CurrentDisplay, UpdateChannels.Embedded);
                 window.View.OpenLogsRequested += () => Notifier.OpenLog(Log);
                 window.View.CheckUpdatesRequested += CheckUpdatesManually;
                 window.Closed += (_, _) =>
@@ -370,6 +423,13 @@ public partial class App : Application
             else _updater?.Stop();
         }
         if (now.Language != old.Language) ApplyLanguage(now);
+        if (now.UpdateChannel != old.UpdateChannel)
+        {
+            Log.Write($"Канал обновлений: {now.UpdateChannel} → {UpdateChannels.Resolve(now.UpdateChannel, UpdateChannels.Embedded)}");
+            // Найденное в другом канале обновление больше не предлагаем; новый канал проверим сразу.
+            _updater?.Forget();
+            if (now.CheckForUpdates && _updater is { } updater) _ = updater.CheckAsync(manual: false);
+        }
     }
 
     /// <summary>Сменили язык в настройках: трей, окна и пункт меню проводника — сразу на новом языке.</summary>

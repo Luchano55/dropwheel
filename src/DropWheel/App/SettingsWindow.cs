@@ -5,6 +5,7 @@ using System.Windows.Media.Imaging;
 using DropWheel.Logging;
 using DropWheel.Settings;
 using DropWheel.Ui;
+using DropWheel.Updates;
 using DropWheel.Wheel;
 
 namespace DropWheel.App;
@@ -21,7 +22,8 @@ internal sealed class SettingsWindow : Window
     private IntPtr _hwnd;
     private bool _backdrop;
 
-    public SettingsWindow(AppSettings settings, Func<Func<AppSettings, AppSettings>, AppSettings> update, int build, FileLog log)
+    public SettingsWindow(AppSettings settings, Func<Func<AppSettings, AppSettings>, AppSettings> update, int build, FileLog log,
+        string? version = null, UpdateChannel embeddedChannel = UpdateChannel.Dev)
     {
         _log = log;
         Title = Strings.Settings.WindowTitle;
@@ -33,7 +35,7 @@ internal sealed class SettingsWindow : Window
         UseLayoutRounding = true;
         TryLoadIcon();
 
-        _view = new SettingsView(Palette(false), settings, SystemTheme.Accent, build) { Update = update };
+        _view = new SettingsView(Palette(false), settings, SystemTheme.Accent, build, version, embeddedChannel) { Update = update };
         _view.PickFolder = PickFolder;
         Content = _view;
 

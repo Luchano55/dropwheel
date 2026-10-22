@@ -7,6 +7,7 @@ using DropWheel.Input;
 using DropWheel.Localization;
 using DropWheel.Settings;
 using DropWheel.Ui;
+using DropWheel.Updates;
 using DropWheel.Wheel;
 using S = DropWheel.Ui.Strings.Settings;
 
@@ -34,6 +35,8 @@ public sealed class SettingsView : Border
     private OperationMode _mode = OperationMode.Convert;
     private string _sharedFolder;
     private readonly int _build;
+    private readonly string? _version;
+    private readonly UpdateChannel _embeddedChannel;
 
     private ScrollViewer _scroll = null!;
     private StackPanel _nav = null!;
@@ -42,12 +45,17 @@ public sealed class SettingsView : Border
     private WheelControl? _preview;
 
     /// <param name="build">Номер сборки для подписи внизу (0 — сборка разработчика).</param>
-    public SettingsView(SettingsPalette palette, AppSettings settings, AccentColors? accent = null, int build = 0)
+    /// <param name="version">Версия для людей (0.3.0, 0.3.0-dev.57); null — показать только номер сборки.</param>
+    /// <param name="embeddedChannel">Канал обновлений, зашитый при сборке, — для подписи «Как при установке».</param>
+    public SettingsView(SettingsPalette palette, AppSettings settings, AccentColors? accent = null, int build = 0,
+        string? version = null, UpdateChannel embeddedChannel = UpdateChannel.Dev)
     {
         _palette = palette;
         _accent = accent ?? AccentColors.Default;
         _settings = settings;
         _build = build;
+        _version = version;
+        _embeddedChannel = embeddedChannel;
         _sharedFolder = settings.Conversion.OutputFolder ?? ConversionSettings.DefaultSharedFolder;
         Update = change => _settings = change(_settings);
         UseLayoutRounding = true;
@@ -206,7 +214,7 @@ public sealed class SettingsView : Border
     {
         var p = _palette;
         var panel = new StackPanel { Margin = new Thickness(10, 0, 0, 0) };
-        panel.Children.Add(new TextBlock { Text = S.Version(_build), FontSize = 12, Foreground = p.TextSecondary, Margin = new Thickness(2, 0, 0, 4) });
+        panel.Children.Add(new TextBlock { Text = S.Version(_build, _version), FontSize = 12, Foreground = p.TextSecondary, Margin = new Thickness(2, 0, 0, 4) });
         var check = new SettingsLink(p, S.CheckUpdates) { HorizontalAlignment = HorizontalAlignment.Left };
         check.Click += () => CheckUpdatesRequested?.Invoke();
         panel.Children.Add(check);
@@ -382,6 +390,17 @@ public sealed class SettingsView : Border
             on => Change(s => s with { ContextMenuEnabled = on })));
         page.Children.Add(ToggleCard(S.Updates, S.UpdatesHint, _settings.CheckForUpdates,
             on => Change(s => s with { CheckForUpdates = on })));
+
+        // Канал обновлений (D-RELEASE): «Как при установке» / «Стабильный» / «Тестовый».
+        var channels = new ChoicePills(p,
+            [(UpdateChannels.Auto, S.UpdateChannelAuto(_embeddedChannel)), (UpdateChannels.Stable, S.UpdateChannelStable),
+             (UpdateChannels.Dev, S.UpdateChannelDev)],
+            UpdateChannels.Normalize(_settings.UpdateChannel), S.UpdateChannelTitle) { Margin = new Thickness(0, 12, 0, -6) };
+        channels.SelectionChanged += v => Change(s => s with { UpdateChannel = (string)v });
+        var channelPanel = new StackPanel();
+        channelPanel.Children.Add(Titles(S.UpdateChannelTitle, S.UpdateChannelHint));
+        channelPanel.Children.Add(channels);
+        page.Children.Add(Card(channelPanel));
     }
 
     // ---------- Качество ----------

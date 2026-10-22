@@ -8,6 +8,26 @@
     <PublishReferencesDocumentationFiles>false</PublishReferencesDocumentationFiles>
   </PropertyGroup>
 
+  <!-- Версия (решение D-RELEASE): номер версии для людей — в version.txt (0.3.0). CI передаёт
+       -p:Version=0.3.0 (тег v0.3.0) или 0.3.0-dev.<run> (main), а AssemblyVersion/FileVersion = 0.3.<run>.0:
+       третья часть — номер запуска CI, по нему программа сравнивает сборки (AppVersion.CurrentBuild).
+       Локальная сборка: 0.3.0.0 — третья часть 0, «сборка разработчика», самообновление выключено. -->
+  <PropertyGroup>
+    <DropWheelVersion>$([System.IO.File]::ReadAllText('$(MSBuildThisFileDirectory)version.txt').Trim())</DropWheelVersion>
+    <Version Condition="'$(Version)' == ''">$(DropWheelVersion)</Version>
+    <Product>DropWheel</Product>
+    <Company>Luchano55</Company>
+    <Copyright>© 2026 Luchano55, MIT License</Copyright>
+  </PropertyGroup>
+
+  <!-- Канал обновлений, зашитый в программу: CI передаёт -p:UpdateChannel=stable (тег) или dev (main). -->
+  <ItemGroup Condition="'$(UpdateChannel)' != ''">
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>UpdateChannel</_Parameter1>
+      <_Parameter2>$(UpdateChannel)</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
+
   <!-- Пакет SkiaSharp (нужен OpenXmlPowerTools) кладёт рядом с родной libSkiaSharp.dll её отладочные символы —
        83 МБ. Ни в выходную папку, ни в архив сборки они не нужны. -->
   <Target Name="DropNativeDebugSymbols" AfterTargets="ResolvePackageAssets">
