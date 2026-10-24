@@ -121,6 +121,7 @@ public partial class App : Application
         StartDragWheel();
         SetClipboardHotkey(Settings.ClipboardHotkey);
         StartUpdater(args.AfterUpdate);
+        CheckWhatsNew(args.AfterUpdate is not null);
 
         // Папки разворачиваются в файлы здесь, в фоновом потоке (D-FOLDERS), а колесо — в потоке интерфейса.
         _batcher = new InvocationBatcher(BatchQuiet, paths =>
@@ -663,6 +664,7 @@ public partial class App : Application
     {
         _saver?.Dispose();
         _settingsWindow?.Close();
+        _whatsNewWindow?.Close();
         _updater?.Dispose();
         _dragWheel?.Dispose();
         _clipboardHotkey?.Dispose();

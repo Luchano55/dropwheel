@@ -213,6 +213,18 @@ public class AppSettingsTests : IDisposable
     }
 
     [Fact]
+    public void Last_seen_version_is_null_in_old_files_and_round_trips()
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(SettingsPath)!);
+        File.WriteAllText(SettingsPath, """{ "hotkey": "Space", "checkForUpdates": true }""");
+        Assert.Null(AppSettings.Load(SettingsPath).LastSeenVersion);
+        Assert.False(File.Exists(SettingsPath + ".bad"));
+
+        new AppSettings { LastSeenVersion = "1.2.0-dev.57" }.Save(SettingsPath);
+        Assert.Equal("1.2.0-dev.57", AppSettings.Load(SettingsPath).LastSeenVersion);
+    }
+
+    [Fact]
     public void Clipboard_image_settings_round_trip()
     {
         new AppSettings { KeepClipboardImage = false, ClipboardFolder = "/data/Мои фото/буфер 1" }.Save(SettingsPath);

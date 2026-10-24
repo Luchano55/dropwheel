@@ -34,6 +34,8 @@ public sealed record AppSettings
     public int WheelOpacity { get; init; } = WheelFill.DefaultPercent;
     /// <summary>Язык интерфейса: «auto» — как у Windows (русский для русской, иначе английский), «ru», «en».</summary>
     public string Language { get; init; } = Loc.Auto;
+    /// <summary>Версия, для которой уже показано «Что нового» («1.2.0», «1.2.0-dev.57»); null — ещё ни разу (D-WHATSNEW).</summary>
+    public string? LastSeenVersion { get; init; }
 
     private static readonly JsonSerializerOptions Json = new()
     {

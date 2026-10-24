@@ -18,7 +18,7 @@ internal sealed partial class TrayIcon : IDisposable
     private readonly ContextMenuStrip _menu;
     private readonly ToolStripMenuItem _contextMenuItem;
     private readonly ToolStripMenuItem _updateItem;
-    private readonly ToolStripMenuItem _jobsItem, _settingsItem, _clipboardItem, _logItem, _checkItem, _exitItem;
+    private readonly ToolStripMenuItem _jobsItem, _settingsItem, _clipboardItem, _logItem, _checkItem, _whatsNewItem, _exitItem;
     private int? _updateBuild;
     private readonly Icon _idle;
     private Icon? _busy;
@@ -53,6 +53,7 @@ internal sealed partial class TrayIcon : IDisposable
         _menu.Items.Add(_contextMenuItem);
         _menu.Items.Add(_logItem = Item(Loc.T.TrayOpenLog, () => OpenFolder(AppPaths.LogsDir)));
         _menu.Items.Add(_checkItem = Item(Loc.T.TrayCheckUpdates, app.CheckUpdatesManually));
+        _menu.Items.Add(_whatsNewItem = Item(Strings.Tray.WhatsNew, () => app.ShowWhatsNew()));
         _menu.Items.Add(new ToolStripSeparator());
         _menu.Items.Add(_exitItem = Item(Loc.T.TrayExit, app.Quit));
         foreach (ToolStripItem item in _menu.Items)
@@ -102,6 +103,7 @@ internal sealed partial class TrayIcon : IDisposable
         _contextMenuItem.Text = Loc.T.TrayContextMenu;
         _logItem.Text = Loc.T.TrayOpenLog;
         _checkItem.Text = Loc.T.TrayCheckUpdates;
+        _whatsNewItem.Text = Strings.Tray.WhatsNew;
         _exitItem.Text = Loc.T.TrayExit;
         if (_updateBuild is { } build) _updateItem.Text = Loc.F(Loc.T.TrayUpdateTo, build);
         UpdateText(Math.Max(_busyCount, 0));

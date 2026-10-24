@@ -440,13 +440,15 @@ Copy files in Explorer (<kbd>Ctrl</kbd>+<kbd>C</kbd>) or take a screenshot (<kbd
 
 - **Left click** the tray icon — the jobs flyout: thumbnails, progress bars, *Cancel*; finished jobs have *Open* and *Show in folder*, failed ones the reason and *Details*.
 - **Double click** — the settings window.
-- **Right click** — *Jobs*, *From clipboard…*, *Settings…*, the Explorer menu on/off switch, *Open log*, *Check for updates*, *Exit*.
+- **Right click** — *Jobs*, *From clipboard…*, *Settings…*, the Explorer menu on/off switch, *Open log*, *Check for updates*, *What's new*, *Exit*.
 - While something is being converted, the icon shows an orange badge with the number of jobs.
 - **Notifications** show a preview of the result with *Open* and *Show in folder*. Several files finished together → one notification “Done: N files”; a whole folder → one notification for the folder.
 
 ### 🔄 Updates
 
 Once a day (and when you click *Check for updates*) DropWheel reads a small `version.json` from the [latest stable release](https://github.com/Luchano55/dropwheel/releases/latest) or, on the test channel, from the [`dev-build` release](https://github.com/Luchano55/dropwheel/releases/tag/dev-build) (*Settings → General → Update channel*). If there's a newer build, the tray menu offers **Update to build N** — nothing is downloaded until you click it. Don't want the check at all? Turn off *Check for updates* in the settings window. This is the only time DropWheel goes online.
+
+After an update, a small **What's new** window lists the changes (it's built into the program — nothing is fetched); open it again any time from the tray menu → *What's new*.
 
 ### ⚙️ Settings
 

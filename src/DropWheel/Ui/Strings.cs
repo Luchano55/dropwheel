@@ -16,6 +16,7 @@ internal static class Strings
     {
         public static string Settings => T.TraySettings;
         public static string StartHint(string hotkey) => Loc.F(T.TrayStartHint, hotkey);
+        public static string WhatsNew => T.TrayWhatsNew;
     }
 
     public static class Settings

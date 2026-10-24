@@ -36,6 +36,12 @@ public sealed partial class Texts
     // ---------- обновления ----------
     public string UpdateAvailableTitle { get; init; } = "Есть новая версия DropWheel";
     public string UpdateAvailableText { get; init; } = "Правый клик по значку → «Обновить».";
+    // «Что нового» (D-WHATSNEW)
+    public string TrayWhatsNew { get; init; } = "Что нового";
+    public string WhatsNewTitle { get; init; } = "Что нового в DropWheel {0}";
+    public string WhatsNewOk { get; init; } = "Понятно";
+    public string WhatsNewAll { get; init; } = "Все изменения";
+    public string WhatsNewMissing { get; init; } = "Описания этой версии нет — все изменения на странице выпусков.";
     public string UpdatedTitle { get; init; } = "DropWheel обновлён";
     public string UpdatedText { get; init; } = "Сборка {0}. Всё готово к работе.";
     public string NoUpdatesTitle { get; init; } = "Обновлений нет";
