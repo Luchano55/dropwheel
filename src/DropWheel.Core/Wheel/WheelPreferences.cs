@@ -137,7 +137,7 @@ public static class WheelArrangement
     public static IReadOnlyList<WheelEntry> Ordered(IReadOnlyList<Operation> ops, OperationMode mode, WheelModePrefs? prefs)
     {
         var candidates = ops.Where(o => o.Mode == mode).DistinctBy(o => o.Id).ToList();
-        if (prefs is null || !prefs.IsCustomized) return candidates.Select(o => new WheelEntry(o, false)).ToList();
+        if (prefs is null || !prefs.IsCustomized) return candidates.Select(o => new WheelEntry(o, o.HiddenByDefault)).ToList();
 
         var byId = candidates.ToDictionary(o => o.Id, StringComparer.OrdinalIgnoreCase);
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);

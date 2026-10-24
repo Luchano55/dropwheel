@@ -12,12 +12,14 @@ Each version section starts with `## <version>`; CI copies it into the GitHub re
   «Word не смог открыть файл» (Office открывал их в защищённом просмотре) — программа сама берёт чистую копию.
 - Если Office установлен, но не работает (не активирован, висит окно первого запуска), Word → PDF, TXT, HTML, Markdown
   и Excel ↔ CSV делаются без Office (PDF — печатью через встроенный в Windows Edge), а не падают с ошибкой.
+- DOC (старый формат Word) по умолчанию убран с колеса — включается в «Настройки → Колесо».
 
 **English**
 - Fixed: Office documents received by e-mail or downloaded from the internet no longer fail with “Word could not open
   the file” (Office opened them in Protected View) — DropWheel retries with a clean copy.
 - If Office is installed but not working (not activated, first-run dialog), conversions that also work without Office
   (Word → PDF via the built-in Edge, TXT, HTML, Markdown; Excel ↔ CSV) now fall back to that instead of failing.
+- DOC (the legacy Word format) is hidden on the wheel by default — show it in Settings → Wheel.
 
 ## 1.1.0
 

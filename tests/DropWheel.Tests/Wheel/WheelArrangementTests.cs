@@ -202,4 +202,21 @@ public class WheelGroupsTests
         Assert.Null(WheelGroups.OnlyFor(OperationCatalog.Find("word-to-pdf")!, WheelGroups.Word));
         Assert.Null(WheelGroups.OnlyFor(OperationCatalog.Find("zip-pack")!, WheelGroups.Any));
     }
+
+    [Fact]
+    public void Doc_is_hidden_by_default_but_can_be_shown()
+    {
+        var ops = OperationCatalog.ForFiles(["отчёт.docx"]);
+        var (convert, _) = WheelArrangement.Arrange(ops, WheelGroups.Word, new WheelPreferences());
+        Assert.DoesNotContain(convert, i => i.Id == "word-to-doc");
+        Assert.Contains(convert, i => i.Id == "word-to-pdf");
+        // В настройках колеса DOC виден как скрытый.
+        Assert.True(WheelArrangement.Ordered(ops, OperationMode.Convert, null).Single(e => e.Operation.Id == "word-to-doc").Hidden);
+
+        // Пользователь включил DOC в настройках — его список скрытых пуст.
+        var order = WheelArrangement.Ordered(ops, OperationMode.Convert, null).Select(e => e.Operation.Id).ToList();
+        var prefs = new WheelPreferences().WithLayout(WheelGroups.Word, OperationMode.Convert, order, []);
+        (convert, _) = WheelArrangement.Arrange(ops, WheelGroups.Word, prefs);
+        Assert.Contains(convert, i => i.Id == "word-to-doc");
+    }
 }

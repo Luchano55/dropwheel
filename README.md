@@ -77,7 +77,7 @@ The same three steps work for a **whole folder** (`Vacation` → `Vacation (JPG)
   <tr>
     <td width="33%" valign="top">
       <h3>📄 Office documents</h3>
-      Word, Excel and PowerPoint through your installed Microsoft Office — pre-warmed in the background, so it's fast. No Office? DOCX → PDF, TXT, HTML, Markdown and XLSX → CSV still work.
+      Word, Excel and PowerPoint through your installed Microsoft Office — pre-warmed in the background, so it's fast. Every Office format needs an activated (licensed) Office. No Office, or Office not working? DOCX → PDF, TXT, HTML, Markdown and XLSX → CSV still work.
     </td>
     <td width="33%" valign="top">
       <h3>🔎 Text from pictures</h3>
@@ -287,6 +287,8 @@ Tools keep the format for ordinary pictures; HEIC, AVIF, SVG, PSD and RAW come o
 <br>
 
 **With Microsoft Office** (2013 or newer) Office itself does the conversion — exactly like *Save as*. DropWheel starts its own invisible Office instance and never touches your open documents; files are opened read-only, macros are disabled, password-protected documents are reported instead of asking. Office is **pre-warmed**: as soon as the wheel shows an Office format, Word, Excel or PowerPoint starts in the background while you aim, so the drop is quick (cold start ~3–5 s, then ~1 s per document). It closes after 5 idle minutes. Word, Excel and PowerPoint are detected separately — only what you have shows up.
+
+> **Full Office support needs an activated, licensed Microsoft Office.** If Office is installed but not activated (or stuck on a first-run dialog), DropWheel falls back to the Office-free conversions below; DOC / RTF / ODT, XLS / ODS and all PowerPoint conversions then aren't available. DOC is hidden on the wheel by default — show it in Settings → Wheel.
 
 **Without Office** built-in libraries and Edge cover the common cases.
 
@@ -518,7 +520,7 @@ Right next to the original: `photo.heic` → `photo.jpg`. Tools keep the format,
 <details>
 <summary><b>Do I need Microsoft Office?</b></summary>
 
-No. Without Office you still get DOCX → PDF / TXT / HTML / Markdown, XLSX / XLS → CSV, CSV → XLSX and TXT / Markdown / HTML → PDF. With Office you also get exact Word, Excel and PowerPoint conversions (DOC, RTF, ODT, ODS, PPT, PPTX, ODP, slides as PNG) and PDF → DOCX. DropWheel runs its own hidden Office instance and leaves your open documents alone; a pre-warmed Word or Excel uses roughly 100–200 MB of RAM until it closes after 5 idle minutes or when you exit DropWheel.
+No. Full Office conversions need an activated Microsoft Office; without it (or with an unactivated one) you still get DOCX → PDF / TXT / HTML / Markdown, XLSX / XLS → CSV, CSV → XLSX and TXT / Markdown / HTML → PDF. With Office you also get exact Word, Excel and PowerPoint conversions (DOC, RTF, ODT, ODS, PPT, PPTX, ODP, slides as PNG) and PDF → DOCX. DropWheel runs its own hidden Office instance and leaves your open documents alone; a pre-warmed Word or Excel uses roughly 100–200 MB of RAM until it closes after 5 idle minutes or when you exit DropWheel.
 </details>
 
 <details>

@@ -142,7 +142,8 @@ public static class OperationCatalog
         // Запасные движки без Office: Word → PDF — Edge (WebPdf, только DOCX); Word → TXT и Excel → CSV — DocLibs.
         new("word-to-pdf",   "PDF",  Conv, Document, Office, "", OutputRule.Fixed("pdf"))  { InputExtensions = Extensions.Word, Fallback = WebPdf },
         new("word-to-docx",  "DOCX", Conv, Document, Office, "", OutputRule.Fixed("docx")) { InputExtensions = Extensions.Word },
-        new("word-to-doc",   "DOC",  Conv, Document, Office, "", OutputRule.Fixed("doc"))  { InputExtensions = Extensions.Word },
+        // DOC — старый формат, нужен редко и только с рабочим Word: по умолчанию скрыт, включается в «Настройки → Колесо».
+        new("word-to-doc",   "DOC",  Conv, Document, Office, "", OutputRule.Fixed("doc"))  { InputExtensions = Extensions.Word, HiddenByDefault = true },
         new("word-to-odt",   "ODT",  Conv, Document, Office, "", OutputRule.Fixed("odt"))  { InputExtensions = Extensions.Word },
         new("word-to-rtf",   "RTF",  Conv, Document, Office, "", OutputRule.Fixed("rtf"))  { InputExtensions = Extensions.Word },
         new("word-to-txt",   "TXT",  Conv, Document, Office, "", OutputRule.Fixed("txt"))  { InputExtensions = Extensions.Word, Fallback = DocLibs },
