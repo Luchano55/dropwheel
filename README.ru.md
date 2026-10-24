@@ -24,7 +24,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Luchano55/dropwheel/releases/latest"><img src="https://img.shields.io/badge/%D0%A1%D0%BA%D0%B0%D1%87%D0%B0%D1%82%D1%8C%201.0-%D0%B4%D0%BB%D1%8F%20Windows-0078D4?style=for-the-badge" alt="Скачать DropWheel 1.0 для Windows"></a>
+  <a href="https://github.com/Luchano55/dropwheel/releases/latest"><img src="https://img.shields.io/github/v/release/Luchano55/dropwheel?label=%D0%A1%D0%BA%D0%B0%D1%87%D0%B0%D1%82%D1%8C%20%D0%B4%D0%BB%D1%8F%20Windows&style=for-the-badge&color=0078D4" alt="Скачать последнюю версию DropWheel для Windows"></a>
 </p>
 
 <p align="center">

@@ -24,7 +24,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Luchano55/dropwheel/releases/latest"><img src="https://img.shields.io/badge/Download%201.0-for%20Windows-0078D4?style=for-the-badge" alt="Download DropWheel 1.0 for Windows"></a>
+  <a href="https://github.com/Luchano55/dropwheel/releases/latest"><img src="https://img.shields.io/github/v/release/Luchano55/dropwheel?label=Download%20for%20Windows&style=for-the-badge&color=0078D4" alt="Download the latest DropWheel for Windows"></a>
 </p>
 
 <p align="center">
