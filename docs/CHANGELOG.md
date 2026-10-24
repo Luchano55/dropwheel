@@ -5,6 +5,27 @@
 
 Each version section starts with `## <version>`; CI copies it into the GitHub release notes.
 
+## 1.3.0
+
+**Новое в этой версии**
+- Своё сочетание для снимка экрана: «Настройки → Основное → Windows» → «Изменить…» и нажмите новое сочетание
+  (например, Ctrl+Shift+F9). Сочетания, которые держит Windows (Win с буквой), и одиночные буквы не принимаются;
+  если сочетание занято другой программой, окно скажет об этом и оставит прежнее.
+- Снимок с задержкой: в меню значка «Снимок через 3 с» и «Снимок через 5 с» — у курсора идёт отсчёт «3… 2… 1…»,
+  можно успеть открыть меню или подсказку. Отсчёт в снимок не попадает.
+- «Сообщить о проблеме» (меню значка и внизу настроек): открывает страницу новой задачи на GitHub с уже заполненными
+  версией, Windows и последними строками журнала (имя пользователя в путях скрыто) и копирует тот же текст в буфер
+  обмена. Отправляете вы сами.
+
+**English**
+- Your own screenshot shortcut: Settings → General → Windows → Change… and press a new shortcut (e.g. Ctrl+Shift+F9).
+  Shortcuts Windows keeps (Win with a letter) and single letters aren't accepted; if another program has taken it,
+  the window says so and keeps the old one.
+- Delayed screenshot: Screenshot in 3 s and Screenshot in 5 s in the tray menu — a 3… 2… 1… countdown next to the
+  cursor gives you time to open a menu or a tooltip. The countdown doesn't appear in the screenshot.
+- Report a problem (tray menu and the bottom of Settings): opens a new GitHub issue with the version, Windows and the
+  last log lines filled in (the user name in paths is hidden) and copies the same text to the clipboard. You send it yourself.
+
 ## 1.2.0
 
 **Новое в этой версии**

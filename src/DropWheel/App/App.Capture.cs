@@ -52,6 +52,77 @@ public partial class App
         }
     }
 
+    /// <summary>
+    /// «Изменить…» у сочетания снимка в настройках: пока окно ждёт нажатия, своё сочетание снято (иначе Windows
+    /// отдаст нажатие нам, а не окну); новое сначала пробуется отдельной регистрацией — занято другой программой →
+    /// окно оставляет старое.
+    /// </summary>
+    private void AttachCaptureKeys(SettingsWindow window)
+    {
+        window.View.PauseCaptureHotkey = pause =>
+        {
+            if (pause) _captureHotkey?.Unregister();
+            else SetCaptureHotkey(Settings.CaptureHotkey, Settings.CaptureKeys);
+        };
+        window.View.TryCaptureKeys = chord =>
+        {
+            try
+            {
+                using var probe = new GlobalHotkey(CaptureProbeId, () => { });
+                var ok = probe.TryRegister(chord.Modifiers, (uint)chord.Key, out var error);
+                if (!ok) Log.Write($"{chord} (снимок экрана) занята другой программой или недоступна (код {error}) — оставлено {Settings.CaptureKeys}");
+                return ok;
+            }
+            catch (Exception ex)
+            {
+                Log.Write("Не удалось проверить сочетание для снимка экрана: " + ex);
+                return false;
+            }
+        };
+        // Окно закрыли, пока оно ждало сочетание, — вернуть своё.
+        window.Closed += (_, _) => SetCaptureHotkey(Settings.CaptureHotkey, Settings.CaptureKeys);
+    }
+
+    private const int CaptureProbeId = 3;
+
+    /// <summary>Пункт трея «Снимок через N с»: плашка с обратным отсчётом у курсора, затем снимок (плашки на нём нет).</summary>
+    internal void CaptureWithDelay(int seconds)
+    {
+        if (_capture is not null || _countdown is not null) return;
+        var steps = CaptureCountdown.Steps(seconds);
+        if (steps.Count == 0)
+        {
+            CaptureFromTray();
+            return;
+        }
+        var pill = new CountdownPill();
+        _countdown = pill;
+        pill.ShowNearCursor(steps[0]);
+        var step = 0;
+        var timer = new DispatcherTimer(DispatcherPriority.Normal, Dispatcher) { Interval = TimeSpan.FromSeconds(1) };
+        timer.Tick += (_, _) =>
+        {
+            if (++step < steps.Count)
+            {
+                pill.SetText(steps[step]);
+                return;
+            }
+            timer.Stop();
+            pill.Close();
+            _countdown = null;
+            var grab = new DispatcherTimer(DispatcherPriority.Normal, Dispatcher) { Interval = CaptureCountdown.HideBeforeGrab };
+            grab.Tick += (_, _) =>
+            {
+                grab.Stop();
+                BeginCapture();
+            };
+            grab.Start();
+        };
+        timer.Start();
+    }
+
+    private CountdownPill? _countdown;
+
     /// <summary>Пункт трея «Снимок экрана».</summary>
     internal void CaptureFromTray()
     {

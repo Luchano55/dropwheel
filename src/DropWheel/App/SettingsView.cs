@@ -51,6 +51,9 @@ public sealed class SettingsView : Border
     private Action? _startHotkeyCapture;
     /// <summary>Не null, пока ждём нажатия своей горячей клавиши: код VK → принята ли.</summary>
     private Func<int, bool>? _hotkeyKey;
+    /// <summary>Не null, пока ждём сочетание снимка («Изменить…»): (модификаторы MOD_*, код VK) → принято ли.</summary>
+    private Func<uint, int, bool>? _chordKey;
+    private Action? _startChordCapture;
 
     /// <param name="build">Номер сборки для подписи внизу (0 — сборка разработчика).</param>
     /// <param name="version">Версия для людей (0.3.0, 0.3.0-dev.57); null — показать только номер сборки.</param>
@@ -73,13 +76,14 @@ public sealed class SettingsView : Border
         System.Windows.Documents.TextElement.SetFontFamily(this, UiFonts.Text);
         System.Windows.Documents.TextElement.SetFontSize(this, 14);
         PreviewKeyDown += OnPreviewKeyDown;
+        PreviewKeyUp += OnPreviewKeyUp;
         Build();
     }
 
     /// <summary>Ждём свою горячую клавишу: нажатие забираем себе, в элементы окна оно не идёт.</summary>
     private void OnPreviewKeyDown(object sender, KeyEventArgs e)
     {
-        if (_hotkeyKey is null) return;
+        if (_hotkeyKey is null && _chordKey is null) return;
         e.Handled = true;
         if (e.IsRepeat) return;
         var key = e.Key switch
@@ -89,8 +93,32 @@ public sealed class SettingsView : Border
             Key.DeadCharProcessed => e.DeadCharProcessedKey,
             _ => e.Key,
         };
-        _hotkeyKey(KeyInterop.VirtualKeyFromKey(key));
+        if (_chordKey is not null) _chordKey(ChordModifiers(), KeyInterop.VirtualKeyFromKey(key));
+        else _hotkeyKey?.Invoke(KeyInterop.VirtualKeyFromKey(key));
     }
+
+    /// <summary>Ждём сочетание снимка: Print Screen приходит только отпусканием (WM_KEYDOWN для неё Windows не шлёт).</summary>
+    private void OnPreviewKeyUp(object sender, KeyEventArgs e)
+    {
+        if (_chordKey is null) return;
+        e.Handled = true;
+        if (e.Key == Key.Snapshot) _chordKey(ChordModifiers(), KeyInterop.VirtualKeyFromKey(Key.Snapshot));
+    }
+
+    private static uint ChordModifiers()
+    {
+        var m = Keyboard.Modifiers;
+        return ((m & ModifierKeys.Control) != 0 ? Capture.KeyChord.Control : 0)
+             | ((m & ModifierKeys.Alt) != 0 ? Capture.KeyChord.Alt : 0)
+             | ((m & ModifierKeys.Shift) != 0 ? Capture.KeyChord.Shift : 0)
+             | ((m & ModifierKeys.Windows) != 0 ? Capture.KeyChord.Win : 0);
+    }
+
+    /// <summary>Нажать «Изменить…» у сочетания снимка (для тестов).</summary>
+    internal void BeginChordCapture() => _startChordCapture?.Invoke();
+
+    /// <summary>Нажато сочетание в режиме «Нажмите сочетание…» (для тестов); true — принято.</summary>
+    internal bool CaptureChord(uint modifiers, int vk) => _chordKey?.Invoke(modifiers, vk) ?? false;
 
     /// <summary>Нажать «Своя…» (для тестов).</summary>
     internal void BeginHotkeyCapture() => _startHotkeyCapture?.Invoke();
@@ -108,6 +136,19 @@ public sealed class SettingsView : Border
     public Func<string, string, string?>? PickFolder { get; set; }
 
     public event Action? OpenLogsRequested;
+    public event Action? ReportProblemRequested;
+
+    /// <summary>
+    /// Проверить новое сочетание снимка: удаётся ли его зарегистрировать (не занято другой программой).
+    /// null (скриншот-тесты) — принимается всегда.
+    /// </summary>
+    public Func<Capture.KeyChord, bool>? TryCaptureKeys { get; set; }
+
+    /// <summary>
+    /// true — окно ждёт сочетание: приложение снимает своё сочетание снимка, чтобы нажатие дошло до окна;
+    /// false — вернуть как в настройках.
+    /// </summary>
+    public Action<bool>? PauseCaptureHotkey { get; set; }
     public event Action? CheckUpdatesRequested;
 
     /// <summary>Настройки, которые показывает окно. Установка снаружи (трей, «последний выбор») перестраивает вид.</summary>
@@ -254,6 +295,9 @@ public sealed class SettingsView : Border
         var logs = new SettingsLink(p, S.OpenLogs) { HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0, 2, 0, 0) };
         logs.Click += () => OpenLogsRequested?.Invoke();
         panel.Children.Add(logs);
+        var report = new SettingsLink(p, S.ReportProblem) { HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0, 2, 0, 0) };
+        report.Click += () => ReportProblemRequested?.Invoke();
+        panel.Children.Add(report);
         return panel;
     }
 
@@ -269,6 +313,8 @@ public sealed class SettingsView : Border
         });
         _hotkeyKey = null;
         _startHotkeyCapture = null;
+        EndChordCapture();
+        _startChordCapture = null;
         switch (_page)
         {
             case SettingsPage.Quality: BuildQuality(page); break;
@@ -488,8 +534,7 @@ public sealed class SettingsView : Border
             on => Change(s => s with { ContextMenuEnabled = on })));
         page.Children.Add(ToggleCard(S.ClipboardHotkey, S.ClipboardHotkeyHint, _settings.ClipboardHotkey,
             on => Change(s => s with { ClipboardHotkey = on })));
-        page.Children.Add(ToggleCard(S.CaptureHotkey((Capture.KeyChord.Parse(_settings.CaptureKeys) ?? Capture.KeyChord.Default).DisplayName),
-            S.CaptureHotkeyHint, _settings.CaptureHotkey, on => Change(s => s with { CaptureHotkey = on })));
+        page.Children.Add(CaptureHotkeyCard());
         page.Children.Add(ClipboardImageCard());
         page.Children.Add(ToggleCard(S.KeepClipboardImage, S.KeepClipboardImageHint, _settings.KeepClipboardImage,
             on => Change(s => s with { KeepClipboardImage = on })));
@@ -506,6 +551,94 @@ public sealed class SettingsView : Border
         channelPanel.Children.Add(Titles(S.UpdateChannelTitle, S.UpdateChannelHint));
         channelPanel.Children.Add(channels);
         page.Children.Add(Card(channelPanel));
+    }
+
+    /// <summary>Закончить ожидание сочетания снимка (если ждали) — приложение возвращает своё сочетание.</summary>
+    private void EndChordCapture()
+    {
+        if (_chordKey is null) return;
+        _chordKey = null;
+        PauseCaptureHotkey?.Invoke(false);
+    }
+
+    /// <summary>
+    /// «Ctrl+Alt+S — снимок экрана»: переключатель и «Изменить…» (D-CAPTURE). Щелчок → «Нажмите сочетание… (Esc — отмена)»,
+    /// следующее сочетание в окне — новое (проверка — KeyChord.Check), сразу регистрируется; занято другой
+    /// программой — подсказка под строкой, остаётся старое.
+    /// </summary>
+    private Border CaptureHotkeyCard()
+    {
+        var p = _palette;
+        Capture.KeyChord Current() => Capture.KeyChord.Parse(_settings.CaptureKeys) ?? Capture.KeyChord.Default;
+        var toggle = new ToggleSwitch(p, _settings.CaptureHotkey, S.CaptureHotkey(Current().DisplayName));
+        toggle.Toggled += on => Change(s => s with { CaptureHotkey = on });
+        var change = new SettingsButton(p, S.CaptureChange) { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 16, 0) };
+        var controls = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+        controls.Children.Add(change);
+        controls.Children.Add(toggle);
+
+        var grid = new Grid();
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        var titles = Titles(S.CaptureHotkey(Current().DisplayName), S.CaptureHotkeyHint);
+        titles.Margin = new Thickness(0, 0, 16, 0);
+        var title = (TextBlock)titles.Children[0];
+        grid.Children.Add(titles);
+        Grid.SetColumn(controls, 1);
+        grid.Children.Add(controls);
+
+        var note = new TextBlock
+        {
+            FontSize = 12, Foreground = p.TextSecondary, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 8, 0, 0),
+            Visibility = Visibility.Collapsed,
+        };
+        void Note(string? text)
+        {
+            note.Text = text ?? "";
+            note.Visibility = text is null ? Visibility.Collapsed : Visibility.Visible;
+        }
+        void Show()
+        {
+            title.Text = S.CaptureHotkey(Current().DisplayName);
+            title.Foreground = p.Text;
+        }
+        _startChordCapture = () =>
+        {
+            if (_chordKey is null) PauseCaptureHotkey?.Invoke(true);
+            title.Text = S.CaptureChordPress;
+            title.Foreground = p.Accent;
+            Note(null);
+            Keyboard.Focus(change);
+            _chordKey = (mods, vk) =>
+            {
+                if (vk == Hotkeys.Escape && mods == 0)
+                {
+                    EndChordCapture();
+                    Show();
+                    return false;
+                }
+                switch (Capture.KeyChord.Check(mods, vk))
+                {
+                    case Capture.ChordCheck.ModifierOnly: return false;
+                    case Capture.ChordCheck.NeedsModifier: Note(S.CaptureChordNeedsModifier); return false;
+                    case Capture.ChordCheck.UnsupportedKey: Note(S.CaptureChordKey); return false;
+                    case Capture.ChordCheck.WindowsOwned: Note(S.CaptureChordWindows(new Capture.KeyChord(mods, vk).DisplayName)); return false;
+                }
+                var chord = new Capture.KeyChord(mods, vk);
+                var free = chord == Current() || TryCaptureKeys?.Invoke(chord) != false;
+                EndChordCapture();
+                if (free) Change(s => s with { CaptureKeys = chord.ToString() });
+                Show();
+                Note(free ? null : S.CaptureChordBusy(chord.DisplayName, Current().DisplayName));
+                return free;
+            };
+        };
+        change.Click += () => _startChordCapture?.Invoke();
+
+        var panel = new StackPanel();
+        panel.Children.Add(grid);
+        panel.Children.Add(note);
+        return Card(panel);
     }
 
     /// <summary>
