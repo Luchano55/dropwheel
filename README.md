@@ -173,6 +173,23 @@ The same three steps work for a **whole folder** (`Vacation` → `Vacation (JPG)
   </tr>
   <tr>
     <td align="center" width="50%">
+      <img src="docs/assets/screenshots/capture-en.png" alt="Screenshot overlay: a selected area with its size in pixels and a toolbar — Copy, Save, Wheel, Text" width="340"><br>
+      <sub><b>Screenshot</b> — <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>S</kbd>: drag an area, click a window or press Enter for the whole screen</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/assets/screenshots/beautify-en.png" alt="The Beautify window: a picture on a gradient background with padding, rounded corners and a shadow" width="300"><br>
+      <sub><b>Beautify</b> — background, padding, rounded corners, shadow; <i>Copy</i> or <i>Save</i></sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <img src="docs/assets/screenshots/pdf-password-en.png" alt="The Protect PDF with a password window: password and repeat fields" width="300"><br>
+      <sub><b>PDF password</b> — protect with AES-256 or remove a known password</sub>
+    </td>
+    <td align="center" width="50%"></td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
       <img src="docs/assets/screenshots/trim-en.png" alt="The Trim video window: a frame preview, a thumbnail strip with start and end handles, start, length and end times, and the Frame-accurate checkbox" width="340"><br>
       <sub><b>Trim video</b> — drag the handles; the part between them is kept</sub>
     </td>

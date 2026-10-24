@@ -110,6 +110,23 @@
   </tr>
   <tr>
     <td align="center" width="50%">
+      <img src="docs/assets/screenshots/capture-ru.png" alt="Снимок экрана: выделенная область с размером в пикселях и панель — Копировать, Сохранить, Колесо, Текст" width="340"><br>
+      <sub><b>Снимок экрана</b> — <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>S</kbd>: выделите область, щёлкните по окну или Enter — весь экран</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/assets/screenshots/beautify-ru.png" alt="Окно «Оформить картинку»: картинка на градиентном фоне с отступами, скруглением и тенью" width="300"><br>
+      <sub><b>Оформить</b> — фон, отступы, скругление, тень; «Копировать» или «Сохранить»</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <img src="docs/assets/screenshots/pdf-password-ru.png" alt="Окно «Защитить PDF паролем»: пароль и повтор" width="300"><br>
+      <sub><b>Пароль на PDF</b> — защитить (AES-256) или снять известный пароль</sub>
+    </td>
+    <td align="center" width="50%"></td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
       <img src="docs/assets/screenshots/trim-ru.png" alt="Окно «Обрезать видео»: кадр, полоса миниатюр с ручками «начало» и «конец», время начала, длины и конца, галочка «Точно по кадру»" width="340"><br>
       <sub><b>Обрезка видео</b> — двигайте ручки, останется кусок между ними</sub>
     </td>
