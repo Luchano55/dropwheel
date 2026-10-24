@@ -19,6 +19,8 @@ public class OfficeAvailabilityTests : IDisposable
     {
         public readonly List<IReadOnlyList<Operation>> Prepared = [];
         public readonly List<(string Op, string Input, string Output)> Runs = [];
+        /// <summary>Не null — «конвертация» падает с этой ошибкой (Office установлен, но не работает).</summary>
+        public string? FailWith { get; init; }
 
         public EngineKind Kind => kind;
         public bool IsAvailable => true;
@@ -30,6 +32,7 @@ public class OfficeAvailabilityTests : IDisposable
             IProgress<double>? progress, CancellationToken ct)
         {
             Runs.Add((op.Id, inputs[0], output));
+            if (FailWith is not null) throw new ConversionException(FailWith, "0x800A1066 COMException");
             if (op.Result == ResultKind.Folder)
                 for (var i = 1; i <= 2; i++) File.WriteAllText(Path.Combine(output, OfficeFormats.SlideFileName(i, 2)), "png");
             else
@@ -101,6 +104,41 @@ public class OfficeAvailabilityTests : IDisposable
         var withOffice = ConverterWith(webPdf, docLibs, Office(OfficeApp.Word));
         Assert.Equal(EngineKind.Office, withOffice.EngineFor(OperationCatalog.Find("word-to-pdf")!, "docx"));
         Assert.Contains("word-to-pdf", Offered(withOffice, "старый.doc"));
+    }
+
+    [Fact]
+    public async Task Broken_office_falls_back_to_the_engine_without_office()
+    {
+        // Word установлен, но не работает (не активирован, окно первого запуска) — PDF печатает Edge.
+        var webPdf = new FakeEngine(EngineKind.WebPdf, (op, ext) => op.Id == "word-to-pdf" && ext is null or "docx");
+        var office = new FakeEngine(EngineKind.Office, (op, _) => OfficeFormats.For(op) is { App: OfficeApp.Word })
+            { FailWith = "Word не смог открыть файл" };
+        var converter = ConverterWith(webPdf, office);
+        var docx = Path.Combine(_dir.Path, "счёт  ЧЗ.docx");
+        File.WriteAllText(docx, "docx");
+
+        var output = await converter.ConvertAsync(docx, OperationCatalog.Find("word-to-pdf")!);
+
+        Assert.Equal(Path.Combine(_dir.Path, "счёт  ЧЗ.pdf"), output);
+        Assert.Equal("WebPdf", File.ReadAllText(output));
+        Assert.Single(office.Runs);
+        Assert.Single(webPdf.Runs);
+    }
+
+    [Fact]
+    public async Task Password_error_is_not_retried_without_office()
+    {
+        var webPdf = new FakeEngine(EngineKind.WebPdf, (op, ext) => op.Id == "word-to-pdf");
+        var office = new FakeEngine(EngineKind.Office, (op, _) => OfficeFormats.For(op) is { App: OfficeApp.Word })
+            { FailWith = DropWheel.Localization.Loc.T.ErrDocPassword };
+        var converter = ConverterWith(webPdf, office);
+        var docx = Path.Combine(_dir.Path, "секрет.docx");
+        File.WriteAllText(docx, "docx");
+
+        var ex = await Assert.ThrowsAsync<ConversionException>(() => converter.ConvertAsync(docx, OperationCatalog.Find("word-to-pdf")!));
+
+        Assert.Equal(DropWheel.Localization.Loc.T.ErrDocPassword, ex.Message);
+        Assert.Empty(webPdf.Runs);
     }
 
     [Fact]

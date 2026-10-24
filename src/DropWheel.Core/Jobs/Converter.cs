@@ -185,10 +185,34 @@ public sealed class Converter(ToolLocator tools, ConversionSettings settings, IE
     private async Task RunEngineAsync(Operation op, IReadOnlyList<string> inputs, string output,
         ConversionSettings settings, IProgress<double>? progress, Action<string>? log, CancellationToken ct)
     {
-        var kind = EngineFor(op, Path.GetExtension(inputs[0])) ?? throw new ConversionException(op.Engine == EngineKind.Office
+        var extension = Path.GetExtension(inputs[0]);
+        var kind = EngineFor(op, extension) ?? throw new ConversionException(op.Engine == EngineKind.Office
             ? Loc.T.ErrNoOffice
             : Loc.F(Loc.T.ErrNoEngine, Loc.Label(op)));
 
+        // Office установлен, но не работает (не активирован, окно первого запуска, файл не открылся) —
+        // пробуем запасной движок без Office, если он есть (у Word → PDF — печать через Edge). Пароль — не повод.
+        if (kind == EngineKind.Office && op.Fallback is { } fallback && CanUse(fallback, op, extension))
+        {
+            try
+            {
+                await RunWithAsync(kind, op, inputs, output, settings, progress, log, ct);
+                return;
+            }
+            catch (ConversionException ex) when (ex.Message != Loc.T.ErrDocPassword)
+            {
+                log?.Invoke($"Office не справился ({ex.Message}; {ex.Details}) — пробую без Office: {fallback}");
+                if (File.Exists(output)) File.Delete(output);
+                if (Directory.Exists(output)) Directory.Delete(output, recursive: true);
+                kind = fallback;
+            }
+        }
+        await RunWithAsync(kind, op, inputs, output, settings, progress, log, ct);
+    }
+
+    private async Task RunWithAsync(EngineKind kind, Operation op, IReadOnlyList<string> inputs, string output,
+        ConversionSettings settings, IProgress<double>? progress, Action<string>? log, CancellationToken ct)
+    {
         if (_internal.TryGetValue(kind, out var engine))
         {
             log?.Invoke($"> [{kind}] {op.Id} {string.Join(" | ", inputs)} → {output}");

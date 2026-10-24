@@ -10,10 +10,14 @@ Each version section starts with `## <version>`; CI copies it into the GitHub re
 **Исправлено**
 - Word, Excel, PowerPoint: документы, пришедшие по почте или скачанные из интернета, больше не падают с ошибкой
   «Word не смог открыть файл» (Office открывал их в защищённом просмотре) — программа сама берёт чистую копию.
+- Если Office установлен, но не работает (не активирован, висит окно первого запуска), Word → PDF, TXT, HTML, Markdown
+  и Excel ↔ CSV делаются без Office (PDF — печатью через встроенный в Windows Edge), а не падают с ошибкой.
 
 **English**
 - Fixed: Office documents received by e-mail or downloaded from the internet no longer fail with “Word could not open
   the file” (Office opened them in Protected View) — DropWheel retries with a clean copy.
+- If Office is installed but not working (not activated, first-run dialog), conversions that also work without Office
+  (Word → PDF via the built-in Edge, TXT, HTML, Markdown; Excel ↔ CSV) now fall back to that instead of failing.
 
 ## 1.1.0
 
