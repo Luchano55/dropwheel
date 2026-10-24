@@ -210,6 +210,16 @@ public class AppSettingsTests : IDisposable
         Assert.True(s.ClipboardHotkey);
         Assert.True(s.KeepClipboardImage);
         Assert.Null(s.ClipboardFolder);
+        Assert.False(s.CopyResultToClipboard);
+    }
+
+    [Fact]
+    public void Copy_result_setting_round_trips()
+    {
+        Assert.False(new AppSettings().CopyResultToClipboard);
+        new AppSettings { CopyResultToClipboard = true }.Save(SettingsPath);
+        Assert.Contains("\"copyResultToClipboard\": true", File.ReadAllText(SettingsPath));
+        Assert.True(AppSettings.Load(SettingsPath).CopyResultToClipboard);
     }
 
     [Fact]

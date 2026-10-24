@@ -24,11 +24,11 @@ public class ImageCropTests
     }
 
     [Fact]
-    public void Default_image_tools_wheel_shows_crop_and_keeps_everything()
+    public void Default_image_tools_wheel_shows_crop_and_beautify_and_keeps_everything()
     {
         var ops = OperationCatalog.ForFiles(["photo.jpg"]);
         var (_, tools) = WheelArrangement.Arrange(ops, WheelGroups.Photo, new WheelPreferences());
-        Assert.Equal(["img-compress", "img-half", "img-1920", "img-strip", ImageCrop.Id, "zip-pack", "pack-7z"], tools.Select(t => t.Id));
+        Assert.Equal(["img-compress", "img-half", "img-1920", "img-strip", ImageCrop.Id, ImageBeautify.Id, "zip-pack", "pack-7z"], tools.Select(t => t.Id));
     }
 
     [Fact]

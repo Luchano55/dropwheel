@@ -9,7 +9,8 @@ namespace DropWheel.Cli;
 
 public static class Program
 {
-    private static string Usage => Loc.T.CliUsage.TrimEnd() + "\n\n" + Loc.T.CliTrimUsage.TrimEnd() + "\n\n" + Loc.T.CropCliUsage;
+    private static string Usage => Loc.T.CliUsage.TrimEnd() + "\n\n" + Loc.T.CliTrimUsage.TrimEnd() + "\n\n" + Loc.T.CropCliUsage.TrimEnd()
+        + "\n\n" + Loc.T.BeautifyCliUsage;
 
     public static async Task<int> Main(string[] args)
     {
@@ -40,7 +41,7 @@ public static class Program
         }
 
         var positional = new List<string>();
-        string? outDir = null, ffmpeg = null, magick = null, start = null, end = null, crop = null;
+        string? outDir = null, ffmpeg = null, magick = null, start = null, end = null, crop = null, style = null;
         bool verbose = false, exact = false;
         for (var i = 1; i < args.Length; i++)
         {
@@ -54,6 +55,7 @@ public static class Program
                 case "--end": end = Value(args, ref i); break;
                 case "--exact": exact = true; break;
                 case "--crop": crop = Value(args, ref i); break;
+                case "--style": style = Value(args, ref i); break;
                 default: positional.Add(args[i]); break;
             }
         }
@@ -62,7 +64,7 @@ public static class Program
         {
             "list" => List(positional, stdout),
             "convert" => await Convert(positional, outDir, new ToolLocator { FfmpegPath = ffmpeg, MagickPath = magick },
-                new TrimOptions(start, end, exact, crop), verbose, stdout, stderr),
+                new TrimOptions(start, end, exact, crop), style, verbose, stdout, stderr),
             _ => throw new UsageException(Loc.F(Loc.T.CliUnknownCommand, args[0])),
         };
     }
@@ -82,7 +84,7 @@ public static class Program
     }
 
     private static async Task<int> Convert(List<string> positional, string? outDir, ToolLocator tools,
-        TrimOptions trim, bool verbose, TextWriter stdout, TextWriter stderr)
+        TrimOptions trim, string? style, bool verbose, TextWriter stdout, TextWriter stderr)
     {
         if (positional.Count < 2) throw new UsageException(Loc.T.CliNeedFileAndOp);
         var opId = positional[^1];
@@ -90,6 +92,8 @@ public static class Program
         var op = OperationCatalog.Find(opId) ?? throw new UsageException(Loc.F(Loc.T.CliUnknownOperation, opId));
         op = WithTrim(op, trim);
         op = await WithCropAsync(op, files, trim.Crop, tools);
+        if (await WithStyleAsync(op, files, style, tools, stderr) is not { } styled) return 1;
+        op = styled;
 
         var settings = ConversionSettings.Default with
         {
@@ -172,6 +176,38 @@ public static class Program
         if (size is not { } s) return ImageCrop.Bind(rect);
         if (rect.Intersect(s.W, s.H) is null) throw new UsageException(Loc.F(Loc.T.CliCropOutside, rect.Geometry, s.W, s.H));
         return ImageCrop.Bind(rect, s.W, s.H);
+    }
+
+    /// <summary>
+    /// img-beautify: --style «bg=sunset;pad=8;radius=12;shadow=1» (без него — по умолчанию) → значения задачи.
+    /// Отступ и холст считаются от размера картинки после поворота — его узнаёт ImageMagick; не открылась — ошибка (null).
+    /// У других операций --style — ошибка использования.
+    /// </summary>
+    private static async Task<Operation?> WithStyleAsync(Operation op, List<string> files, string? style, ToolLocator tools, TextWriter stderr)
+    {
+        if (op.Id != ImageBeautify.Id)
+        {
+            if (style is not null) throw new UsageException(Loc.F(Loc.T.CliNoStyle, op.Id));
+            return op;
+        }
+        var parsed = BeautifyStyle.Default;
+        if (style is not null && !BeautifyStyle.TryParse(style, out parsed)) throw new UsageException(Loc.F(Loc.T.CliBadStyle, style));
+        if (files.Count != 1) return op; // несколько файлов — ошибку «не больше одного» даст очередь
+        (int W, int H)? size;
+        try
+        {
+            size = File.Exists(files[0]) ? await ImageProbe.SizeAsync(tools, files[0]) : null;
+        }
+        catch (Exception ex) when (ex is ConversionException or System.ComponentModel.Win32Exception or IOException)
+        {
+            size = null;
+        }
+        if (size is not { } s)
+        {
+            stderr.WriteLine(Loc.F(Loc.T.CliPictureFailed, files[0]));
+            return null;
+        }
+        return ImageBeautify.Bind(parsed, s.W, s.H);
     }
 
     /// <summary>

@@ -5,6 +5,24 @@
 
 Each version section starts with `## <version>`; CI copies it into the GitHub release notes.
 
+## 1.2.0
+
+**Новое в этой версии**
+- Оформить картинку: «Инструменты» → «Оформить…» — окно с живым предпросмотром: фон (три мягких градиента, белый, серый,
+  тёмный или прозрачный), отступ, скругление углов и тень. Результат — `фото (оформлено).png` рядом с исходником;
+  кнопка «Копировать» кладёт картинку сразу в буфер обмена, ничего не сохраняя. Удобно для снимков экрана.
+  В командной строке: `img-beautify --style "bg=sunset;pad=8;radius=12;shadow=1"`.
+- Настройка «Копировать результат в буфер обмена» («Основное», по умолчанию выключена): готовая картинка попадает
+  в буфер картинкой (Ctrl+V в мессенджере или редакторе) и файлом, остальное — файлом (Ctrl+V в проводнике);
+  в уведомлении — «Скопировано в буфер обмена».
+
+**English**
+- Beautify a picture: Tools → Beautify… opens a window with a live preview — background (three soft gradients, white,
+  grey, dark or transparent), padding, rounded corners and a shadow. The result is `photo (styled).png` next to the
+  original; *Copy* puts the picture straight into the clipboard without saving. CLI: `img-beautify --style "…"`.
+- New setting *Copy the result to the clipboard* (General, off by default): a finished picture goes to the clipboard as
+  a picture and a file, anything else as a file.
+
 ## 1.1.1
 
 **Исправлено**

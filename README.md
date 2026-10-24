@@ -218,6 +218,7 @@ The wheel only offers what makes sense for the file you are dragging: a `.jpg` n
 | Tool | Fit to 1920 px | longest side ≤ 1920 px, small pictures are left as is → `photo (1920).jpg` | — | `img-1920` |
 | Tool | Strip metadata | removes EXIF, GPS location, camera info → `photo (no metadata).jpg` | — | `img-strip` |
 | Tool | Crop… | a window with a crop frame (8 handles) and aspect presets Free / 1:1 / 4:3 / 16:9 / Original → `photo (cropped).jpg`, same format; transparency kept. One picture at a time. CLI: `--crop 800x600+100+50` | — | `img-crop` |
+| Tool | Beautify… | a window with a live preview: rounded corners, a soft shadow and padding on a background (3 gradients, white, grey, dark or transparent) → `photo (styled).png` — handy for screenshots. *Copy* puts the picture into the clipboard without saving. One picture at a time. CLI: `--style "bg=sunset;pad=8;radius=12;shadow=1"` | — | `img-beautify` |
 | Tool | One PDF (2+ images) | every image becomes a page → `photo (all).pdf` | — | `images-to-pdf` |
 
 Tools keep the format for ordinary pictures; HEIC, AVIF, SVG, PSD and RAW come out as JPG.
@@ -458,6 +459,7 @@ Double-click the tray icon (or right click → *Settings…*). Every change appl
 - **Where results go** — next to the original, or all into one folder (default `Downloads\DropWheel`).
 - **Quality** — JPG and WebP (50–100), video CRF (18–32, lower = better), MP3 bitrate (128–320 kbps). Applies to new jobs.
 - **Pictures from the clipboard and browser** — the default folder or your own; **Keep the original picture** on or off.
+- **Copy the result to the clipboard** (off by default) — a finished picture goes to the clipboard as a picture (paste it into a messenger or an editor), anything else — as a file (paste it in Explorer).
 - **Start with Windows**, the Explorer menu item, <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>V</kbd> for the clipboard, the daily update check and the **update channel** (stable or test builds).
 - **Your own wheel** — for each file type (photo, video, audio, PDF, Word, Excel, PowerPoint, text, archives, any file): reorder the formats (drag or ↑/↓), hide the ones you never use, with a live preview of the wheel. **Last choice first** puts the format you picked last time for that type on top.
 

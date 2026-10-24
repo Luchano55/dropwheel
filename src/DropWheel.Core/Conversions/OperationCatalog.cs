@@ -47,6 +47,10 @@ public static class OperationCatalog
         // в окне «Обрезать…» или в CLI (--crop WxH+X+Y). +repage — без «холста» от исходника (иначе PNG/GIF помнят смещение).
         new(ImageCrop.Id,   "Обрезать…",      Tool, Image, ImageMagick, "-auto-orient -crop {w}x{h}+{x}+{y} +repage -quality {jpgq}",
             OutputRule.Same("jpg", RasterKeep), " (обрезано)") { Parameters = ImageCrop.ParameterNames, MaxFiles = 1 },
+        // Оформить (D-BEAUTIFY): скруглённые углы, тень, фон с отступами — всегда PNG (прозрачность углов и фона).
+        // Значения {mask} {pad} {shadow} {canvas} {bg} — от стиля и размера картинки (ImageBeautify.Values).
+        new(ImageBeautify.Id, "Оформить…",    Tool, Image, ImageMagick, ImageBeautify.Args,
+            OutputRule.Fixed("png"), " (оформлено)") { Parameters = ImageBeautify.ParameterNames, MaxFiles = 1 },
 
         // Видео — конвертация
         new("to-mp4",       "MP4",  Conv, Video, FFmpeg, $"-map 0:v:0 -map 0:a:0? -vf {Even} -crf {{crf}} {H264}", OutputRule.Fixed("mp4")),

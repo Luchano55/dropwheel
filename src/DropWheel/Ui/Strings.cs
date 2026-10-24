@@ -75,6 +75,8 @@ internal static class Strings
         public static string ClipboardFolderBrowseTitle => T.ClipboardFolderBrowseTitle;
         public static string KeepClipboardImage => T.KeepClipboardImage;
         public static string KeepClipboardImageHint => T.KeepClipboardImageHint;
+        public static string CopyResult => T.CopyResult;
+        public static string CopyResultHint => T.CopyResultHint;
         public static string WheelOpacityTitle => T.WheelOpacityTitle;
         public static string WheelOpacityHint => T.WheelOpacityHint;
         public static string WheelOpacitySolid => T.WheelOpacitySolid;

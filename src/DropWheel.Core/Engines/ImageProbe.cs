@@ -29,11 +29,12 @@ public static class ImageProbe
 
     /// <summary>
     /// Копия для показа → png (временный файл, его удаляет вызывающий) и размер полной картинки после поворота.
-    /// null — ImageMagick картинку не открыл.
+    /// null — ImageMagick картинку не открыл. side — сторона копии («Оформить…» берёт поменьше, D-BEAUTIFY).
     /// </summary>
-    public static async Task<(int W, int H)?> PreviewAsync(ToolLocator tools, string image, string png, CancellationToken ct = default)
+    public static async Task<(int W, int H)?> PreviewAsync(ToolLocator tools, string image, string png, CancellationToken ct = default,
+        int side = PreviewSide)
     {
-        var (code, stdout, _) = await VideoProbe.RunProcessAsync(tools.Resolve(EngineKind.ImageMagick), PreviewArgs(image, png), ct);
+        var (code, stdout, _) = await VideoProbe.RunProcessAsync(tools.Resolve(EngineKind.ImageMagick), PreviewArgs(image, png, side), ct);
         if (code != 0 || !File.Exists(png) || new FileInfo(png).Length == 0) return null;
         return ParseSize(stdout);
     }
@@ -43,6 +44,29 @@ public static class ImageProbe
     {
         var (code, stdout, _) = await VideoProbe.RunProcessAsync(tools.Resolve(EngineKind.ImageMagick), SizeArgs(image), ct);
         return code == 0 ? ParseSize(stdout) : null;
+    }
+
+    /// <summary>
+    /// Запустить ImageMagick с готовыми аргументами (предпросмотр «Оформить…»: тот же шаблон, что у задачи,
+    /// на уменьшенной копии). true — результат записан. Отмена — процесс убивается.
+    /// </summary>
+    public static async Task<bool> RenderAsync(ToolLocator tools, IReadOnlyList<string> args, string output, CancellationToken ct = default)
+    {
+        var (code, _, _) = await VideoProbe.RunProcessAsync(tools.Resolve(EngineKind.ImageMagick), args, ct);
+        return code == 0 && File.Exists(output) && new FileInfo(output).Length > 0;
+    }
+
+    /// <summary>
+    /// Размер PNG по заголовку (IHDR: ширина и высота — байты 16…23, big-endian), без декодирования.
+    /// Копия для «Оформить…»: размер копии нужен точно — по нему считаются маска и холст. null — не PNG.
+    /// </summary>
+    public static (int W, int H)? PngSize(ReadOnlySpan<byte> head)
+    {
+        ReadOnlySpan<byte> signature = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
+        if (head.Length < 24 || !head[..8].SequenceEqual(signature) || !head[12..16].SequenceEqual("IHDR"u8)) return null;
+        var w = System.Buffers.Binary.BinaryPrimitives.ReadInt32BigEndian(head[16..20]);
+        var h = System.Buffers.Binary.BinaryPrimitives.ReadInt32BigEndian(head[20..24]);
+        return w > 0 && h > 0 ? (w, h) : null;
     }
 
     /// <summary>«4032 3024» (первая непустая строка) → (4032, 3024); иначе null.</summary>
