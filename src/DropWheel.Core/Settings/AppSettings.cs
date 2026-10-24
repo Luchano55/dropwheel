@@ -20,6 +20,10 @@ public sealed record AppSettings
     public bool KeepClipboardImage { get; init; } = true;
     /// <summary>true — готовый результат сразу в буфер обмена: картинка — картинкой и файлом, остальное — файлом (D-COPYRESULT).</summary>
     public bool CopyResultToClipboard { get; init; }
+    /// <summary>Снимок экрана по сочетанию <see cref="CaptureKeys"/> (решение D-CAPTURE); пункт трея работает всегда.</summary>
+    public bool CaptureHotkey { get; init; } = true;
+    /// <summary>Сочетание для снимка экрана: «Ctrl+Alt+S» (по умолчанию), «Ctrl+Shift+PrintScreen», «F9»… (Capture.KeyChord).</summary>
+    public string CaptureKeys { get; init; } = Capture.KeyChord.DefaultText;
     public bool AutoStart { get; init; }
     /// <summary>null — искать в tools/ рядом с exe.</summary>
     public string? FfmpegPath { get; init; }
@@ -109,5 +113,6 @@ public sealed record AppSettings
         WheelOpacity = WheelFill.Clamp(s.WheelOpacity),
         ClipboardFolder = string.IsNullOrWhiteSpace(s.ClipboardFolder) ? null : s.ClipboardFolder,
         UpdateChannel = Updates.UpdateChannels.Normalize(s.UpdateChannel),
+        CaptureKeys = Capture.KeyChord.Normalize(s.CaptureKeys), // неверное сочетание → Ctrl+Alt+S
     };
 }

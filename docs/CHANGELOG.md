@@ -23,6 +23,10 @@ Each version section starts with `## <version>`; CI copies it into the GitHub re
 - Пароль на PDF: «Инструменты» → «Защитить…» — PDF с паролем на открытие (шифрование AES-256), `документ (защищён).pdf`;
   «Снять пароль…» — копия без пароля, `документ (без пароля).pdf`. Неверный пароль — понятная ошибка. Пароль нигде
   не сохраняется и не пишется в журнал. Исходный файл не меняется.
+- Снимок экрана: Ctrl+Alt+S или «Снимок экрана» в меню значка. Выделите область мышью,
+  щёлкните по окну или нажмите Enter — весь монитор; работает с несколькими мониторами и любым масштабом. Затем
+  «Копировать», «Сохранить» (PNG в «Изображения\DropWheel»), «Колесо» (сразу конвертировать или обрезать) или «Текст»
+  (распознать текст и положить в буфер). Сочетание выключается в настройках.
 
 **English**
 - Beautify a picture: Tools → Beautify… opens a window with a live preview — background (three soft gradients, white,
@@ -37,6 +41,10 @@ Each version section starts with `## <version>`; CI copies it into the GitHub re
 - PDF password: Tools → “Protect…” adds an open password (AES-256), `document (protected).pdf`; “Remove password…”
   makes an unlocked copy, `document (unlocked).pdf`. A wrong password gives a clear error. The password is never saved
   or written to the log. The original file is never changed.
+- Screenshots: Ctrl+Alt+S or *Screenshot* in the tray menu. Drag to select an area,
+  click a window or press Enter for the whole monitor — multiple monitors and any scaling. Then *Copy*, *Save*
+  (PNG in `Pictures\DropWheel`), *Wheel* (convert or crop right away) or *Text* (recognise the text and copy it).
+  The shortcut can be turned off in the settings.
 
 ## 1.1.1
 

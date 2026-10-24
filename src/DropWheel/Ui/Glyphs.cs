@@ -46,6 +46,7 @@ public static class Glyphs
     public const string Beautify = "\uE790";
     public const string Lock = "\uE72E";
     public const string Unlock = "\uE785";
+    public const string Save = "\uE74E";
 }
 
 /// <summary>

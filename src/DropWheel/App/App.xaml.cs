@@ -124,6 +124,7 @@ public partial class App : Application
 
         StartDragWheel();
         SetClipboardHotkey(Settings.ClipboardHotkey);
+        SetCaptureHotkey(Settings.CaptureHotkey, Settings.CaptureKeys);
         StartUpdater(args.AfterUpdate);
         CheckWhatsNew(args.AfterUpdate is not null);
 
@@ -324,6 +325,8 @@ public partial class App : Application
         _dragWheel = null;
         _clipboardHotkey?.Dispose();
         _clipboardHotkey = null;
+        _captureHotkey?.Dispose();
+        _captureHotkey = null;
         _pipe?.Dispose();
         _pipe = null;
         _instance?.Dispose();
@@ -634,6 +637,7 @@ public partial class App : Application
             if (_chooser is not null) _chooser.FillPercent = now.WheelOpacity;
         }
         if (now.ClipboardHotkey != old.ClipboardHotkey) SetClipboardHotkey(now.ClipboardHotkey);
+        if (now.CaptureHotkey != old.CaptureHotkey || now.CaptureKeys != old.CaptureKeys) SetCaptureHotkey(now.CaptureHotkey, now.CaptureKeys);
         if (now.CheckForUpdates != old.CheckForUpdates)
         {
             if (now.CheckForUpdates) _updater?.Start();
@@ -676,6 +680,8 @@ public partial class App : Application
         _updater?.Dispose();
         _dragWheel?.Dispose();
         _clipboardHotkey?.Dispose();
+        _captureHotkey?.Dispose();
+        _capture?.Close();
         _chooser?.Close();
         _pipe?.Dispose();
         _batcher?.Dispose();
