@@ -25,6 +25,40 @@ public sealed partial class Texts
         ClipboardImageLinkOnly = "The clipboard has only a link to a picture. Copy the picture itself: right-click → Copy image",
         BrowserImageFailed = "Couldn't save the picture from the browser",
 
+        // оформить, копировать результат (Texts.Beautify.cs)
+        BeautifyTitle = "Beautify picture",
+        BeautifySave = "Save",
+        BeautifyCopy = "Copy",
+        BeautifyBackground = "Background",
+        BeautifyPadding = "Padding",
+        BeautifyRadius = "Corners",
+        BeautifyShadow = "Shadow",
+        BeautifyHint = "The result is a PNG next to the original: “{0}”.",
+        BeautifyRendering = "Drawing…",
+        BeautifyRenderFailed = "Couldn't draw the preview",
+        BeautifyCopyFailed = "Couldn't copy",
+        BgSunset = "Sunset",
+        BgSky = "Sky",
+        BgMint = "Mint",
+        BgWhite = "White",
+        BgGrey = "Grey",
+        BgDark = "Dark",
+        BgNone = "Transparent",
+        BeautifyCliUsage = """
+            Beautify a picture (PNG with rounded corners, a shadow and a background):
+              dropwheel convert <picture> img-beautify [--style "bg=sunset;pad=8;radius=12;shadow=1"]
+              bg       background: sunset, sky, mint, white, grey, dark, none (transparent)
+              pad      padding, % of the shorter side (0–25)
+              radius   corner radius, px (0–100)
+              shadow   shadow: 1 or 0
+            """,
+        CliBadStyle = "Can't read the style “{0}” (e.g. bg=sunset;pad=8;radius=12;shadow=1)",
+        CliNoStyle = "Operation {0} doesn't take --style",
+        CliPictureFailed = "Couldn't open the picture “{0}”",
+        CopyResult = "Copy the result to the clipboard",
+        CopyResultHint = "A finished picture pastes as a picture (Ctrl+V in a messenger or editor), anything else as a file (Ctrl+V in Explorer).",
+        CopiedToClipboard = "Copied to the clipboard",
+
         // папки целиком (Texts.Folders.cs)
         FolderTooMany = "The folder has more than {0} files — too many for one go. Please pick a smaller folder.",
         FolderEmpty = "The folder has no files",

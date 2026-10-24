@@ -209,6 +209,7 @@ public partial class LocalizationTests
     [InlineData("img-1920", "Fit 1920 px", " (1920)")]
     [InlineData("img-strip", "No metadata", " (no metadata)")]
     [InlineData("img-crop", "Crop…", " (cropped)")]
+    [InlineData("img-beautify", "Beautify…", " (styled)")]
     [InlineData("video-mute", "Mute", " (muted)")]
     [InlineData("video-720p", "720p", " (720p)")]
     [InlineData("video-subs", "Subtitles SRT", "")]

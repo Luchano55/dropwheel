@@ -464,6 +464,9 @@ public sealed class SettingsView : Border
         outputPanel.Children.Add(where);
         outputPanel.Children.Add(folderRow);
         page.Children.Add(Card(outputPanel));
+        // Готовый результат — сразу в буфер обмена (D-COPYRESULT).
+        page.Children.Add(ToggleCard(S.CopyResult, S.CopyResultHint, _settings.CopyResultToClipboard,
+            on => Change(s => s with { CopyResultToClipboard = on })));
 
         // Язык интерфейса: «Как в Windows» / «Русский» / «English» — применяется сразу (приложение перестраивает окна).
         var languages = new ChoicePills(p,
@@ -766,7 +769,8 @@ public sealed class SettingsView : Border
         for (var i = 0; i < entries.Count; i++)
         {
             var entry = entries[i];
-            var overLimit = !entry.Hidden && ++shown > WheelGeometry.MaxSectors;
+            // Счёт — для одного файла: «от 2 файлов» (Один PDF) на колесе одного файла не бывает и место не занимает.
+            var overLimit = !entry.Hidden && entry.Operation.MinFiles <= 1 && ++shown > WheelGeometry.MaxSectors;
             _wheelList.Children.Add(EntryRow(entries, i, overLimit));
         }
 

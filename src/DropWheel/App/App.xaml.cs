@@ -112,7 +112,11 @@ public partial class App : Application
         _engines = AppEngines.EngineRegistry.Create(Log, Dispatcher);
         Queue = new JobQueue(new Converter(tools, Settings.Conversion, _engines), maxParallel: 2, Log.Write);
 
-        _notifier = new Notifier(Log);
+        _notifier = new Notifier(Log)
+        {
+            // «Копировать результат в буфер обмена» (D-COPYRESULT): пачка результатов одного уведомления → буфер.
+            CopyResults = results => Settings.CopyResultToClipboard && ClipboardWriter.CopyResults(results, Log),
+        };
         _tray = new TrayIcon(this);
         Queue.Changed += job => Dispatcher.BeginInvoke(() => OnJobChanged(job));
 
@@ -470,7 +474,7 @@ public partial class App : Application
     /// </summary>
     private void AskValues(IReadOnlyList<string> paths, Operation op)
     {
-        if (op.Id is not (VideoTrim.Id or ImageCrop.Id) || paths.Count != 1)
+        if (op.Id is not (VideoTrim.Id or ImageCrop.Id or ImageBeautify.Id) || paths.Count != 1)
         {
             Log.Write($"{op.Id}: нечем спросить параметры для {paths.Count} файл(ов) — пропускаю");
             return;
@@ -484,7 +488,8 @@ public partial class App : Application
             {
                 var tools = new ToolLocator { FfmpegPath = Settings.FfmpegPath, MagickPath = Settings.MagickPath };
                 void Enqueue(Operation bound) => Queue.EnqueueSelection([file], bound);
-                if (op.Id == ImageCrop.Id) new CropWindow(file, tools, Log, Enqueue).ShowAndActivate();
+                if (op.Id == ImageBeautify.Id) new BeautifyWindow(file, tools, Log, Enqueue).ShowAndActivate();
+                else if (op.Id == ImageCrop.Id) new CropWindow(file, tools, Log, Enqueue).ShowAndActivate();
                 else new TrimWindow(file, tools, Log, Enqueue).ShowAndActivate();
             }
             catch (Exception ex)

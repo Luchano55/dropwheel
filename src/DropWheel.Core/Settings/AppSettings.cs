@@ -18,6 +18,8 @@ public sealed record AppSettings
     public string? ClipboardFolder { get; init; }
     /// <summary>false — после удачной конвертации PNG из буфера удаляется, остаётся только результат.</summary>
     public bool KeepClipboardImage { get; init; } = true;
+    /// <summary>true — готовый результат сразу в буфер обмена: картинка — картинкой и файлом, остальное — файлом (D-COPYRESULT).</summary>
+    public bool CopyResultToClipboard { get; init; }
     public bool AutoStart { get; init; }
     /// <summary>null — искать в tools/ рядом с exe.</summary>
     public string? FfmpegPath { get; init; }

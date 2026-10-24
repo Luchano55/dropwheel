@@ -44,7 +44,10 @@ public class CatalogTests
             Assert.Equal(Engines.SevenZip.PackId, ops[^1].Id);
             return;
         }
-        Assert.True(ops.Count <= 8, $"{ext} {ops[0].Mode}: {list}");
+        // Колесо одного файла — без операций «от 2 файлов», колесо нескольких — без «только для одного» (D-BEAUTIFY:
+        // у картинок 9 инструментов, но «Один PDF» и «Обрезать…»/«Оформить…» вместе не бывают).
+        Assert.True(ops.Count(o => o.MinFiles <= 1) <= 8, $"{ext} {ops[0].Mode}, один файл: {list}");
+        Assert.True(ops.Count(o => o.MaxFiles > 1) <= 8, $"{ext} {ops[0].Mode}, несколько файлов: {list}");
     }
 
     [Fact]

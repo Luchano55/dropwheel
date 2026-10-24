@@ -117,6 +117,14 @@ public class SettingsScreenshots
         Sta.Run(() => Save(Make(light, page), light, name));
     }
 
+    /// <summary>«Основное» с включённым «Копировать результат в буфер обмена» (D-COPYRESULT), под «Куда класть результат».</summary>
+    [Fact]
+    public void General_with_copy_result()
+    {
+        Sta.Run(() => Save(Make(true, SettingsPage.General, Sample() with { CopyResultToClipboard = true }), light: true,
+            "settings-light-general-copy-result"));
+    }
+
     /// <summary>«Колесо» → Инструменты для видео; результат «рядом с исходником» — по умолчанию.</summary>
     [Fact]
     public void Wheel_tools_for_video()

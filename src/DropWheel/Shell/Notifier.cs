@@ -59,6 +59,25 @@ internal sealed class Notifier
         };
     }
 
+    /// <summary>
+    /// «Копировать результат в буфер обмена» (D-COPYRESULT): результаты одной пачки уведомления (файлы или папки-результаты);
+    /// true — скопировано, в уведомлении появится «Скопировано в буфер обмена». null — не копировать.
+    /// </summary>
+    public Func<IReadOnlyList<string>, bool>? CopyResults { get; init; }
+
+    private bool TryCopy(IReadOnlyList<string> results)
+    {
+        try
+        {
+            return results.Count > 0 && CopyResults?.Invoke(results) == true;
+        }
+        catch (Exception ex)
+        {
+            _log.Write("Буфер обмена: результат не скопирован: " + ex.Message);
+            return false;
+        }
+    }
+
     public void Done(string outputPath)
     {
         _done.Add(outputPath);
@@ -151,8 +170,9 @@ internal sealed class Notifier
         _done.Clear();
         _failed.Clear();
 
-        if (done.Count == 1) _ = ShowDoneAsync(done[0]);
-        else if (done.Count > 1) ShowDoneGroup(done);
+        var copied = TryCopy(done);
+        if (done.Count == 1) _ = ShowDoneAsync(done[0], copied);
+        else if (done.Count > 1) ShowDoneGroup(done, copied);
 
         if (failed.Count == 1) ShowFailed(failed[0].Input, failed[0].Reason);
         else if (failed.Count > 1) ShowFailedGroup(failed);
@@ -160,7 +180,7 @@ internal sealed class Notifier
 
     // ---- уведомления ----
 
-    private async Task ShowDoneAsync(string path)
+    private async Task ShowDoneAsync(string path, bool copied)
     {
         string? preview = null;
         if (HasPreview(path))
@@ -182,7 +202,7 @@ internal sealed class Notifier
                 .AddArgument(ActionKey, RevealAction)
                 .AddArgument("path", path)
                 .AddText(Loc.F(Loc.T.NotifyDone, Path.GetFileName(path.TrimEnd('\\', '/'))))
-                .AddText(FolderLine([path]));
+                .AddText(FolderLine([path], copied));
             if (preview is not null) b.AddHeroImage(new Uri(preview));
             return b
                 .AddButton(new ToastButton().SetContent(Loc.T.ActionOpen)
@@ -192,7 +212,7 @@ internal sealed class Notifier
         });
     }
 
-    private void ShowDoneGroup(IReadOnlyList<string> paths)
+    private void ShowDoneGroup(IReadOnlyList<string> paths, bool copied)
     {
         var id = Guid.NewGuid().ToString("N");
         Groups[id] = paths.ToArray();
@@ -206,7 +226,7 @@ internal sealed class Notifier
             .AddArgument("path", paths[0])
             .AddText(Loc.F(Loc.T.NotifyDone, Loc.Count(paths.Count, Loc.T.Files)))
             .AddText(list)
-            .AddText(FolderLine(paths))
+            .AddText(FolderLine(paths, copied))
             .AddButton(new ToastButton().SetContent(Loc.T.ActionReveal)
                 .AddArgument(ActionKey, GroupAction).AddArgument("id", id).AddArgument("path", paths[0])));
     }
@@ -224,6 +244,7 @@ internal sealed class Notifier
         var notes = new List<string>();
         if (batch.Skipped > 0) notes.Add(Loc.F(Loc.T.FolderSkipped, batch.Skipped));
         if (batch.Failures.Count > 0) notes.Add(Loc.F(Loc.T.FolderFailed, batch.Failures.Count));
+        if (batch.Done > 0 && TryCopy(roots)) notes.Add(Loc.T.CopiedToClipboard);
 
         if (batch.Done == 0 || roots.Count == 0)
         {
@@ -306,6 +327,9 @@ internal sealed class Notifier
     }
 
     /// <summary>«В папке «Мои фото»» или «В разных папках».</summary>
+    private static string FolderLine(IReadOnlyList<string> paths, bool copied) =>
+        copied ? FolderLine(paths) + " · " + Loc.T.CopiedToClipboard : FolderLine(paths);
+
     private static string FolderLine(IReadOnlyList<string> paths)
     {
         var folders = paths.Select(p => Path.GetDirectoryName(p.TrimEnd('\\', '/'))).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
