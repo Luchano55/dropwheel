@@ -573,6 +573,8 @@ public partial class App : Application
                     AppVersion.CurrentBuild, Log, AppVersion.CurrentDisplay, UpdateChannels.Embedded);
                 window.View.OpenLogsRequested += () => Notifier.OpenLog(Log);
                 window.View.CheckUpdatesRequested += CheckUpdatesManually;
+                window.View.ReportProblemRequested += ReportProblem;
+                AttachCaptureKeys(window);
                 window.Closed += (_, _) =>
                 {
                     if (ReferenceEquals(_settingsWindow, window)) _settingsWindow = null;

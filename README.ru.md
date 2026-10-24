@@ -16,6 +16,7 @@
   <a href="https://github.com/Luchano55/dropwheel/actions/workflows/build.yml"><img src="https://img.shields.io/github/actions/workflow/status/Luchano55/dropwheel/build.yml?label=%D1%81%D0%B1%D0%BE%D1%80%D0%BA%D0%B0&logo=githubactions&logoColor=white" alt="Сборка"></a>
   <a href="https://github.com/Luchano55/dropwheel/releases/latest"><img src="https://img.shields.io/github/v/release/Luchano55/dropwheel?label=%D0%B2%D0%B5%D1%80%D1%81%D0%B8%D1%8F&color=0078D4" alt="Последняя версия"></a>
   <a href="https://github.com/Luchano55/dropwheel/releases/tag/dev-build"><img src="https://img.shields.io/github/v/release/Luchano55/dropwheel?include_prereleases&sort=date&display_name=tag&label=%D1%82%D0%B5%D1%81%D1%82%D0%BE%D0%B2%D0%B0%D1%8F%20%D1%81%D0%B1%D0%BE%D1%80%D0%BA%D0%B0&color=6e7781" alt="Свежая тестовая сборка"></a>
+  <a href="https://github.com/Luchano55/dropwheel/releases"><img src="https://img.shields.io/github/downloads/Luchano55/dropwheel/total?label=%D1%81%D0%BA%D0%B0%D1%87%D0%B8%D0%B2%D0%B0%D0%BD%D0%B8%D0%B9&color=0078D4" alt="Скачиваний"></a>
   <a href="#установка"><img src="https://img.shields.io/badge/Windows-10%20%7C%2011%20(x64)-0078D4" alt="Windows 10 | 11"></a>
   <a href="https://dotnet.microsoft.com/download/dotnet/8.0"><img src="https://img.shields.io/badge/.NET-8-512BD4?logo=dotnet&logoColor=white" alt=".NET 8"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="Лицензия MIT"></a>

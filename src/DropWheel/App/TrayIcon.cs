@@ -19,6 +19,8 @@ internal sealed partial class TrayIcon : IDisposable
     private readonly ToolStripMenuItem _contextMenuItem;
     private readonly ToolStripMenuItem _updateItem;
     private readonly ToolStripMenuItem _jobsItem, _settingsItem, _clipboardItem, _captureItem, _logItem, _checkItem, _whatsNewItem, _exitItem;
+    private readonly ToolStripMenuItem[] _delayItems;
+    private readonly ToolStripMenuItem _reportItem;
     private int? _updateBuild;
     private readonly Icon _idle;
     private Icon? _busy;
@@ -51,11 +53,15 @@ internal sealed partial class TrayIcon : IDisposable
         _clipboardItem.ShortcutKeyDisplayString = app.Settings.ClipboardHotkey ? ClipboardShortcut : null;
         _menu.Items.Add(_captureItem = Item(Loc.T.TrayCapture, app.CaptureFromTray));
         _captureItem.ShortcutKeyDisplayString = CaptureShortcut(app.Settings);
+        // Снимок с задержкой (D-CAPTURE): «Снимок через 3 с», «через 5 с».
+        _delayItems = Capture.CaptureCountdown.TrayDelays.Select(d => Item(Strings.Tray.CaptureDelay(d), () => app.CaptureWithDelay(d))).ToArray();
+        foreach (var item in _delayItems) _menu.Items.Add(item);
         _menu.Items.Add(_settingsItem = Item(Strings.Tray.Settings, app.ShowSettings));
         _menu.Items.Add(_contextMenuItem);
         _menu.Items.Add(_logItem = Item(Loc.T.TrayOpenLog, () => OpenFolder(AppPaths.LogsDir)));
         _menu.Items.Add(_checkItem = Item(Loc.T.TrayCheckUpdates, app.CheckUpdatesManually));
         _menu.Items.Add(_whatsNewItem = Item(Strings.Tray.WhatsNew, () => app.ShowWhatsNew()));
+        _menu.Items.Add(_reportItem = Item(Strings.Tray.ReportProblem, app.ReportProblem));
         _menu.Items.Add(new ToolStripSeparator());
         _menu.Items.Add(_exitItem = Item(Loc.T.TrayExit, app.Quit));
         foreach (ToolStripItem item in _menu.Items)
@@ -112,6 +118,8 @@ internal sealed partial class TrayIcon : IDisposable
         _logItem.Text = Loc.T.TrayOpenLog;
         _checkItem.Text = Loc.T.TrayCheckUpdates;
         _whatsNewItem.Text = Strings.Tray.WhatsNew;
+        _reportItem.Text = Strings.Tray.ReportProblem;
+        for (var i = 0; i < _delayItems.Length; i++) _delayItems[i].Text = Strings.Tray.CaptureDelay(Capture.CaptureCountdown.TrayDelays[i]);
         _exitItem.Text = Loc.T.TrayExit;
         if (_updateBuild is { } build) _updateItem.Text = Loc.F(Loc.T.TrayUpdateTo, build);
         UpdateText(Math.Max(_busyCount, 0));

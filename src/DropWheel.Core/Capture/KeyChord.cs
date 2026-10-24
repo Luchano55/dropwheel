@@ -59,6 +59,25 @@ public sealed record KeyChord(uint Modifiers, int Key)
         _ => false,
     };
 
+    /// <summary>
+    /// Проверка сочетания, нажатого в настройках («Изменить…»): <paramref name="vk"/> — нажатая клавиша,
+    /// <paramref name="modifiers"/> — зажатые модификаторы (флаги MOD_*). Строже <see cref="IsAllowed"/>:
+    /// Win с буквой, цифрой или Print Screen Windows держит за собой (Win+Shift+S, Win+V, Win+цифры — панель задач,
+    /// Win+Alt+R — запись, Win+Ctrl+D — рабочие столы и т. д.), RegisterHotKey их либо не даст, либо они не дойдут,
+    /// поэтому Win подходит только с F1–F24.
+    /// </summary>
+    public static ChordCheck Check(uint modifiers, int vk)
+    {
+        if (IsModifierKey(vk)) return ChordCheck.ModifierOnly;
+        var letterOrDigit = vk is (>= 0x30 and <= 0x39) or (>= 0x41 and <= 0x5A);
+        if (!letterOrDigit && vk is not PrintScreen and not (>= 0x70 and <= 0x87)) return ChordCheck.UnsupportedKey;
+        if ((modifiers & Win) != 0 && (letterOrDigit || vk == PrintScreen)) return ChordCheck.WindowsOwned;
+        return new KeyChord(modifiers & (Alt | Control | Shift | Win), vk).IsAllowed ? ChordCheck.Ok : ChordCheck.NeedsModifier;
+    }
+
+    /// <summary>Shift, Ctrl, Alt, Win (левые, правые и общие коды VK).</summary>
+    public static bool IsModifierKey(int vk) => vk is 0x10 or 0x11 or 0x12 or 0x5B or 0x5C or (>= 0xA0 and <= 0xA5);
+
     /// <summary>Каноническая запись: «Ctrl+Alt+Shift+Win+S» (порядок модификаторов фиксированный).</summary>
     public override string ToString()
     {
@@ -103,4 +122,18 @@ public sealed record KeyChord(uint Modifiers, int Key)
 
     /// <summary>Как показать человеку: «Ctrl+Alt+S», «Ctrl+Print Screen».</summary>
     public string DisplayName => ToString().Replace("PrintScreen", "Print Screen", StringComparison.Ordinal);
+}
+
+/// <summary>Итог <see cref="KeyChord.Check"/>.</summary>
+public enum ChordCheck
+{
+    Ok,
+    /// <summary>Нажат только модификатор — ждём клавишу дальше.</summary>
+    ModifierOnly,
+    /// <summary>Буква или цифра без Ctrl, Alt или Win — это обычный набор текста.</summary>
+    NeedsModifier,
+    /// <summary>Win + буква, цифра или Print Screen — сочетания Windows.</summary>
+    WindowsOwned,
+    /// <summary>Не буква, не цифра, не F1–F24 и не Print Screen.</summary>
+    UnsupportedKey,
 }

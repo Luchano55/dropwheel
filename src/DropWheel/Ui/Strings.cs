@@ -17,6 +17,8 @@ internal static class Strings
         public static string Settings => T.TraySettings;
         public static string StartHint(string hotkey) => Loc.F(T.TrayStartHint, hotkey);
         public static string WhatsNew => T.TrayWhatsNew;
+        public static string CaptureDelay(int seconds) => Loc.F(T.TrayCaptureDelay, seconds);
+        public static string ReportProblem => T.TrayReportProblem;
     }
 
     public static class Settings
@@ -71,6 +73,12 @@ internal static class Strings
         public static string ClipboardHotkeyHint => T.ClipboardHotkeyHint;
         public static string CaptureHotkey(string keys) => Loc.F(T.CaptureHotkeyTitle, keys);
         public static string CaptureHotkeyHint => T.CaptureHotkeyHint;
+        public static string CaptureChange => T.CaptureChange;
+        public static string CaptureChordPress => T.CaptureChordPress;
+        public static string CaptureChordNeedsModifier => T.CaptureChordNeedsModifier;
+        public static string CaptureChordWindows(string keys) => Loc.F(T.CaptureChordWindows, keys);
+        public static string CaptureChordKey => T.CaptureChordKey;
+        public static string CaptureChordBusy(string keys, string kept) => Loc.F(T.CaptureChordBusy, keys, kept);
         public static string ClipboardImageTitle => T.ClipboardImageTitle;
         public static string ClipboardImageHint => T.ClipboardImageHint;
         public static string ClipboardFolderDefault => T.ClipboardFolderDefault;
@@ -115,6 +123,7 @@ internal static class Strings
         // Низ окна
         public static string OpenLogs => T.OpenLogs;
         public static string CheckUpdates => T.TrayCheckUpdates;
+        public static string ReportProblem => T.TrayReportProblem;
         public static string Version(int build, string? version = null) =>
             build <= 0 ? T.VersionDev
             : string.IsNullOrWhiteSpace(version) ? Loc.F(T.Version, build)

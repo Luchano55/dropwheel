@@ -16,6 +16,7 @@
   <a href="https://github.com/Luchano55/dropwheel/actions/workflows/build.yml"><img src="https://img.shields.io/github/actions/workflow/status/Luchano55/dropwheel/build.yml?label=build&logo=githubactions&logoColor=white" alt="Build status"></a>
   <a href="https://github.com/Luchano55/dropwheel/releases/latest"><img src="https://img.shields.io/github/v/release/Luchano55/dropwheel?label=version&color=0078D4" alt="Latest version"></a>
   <a href="https://github.com/Luchano55/dropwheel/releases/tag/dev-build"><img src="https://img.shields.io/github/v/release/Luchano55/dropwheel?include_prereleases&sort=date&display_name=tag&label=test%20build&color=6e7781" alt="Latest test build"></a>
+  <a href="https://github.com/Luchano55/dropwheel/releases"><img src="https://img.shields.io/github/downloads/Luchano55/dropwheel/total?label=downloads&color=0078D4" alt="Downloads"></a>
   <a href="#install"><img src="https://img.shields.io/badge/Windows-10%20%7C%2011%20(x64)-0078D4" alt="Windows 10 | 11"></a>
   <a href="https://dotnet.microsoft.com/download/dotnet/8.0"><img src="https://img.shields.io/badge/.NET-8-512BD4?logo=dotnet&logoColor=white" alt=".NET 8"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="License: MIT"></a>
