@@ -2,7 +2,7 @@ using DropWheel.Conversions;
 
 namespace DropWheel.Engines;
 
-/// <summary>Движок без внешнего процесса: ZIP (.NET), Office (COM), библиотеки, Edge, OCR.</summary>
+/// <summary>Движок без шаблона аргументов: ZIP (.NET), Office (COM), библиотеки, Edge, OCR, установленный LibreOffice.</summary>
 public interface IInternalEngine
 {
     EngineKind Kind { get; }

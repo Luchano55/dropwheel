@@ -48,11 +48,18 @@ public sealed class Converter(ToolLocator tools, ConversionSettings settings, IE
     /// Движок, которым операция будет выполнена здесь: основной, иначе запасной, иначе null.
     /// extension — входное расширение (без точки); null — не проверять расширение.
     /// </summary>
-    public EngineKind? EngineFor(Operation op, string? extension = null)
+    public EngineKind? EngineFor(Operation op, string? extension = null) =>
+        Candidates(op, extension).Cast<EngineKind?>().FirstOrDefault();
+
+    /// <summary>
+    /// Движки по порядку: основной; у операций Office — установленный LibreOffice (D-LIBREOFFICE); запасной.
+    /// Только те, что здесь могут выполнить операцию.
+    /// </summary>
+    private IEnumerable<EngineKind> Candidates(Operation op, string? extension)
     {
-        if (CanUse(op.Engine, op, extension)) return op.Engine;
-        if (op.Fallback is { } fb && CanUse(fb, op, extension)) return fb;
-        return null;
+        if (CanUse(op.Engine, op, extension)) yield return op.Engine;
+        if (op.Engine == EngineKind.Office && CanUse(EngineKind.LibreOffice, op, extension)) yield return EngineKind.LibreOffice;
+        if (op.Fallback is { } fb && CanUse(fb, op, extension)) yield return fb;
     }
 
     private bool CanUse(EngineKind kind, Operation op, string? extension)
@@ -187,28 +194,33 @@ public sealed class Converter(ToolLocator tools, ConversionSettings settings, IE
         ConversionSettings settings, IProgress<double>? progress, Action<string>? log, CancellationToken ct)
     {
         var extension = Path.GetExtension(inputs[0]);
-        var kind = EngineFor(op, extension) ?? throw new ConversionException(op.Engine == EngineKind.Office
-            ? Loc.T.ErrNoOffice
-            : Loc.F(Loc.T.ErrNoEngine, Loc.Label(op)));
+        var engines = Candidates(op, extension).ToList();
+        if (engines.Count == 0)
+            throw new ConversionException(op.Engine == EngineKind.Office
+                ? Loc.T.ErrNoOffice
+                : Loc.F(Loc.T.ErrNoEngine, Loc.Label(op)));
 
         // Office установлен, но не работает (не активирован, окно первого запуска, файл не открылся) —
-        // пробуем запасной движок без Office, если он есть (у Word → PDF — печать через Edge). Пароль — не повод.
-        if (kind == EngineKind.Office && op.Fallback is { } fallback && CanUse(fallback, op, extension))
+        // пробуем следующий: LibreOffice, затем запасной движок без Office (у Word → PDF — печать через Edge).
+        // Пароль — не повод.
+        var i = 0;
+        for (; i < engines.Count - 1 && engines[i] is EngineKind.Office or EngineKind.LibreOffice; i++)
         {
             try
             {
-                await RunWithAsync(kind, op, inputs, output, settings, progress, log, ct);
+                await RunWithAsync(engines[i], op, inputs, output, settings, progress, log, ct);
                 return;
             }
             catch (ConversionException ex) when (ex.Message != Loc.T.ErrDocPassword)
             {
-                log?.Invoke($"Office не справился ({ex.Message}; {ex.Details}) — пробую без Office: {fallback}");
+                log?.Invoke($"{engines[i]} не справился ({ex.Message}; {ex.Details}) — пробую {engines[i + 1]}");
                 if (File.Exists(output)) File.Delete(output);
                 if (Directory.Exists(output)) Directory.Delete(output, recursive: true);
-                kind = fallback;
+                // Папка-результат (слайды) должна снова существовать — пустой.
+                if (op.Result == ResultKind.Folder) Directory.CreateDirectory(output);
             }
         }
-        await RunWithAsync(kind, op, inputs, output, settings, progress, log, ct);
+        await RunWithAsync(engines[i], op, inputs, output, settings, progress, log, ct);
     }
 
     private async Task RunWithAsync(EngineKind kind, Operation op, IReadOnlyList<string> inputs, string output,

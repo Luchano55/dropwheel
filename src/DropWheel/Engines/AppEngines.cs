@@ -7,7 +7,7 @@ namespace DropWheel.AppEngines;
 
 /// <summary>
 /// Встроенные движки приложения (Windows): общий ZIP из ядра + то, что есть только в Windows
-/// (Office через COM, печать в PDF через Edge, распознавание текста). Новый движок — одна строка.
+/// (Office через COM, печать в PDF через Edge, распознавание текста) и установленный LibreOffice. Новый движок — одна строка.
 /// </summary>
 internal static class EngineRegistry
 {
@@ -18,6 +18,7 @@ internal static class EngineRegistry
         new TextEngine(),
         new OcrEngine(log.Write),
         new OfficeEngine(log.Write),
+        new LibreOfficeEngine(log: log.Write), // нет Office или он не работает — установленный LibreOffice (D-LIBREOFFICE)
         new DocLibsEngine(),
         new WebPdfEngine(dispatcher, AppPaths.WebView2Dir, log.Write),
     ];
