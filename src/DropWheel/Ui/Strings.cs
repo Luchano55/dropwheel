@@ -79,6 +79,8 @@ internal static class Strings
         public static string CaptureChordWindows(string keys) => Loc.F(T.CaptureChordWindows, keys);
         public static string CaptureChordKey => T.CaptureChordKey;
         public static string CaptureChordBusy(string keys, string kept) => Loc.F(T.CaptureChordBusy, keys, kept);
+        public static string RecordHotkey(string keys) => Loc.F(T.RecordHotkeyTitle, keys);
+        public static string RecordHotkeyHint => T.RecordHotkeyHint;
         public static string ClipboardImageTitle => T.ClipboardImageTitle;
         public static string ClipboardImageHint => T.ClipboardImageHint;
         public static string ClipboardFolderDefault => T.ClipboardFolderDefault;

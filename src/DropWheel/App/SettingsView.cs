@@ -535,6 +535,8 @@ public sealed class SettingsView : Border
         page.Children.Add(ToggleCard(S.ClipboardHotkey, S.ClipboardHotkeyHint, _settings.ClipboardHotkey,
             on => Change(s => s with { ClipboardHotkey = on })));
         page.Children.Add(CaptureHotkeyCard());
+        page.Children.Add(ToggleCard(S.RecordHotkey((Capture.KeyChord.Parse(_settings.RecordKeys) ?? Capture.ScreenRecord.DefaultChord).DisplayName),
+            S.RecordHotkeyHint, _settings.RecordHotkey, on => Change(s => s with { RecordHotkey = on })));
         page.Children.Add(ClipboardImageCard());
         page.Children.Add(ToggleCard(S.KeepClipboardImage, S.KeepClipboardImageHint, _settings.KeepClipboardImage,
             on => Change(s => s with { KeepClipboardImage = on })));

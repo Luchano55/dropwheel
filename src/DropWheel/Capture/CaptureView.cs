@@ -23,7 +23,7 @@ internal enum CaptureAction
 /// рамка, подпись размера в пикселях, подсказка и панель кнопок. Всё в DIP этого окна; что рисовать — решает
 /// <see cref="CaptureOverlay"/> (по <see cref="CaptureSession"/>). Без окна — его же рисуют скриншот-тесты.
 /// </summary>
-internal sealed class CaptureView : Canvas
+internal sealed partial class CaptureView : Canvas
 {
     /// <summary>Затемнение вне выделения.</summary>
     private static readonly Brush Dim = SettingsPalette.B(Color.FromArgb(0x80, 0, 0, 0));
@@ -48,10 +48,12 @@ internal sealed class CaptureView : Canvas
     private readonly bool _ocr;
     private SettingsPalette _palette;
 
-    public CaptureView(SettingsPalette palette, bool ocr)
+    /// <param name="record">Режим записи экрана (D-RECORD) и выбранный в нём формат; null — снимок.</param>
+    public CaptureView(SettingsPalette palette, bool ocr, RecordFormat? record = null)
     {
         _palette = palette;
         _ocr = ocr;
+        _record = record;
         ClipToBounds = true;
         Background = Brushes.Black;
         Cursor = Cursors.Cross;
@@ -154,7 +156,7 @@ internal sealed class CaptureView : Canvas
 
         _hint.Background = SettingsPalette.B(_palette.Solid);
         _hintText.Foreground = _palette.Text;
-        _hintText.Text = Loc.T.CaptureHint;
+        _hintText.Text = _record is null ? Loc.T.CaptureHint : Loc.T.RecordHint;
         _hint.Visibility = _showHint ? Visibility.Visible : Visibility.Collapsed;
         if (_showHint)
         {
@@ -186,6 +188,11 @@ internal sealed class CaptureView : Canvas
         var p = _palette;
         _toolbar.Background = SettingsPalette.B(p.Solid);
         _toolbar.BorderBrush = p.ControlBorder;
+        if (_record is not null)
+        {
+            _toolbar.Child = RecordToolbar(p);
+            return;
+        }
         var row = new StackPanel { Orientation = Orientation.Horizontal };
         void Add(CaptureAction action, string text, string glyph)
         {

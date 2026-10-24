@@ -152,7 +152,7 @@ public sealed class Converter(ToolLocator tools, ConversionSettings settings, IE
     private static readonly object TempLock = new();
     private static readonly Dictionary<string, int> TempUsers = new(StringComparer.OrdinalIgnoreCase);
 
-    private static string AcquireTempDir(string dir)
+    internal static string AcquireTempDir(string dir)
     {
         var path = Path.Combine(dir, TempDirName);
         lock (TempLock)
@@ -164,7 +164,7 @@ public sealed class Converter(ToolLocator tools, ConversionSettings settings, IE
         return path;
     }
 
-    private static void ReleaseTempDir(string path)
+    internal static void ReleaseTempDir(string path)
     {
         lock (TempLock)
         {
@@ -284,7 +284,7 @@ public sealed class Converter(ToolLocator tools, ConversionSettings settings, IE
     }
 
     /// <summary>Имя выбираем в последний момент; если его успели занять — берём следующее.</summary>
-    private static string MoveToFreeName(string temp, string desired, bool folder)
+    internal static string MoveToFreeName(string temp, string desired, bool folder)
     {
         for (var attempt = 0; ; attempt++)
         {

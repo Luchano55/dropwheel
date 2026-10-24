@@ -24,6 +24,12 @@ public sealed record AppSettings
     public bool CaptureHotkey { get; init; } = true;
     /// <summary>Сочетание для снимка экрана: «Ctrl+Alt+S» (по умолчанию), «Ctrl+Shift+PrintScreen», «F9»… (Capture.KeyChord).</summary>
     public string CaptureKeys { get; init; } = Capture.KeyChord.DefaultText;
+    /// <summary>Запись экрана по сочетанию <see cref="RecordKeys"/> (решение D-RECORD); пункт трея работает всегда.</summary>
+    public bool RecordHotkey { get; init; } = true;
+    /// <summary>Сочетание записи экрана: «Ctrl+Alt+R» по умолчанию; оно же останавливает запись.</summary>
+    public string RecordKeys { get; init; } = Capture.ScreenRecord.DefaultKeys;
+    /// <summary>Последний выбор на панели записи: true — GIF, false — MP4.</summary>
+    public bool RecordGif { get; init; }
     public bool AutoStart { get; init; }
     /// <summary>null — искать в tools/ рядом с exe.</summary>
     public string? FfmpegPath { get; init; }
@@ -114,5 +120,6 @@ public sealed record AppSettings
         ClipboardFolder = string.IsNullOrWhiteSpace(s.ClipboardFolder) ? null : s.ClipboardFolder,
         UpdateChannel = Updates.UpdateChannels.Normalize(s.UpdateChannel),
         CaptureKeys = Capture.KeyChord.Normalize(s.CaptureKeys), // неверное сочетание → Ctrl+Alt+S
+        RecordKeys = Capture.ScreenRecord.NormalizeKeys(s.RecordKeys), // неверное сочетание → Ctrl+Alt+R
     };
 }

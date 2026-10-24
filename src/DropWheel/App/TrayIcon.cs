@@ -56,6 +56,7 @@ internal sealed partial class TrayIcon : IDisposable
         // Снимок с задержкой (D-CAPTURE): «Снимок через 3 с», «через 5 с».
         _delayItems = Capture.CaptureCountdown.TrayDelays.Select(d => Item(Strings.Tray.CaptureDelay(d), () => app.CaptureWithDelay(d))).ToArray();
         foreach (var item in _delayItems) _menu.Items.Add(item);
+        _menu.Items.Add(RecordItem(app));
         _menu.Items.Add(_settingsItem = Item(Strings.Tray.Settings, app.ShowSettings));
         _menu.Items.Add(_contextMenuItem);
         _menu.Items.Add(_logItem = Item(Loc.T.TrayOpenLog, () => OpenFolder(AppPaths.LogsDir)));
@@ -103,6 +104,7 @@ internal sealed partial class TrayIcon : IDisposable
         _syncing = true;
         _clipboardItem.ShortcutKeyDisplayString = settings.ClipboardHotkey ? ClipboardShortcut : null;
         _captureItem.ShortcutKeyDisplayString = CaptureShortcut(settings);
+        SyncRecordSettings(settings);
         try { _contextMenuItem.Checked = settings.ContextMenuEnabled; }
         finally { _syncing = false; }
     }
@@ -114,6 +116,7 @@ internal sealed partial class TrayIcon : IDisposable
         _settingsItem.Text = Strings.Tray.Settings;
         _clipboardItem.Text = Loc.T.TrayFromClipboard;
         _captureItem.Text = Loc.T.TrayCapture;
+        RelocalizeRecord();
         _contextMenuItem.Text = Loc.T.TrayContextMenu;
         _logItem.Text = Loc.T.TrayOpenLog;
         _checkItem.Text = Loc.T.TrayCheckUpdates;
@@ -172,8 +175,8 @@ internal sealed partial class TrayIcon : IDisposable
 
         var old = _busy;
         _busy = active > 0 ? TrayIconArt.CreateIcon(IconSize, active) : null;
-        _icon.Icon = _busy ?? _idle;
-        if (_status is null) UpdateText(active);
+        _icon.Icon = _recordingIcon ?? _busy ?? _idle;
+        if (_status is null && _recordStatus is null) UpdateText(active);
         DestroyIcon(old);
     }
 
@@ -214,6 +217,7 @@ internal sealed partial class TrayIcon : IDisposable
         _menu.Dispose();
         DestroyIcon(_busy);
         DestroyIcon(_idle);
+        DestroyIcon(_recordingIcon);
     }
 
     private static partial class NativeIcon

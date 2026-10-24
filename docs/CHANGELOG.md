@@ -16,6 +16,11 @@ Each version section starts with `## <version>`; CI copies it into the GitHub re
 - «Сообщить о проблеме» (меню значка и внизу настроек): открывает страницу новой задачи на GitHub с уже заполненными
   версией, Windows и последними строками журнала (имя пользователя в путях скрыто) и копирует тот же текст в буфер
   обмена. Отправляете вы сами.
+- Запись экрана: Ctrl+Alt+R или «Записать экран» в меню значка. Выделите область, щёлкните по окну или нажмите
+  Enter — весь монитор, выберите MP4 или GIF и нажмите «Записать». Пока идёт запись, область обведена тонкой красной
+  рамкой, рядом — время и кнопка «Стоп» (в саму запись они не попадают). Остановить — «Стоп», то же сочетание или пункт
+  в меню значка. Готовая запись — `Запись 2026-10-24 15-30-05.mp4` в папке «Видео\DropWheel», в уведомлении —
+  «Открыть», «Показать в папке» и «Обрезать…». Курсор записывается, звук — пока нет; одна запись — до 30 минут.
 
 **English**
 - Your own screenshot shortcut: Settings → General → Windows → Change… and press a new shortcut (e.g. Ctrl+Shift+F9).
@@ -25,6 +30,11 @@ Each version section starts with `## <version>`; CI copies it into the GitHub re
   cursor gives you time to open a menu or a tooltip. The countdown doesn't appear in the screenshot.
 - Report a problem (tray menu and the bottom of Settings): opens a new GitHub issue with the version, Windows and the
   last log lines filled in (the user name in paths is hidden) and copies the same text to the clipboard. You send it yourself.
+- Screen recording: Ctrl+Alt+R or *Record screen* in the tray menu. Drag an area, click a window or press Enter for
+  the whole monitor, choose MP4 or GIF and press *Record*. While recording, a thin red frame marks the area, with the time
+  and a *Stop* button next to it (neither shows up in the video). Stop with *Stop*, the same shortcut or the tray menu.
+  The result is `Recording 2026-10-24 15-30-05.mp4` in `Videos\DropWheel`; the notification offers *Open*,
+  *Show in folder* and *Trim…*. The mouse pointer is recorded, sound is not yet; one recording lasts up to 30 minutes.
 
 ## 1.2.0
 

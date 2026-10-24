@@ -15,7 +15,7 @@ namespace DropWheel.Capture;
 /// Выбрали действие — оверлей закрывается и отдаёт вырезанную картинку в <see cref="Finished"/>;
 /// Esc, правый щелчок, переход в другое окно — закрывается без действия. После закрытия ссылок на снимок не остаётся.
 /// </summary>
-internal sealed class CaptureOverlay
+internal sealed partial class CaptureOverlay
 {
     private readonly ScreenCapture.Frame _frame;
     private readonly CaptureSession _session;
@@ -26,10 +26,12 @@ internal sealed class CaptureOverlay
     /// <summary>Хоть одно окно оверлея было активным: только тогда потеря фокуса закрывает оверлей.</summary>
     private bool _wasActive;
 
-    public CaptureOverlay(ScreenCapture.Frame frame, bool ocr, FileLog log)
+    /// <param name="record">Режим записи экрана (D-RECORD) с форматом по умолчанию; null — снимок.</param>
+    public CaptureOverlay(ScreenCapture.Frame frame, bool ocr, FileLog log, RecordFormat? record = null)
     {
         _frame = frame;
         _log = log;
+        _recordMode = record is not null;
         _session = new CaptureSession(frame.Monitors.Select(m => m.Bounds).ToList(), frame.Windows);
         var palette = SystemTheme.AppsLight ? SettingsPalette.Light(SystemTheme.Accent) : SettingsPalette.Dark(SystemTheme.Accent);
         foreach (var monitor in frame.Monitors)
@@ -37,10 +39,11 @@ internal sealed class CaptureOverlay
             var b = monitor.Bounds;
             var part = new CroppedBitmap(frame.Image, new Int32Rect(b.X - frame.Bounds.X, b.Y - frame.Bounds.Y, b.Width, b.Height));
             part.Freeze();
-            var view = new CaptureView(palette, ocr) { Frame = part, Width = monitor.DipWidth, Height = monitor.DipHeight };
+            var view = new CaptureView(palette, ocr, record) { Frame = part, Width = monitor.DipWidth, Height = monitor.DipHeight };
             var window = new CaptureWindow(monitor, view);
             view.ActionRequested += Finish;
             view.CloseRequested += Close;
+            view.RecordRequested += FinishRecord;
             window.MouseMove += (_, _) => OnMove();
             window.MouseLeftButtonDown += (_, e) => OnPress(window, e);
             window.MouseLeftButtonUp += (_, _) => OnRelease();
@@ -123,6 +126,7 @@ internal sealed class CaptureOverlay
 
     private void OnKey(object sender, KeyEventArgs e)
     {
+        if (_recordMode && OnRecordKey(e)) return;
         var ctrl = (Keyboard.Modifiers & ModifierKeys.Control) != 0;
         switch (e.Key)
         {

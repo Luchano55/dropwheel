@@ -133,6 +133,22 @@ public sealed partial class Texts
         ReportCopied = "Report copied to the clipboard",
         ReportCopiedHint = "A new GitHub issue has opened. If the text is missing, paste it: Ctrl+V",
         ReportFailed = "Couldn't open the report page",
+        // запись экрана (Texts.Record.cs)
+        TrayRecord = "Record screen",
+        TrayRecordStop = "Stop recording",
+        RecordFile = "Recording {0}",
+        RecordHint = "Drag to select an area to record · click — a window · Enter — the whole screen · Esc — cancel",
+        RecordStart = "Record",
+        RecordStop = "Stop",
+        RecordTrayStatus = "recording {0}",
+        RecordSaving = "saving the recording…",
+        RecordSaved = "Recording saved",
+        RecordTrim = "Trim…",
+        RecordFailed = "Couldn't record the screen",
+        RecordNothing = "Nothing was recorded — not a single frame",
+        RecordLimit = "Recording stopped after {0} min — the limit for one recording",
+        RecordHotkeyTitle = "{0} — screen recording",
+        RecordHotkeyHint = "Select an area, a window or the whole screen and press “Record” (MP4 or GIF). Stop with the same shortcut or “Stop”.",
 
         // обновления
         UpdateAvailableTitle = "A new version of DropWheel is available",

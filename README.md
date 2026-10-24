@@ -136,6 +136,10 @@ The same three steps work for a **whole folder** (`Vacation` → `Vacation (JPG)
       <h3>📸 Screenshots</h3>
       <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>S</kbd>: select an area, click a window or take the whole screen — multiple monitors, any scaling — then <i>Copy</i>, <i>Save</i>, open the <i>Wheel</i> or grab the <i>Text</i>. Lightweight: nothing stays in memory afterwards.
     </td>
+    <td width="33%" valign="top">
+      <h3>🎥 Screen recording</h3>
+      <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>R</kbd>: the same selection, then <i>Record</i> to MP4 or GIF. A thin red frame and a <i>Stop</i> pill show while recording — and stay out of the video.
+    </td>
   </tr>
 </table>
 
@@ -472,7 +476,11 @@ Press <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>S</kbd> or right-click the tray icon �
 - **click** without dragging to take the window under the cursor (it is highlighted as you move), **double-click** or <kbd>Enter</kbd> for the whole monitor;
 - <kbd>Esc</kbd> or a right click cancels.
 
-A toolbar appears next to the selection: **Copy** (picture to the clipboard; <kbd>Ctrl</kbd>+<kbd>C</kbd> or <kbd>Enter</kbd>), **Save** (`Screenshot 2026-10-24 15-30-05.png` in `Pictures\DropWheel` or your folder for clipboard pictures; <kbd>Ctrl</kbd>+<kbd>S</kbd>), **Wheel** (save and open the wheel right away: JPG, WebP, PDF, Crop…, text…) and **Text** (recognise the text with the OCR built into Windows and copy it). The screenshot is kept in memory only while the screen is frozen and released right after. Turn the shortcut off in *Settings → General*; if another program already uses it, the tray item still works. Annotations, scrolling screenshots and screen recording are not there yet.
+A toolbar appears next to the selection: **Copy** (picture to the clipboard; <kbd>Ctrl</kbd>+<kbd>C</kbd> or <kbd>Enter</kbd>), **Save** (`Screenshot 2026-10-24 15-30-05.png` in `Pictures\DropWheel` or your folder for clipboard pictures; <kbd>Ctrl</kbd>+<kbd>S</kbd>), **Wheel** (save and open the wheel right away: JPG, WebP, PDF, Crop…, text…) and **Text** (recognise the text with the OCR built into Windows and copy it). The screenshot is kept in memory only while the screen is frozen and released right after. Turn the shortcut off in *Settings → General*; if another program already uses it, the tray item still works. Annotations and scrolling screenshots are not there yet.
+
+### 🎥 Screen recording: <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>R</kbd>
+
+Press <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>R</kbd> or right-click the tray icon → **Record screen**. You get the same frozen screen as for a screenshot: drag an area, click a window, or press <kbd>Enter</kbd> for the whole monitor. On the toolbar choose **MP4** or **GIF** and press **Record** (or <kbd>Enter</kbd>). While recording, a thin red frame marks the area, and a small pill next to it shows the time and a **Stop** button; the tray icon gets a red dot. The frame and the pill are hidden from the recording itself (Windows 10 2004 or newer). Stop with **Stop**, the same shortcut again, or the tray item **Stop recording** — then `Recording 2026-10-24 15-30-05.mp4` (or `.gif`) appears in `Videos\DropWheel` (or your folder for clipboard pictures / the shared output folder), with a notification: *Open*, *Show in folder*, *Trim…*. The mouse pointer is recorded at 30 fps; sound is not recorded yet; one recording lasts up to 30 minutes; protected video (online cinemas) comes out black. The shortcut can be turned off in *Settings → General*.
 
 ### 🔔 Tray, jobs and notifications
 
