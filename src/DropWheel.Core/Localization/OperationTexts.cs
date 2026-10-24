@@ -21,6 +21,7 @@ internal static class OperationTexts
         ["video-frames"] = "Frames",
         [Conversions.VideoTrim.Id] = "Trim…",
         [Conversions.VideoTrim.ExactId] = "Trim exactly",
+        [Conversions.VideoTrim.GifId] = "GIF (clip)",
         ["video-poster"] = "JPG (frame)",
         ["audio-normalize"] = "Normalize",
         ["pdf-to-png"] = "PNG (pages)",
@@ -40,6 +41,8 @@ internal static class OperationTexts
         ["pdf-to-txt"] = "TXT (text)",
         ["pdf-to-md-fast"] = "MD (fast)",
         ["pdf-rotate"] = "Rotate ↻",
+        [Conversions.PdfPassword.ProtectId] = "Protect…",
+        [Conversions.PdfPassword.UnlockId] = "Remove password…",
         ["ppt-to-png"] = "Slides PNG",
     };
 
@@ -55,6 +58,7 @@ internal static class OperationTexts
         ["video-frames"] = " (frames)",
         [Conversions.VideoTrim.Id] = " (trimmed)",
         [Conversions.VideoTrim.ExactId] = " (trimmed)",
+        [Conversions.VideoTrim.GifId] = " (clip)",
         ["video-poster"] = " (frame)",
         ["audio-normalize"] = " (normalized)",
         ["pdf-to-png"] = " (pages)",
@@ -64,6 +68,8 @@ internal static class OperationTexts
         ["pdf-optimize"] = " (optimized)",
         ["images-to-pdf"] = " (all)",
         ["pdf-rotate"] = " (rotated)",
+        [Conversions.PdfPassword.ProtectId] = " (protected)",
+        [Conversions.PdfPassword.UnlockId] = " (unlocked)",
         ["ppt-to-png"] = " (slides)",
     };
 }

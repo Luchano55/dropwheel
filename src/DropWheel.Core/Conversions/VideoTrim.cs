@@ -4,7 +4,7 @@ namespace DropWheel.Conversions;
 
 /// <summary>
 /// Обрезка видео по времени (решение D-TRIM): id операций, разбор и показ времени, значения {start}/{end}.
-/// Окно «Обрезать…» и CLI (<c>--start 0:05 --end 0:12 [--exact]</c>) собирают задачу через <see cref="Bind"/>.
+/// Окно «Обрезать…» и CLI (<c>--start 0:05 --end 0:12 [--exact | --gif]</c>) собирают задачу через <see cref="Bind"/>.
 /// </summary>
 public static class VideoTrim
 {
@@ -12,6 +12,14 @@ public static class VideoTrim
     public const string Id = "video-trim";
     /// <summary>Точно по кадру: пересжатие в H.264 (дольше). В колесе не показывается.</summary>
     public const string ExactId = "video-trim-exact";
+    /// <summary>Кусок → анимированный GIF (как «GIF» у видео: 15 кадров/с, до 640 px). В колесе не показывается.</summary>
+    public const string GifId = "video-trim-gif";
+
+    /// <summary>Кусок длиннее — окно предупреждает, что GIF выйдет большим (только подсказка, не запрет).</summary>
+    public const double GifLongSeconds = 30;
+
+    /// <summary>GIF из куска такой длины, скорее всего, будет очень большим.</summary>
+    public static bool IsLongForGif(double seconds) => seconds > GifLongSeconds;
 
     public const string StartKey = "start", EndKey = "end";
     public static readonly IReadOnlyList<string> ParameterNames = [StartKey, EndKey];
@@ -20,11 +28,16 @@ public static class VideoTrim
     public const double MinLength = 0.1;
 
     /// <summary>Операция обрезки с началом и концом (секунды). Конец раньше начала, отрицательное — ArgumentException.</summary>
-    public static Operation Bind(bool exact, double start, double end)
+    public static Operation Bind(bool exact, double start, double end) => BindId(exact ? ExactId : Id, start, end);
+
+    /// <summary>Кусок → GIF (<see cref="GifId"/>).</summary>
+    public static Operation BindGif(double start, double end) => BindId(GifId, start, end);
+
+    private static Operation BindId(string id, double start, double end)
     {
         if (!double.IsFinite(start) || !double.IsFinite(end) || start < 0 || end - start < MinLength / 2)
             throw new ArgumentException($"Неверный отрезок {start}…{end}");
-        var op = OperationCatalog.Find(exact ? ExactId : Id)!;
+        var op = OperationCatalog.Find(id)!;
         return op.WithValues(new Dictionary<string, string>
         {
             [StartKey] = Arg(start),

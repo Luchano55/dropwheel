@@ -44,6 +44,8 @@ public static class Glyphs
     public const string Copy = "\uE8C8";
     /// <summary>Палитра — «Оформить…» (D-BEAUTIFY).</summary>
     public const string Beautify = "\uE790";
+    public const string Lock = "\uE72E";
+    public const string Unlock = "\uE785";
 }
 
 /// <summary>
@@ -78,6 +80,8 @@ public static class OperationGlyphs
             if (Has(id, "trim")) return Glyphs.Trim;
             if (Has(id, "crop")) return Glyphs.Crop;
             if (Has(id, "beautify")) return Glyphs.Beautify;
+            if (Has(id, "unlock")) return Glyphs.Unlock;
+            if (Has(id, "protect")) return Glyphs.Lock;
             if (Has(id, "extract", "unpack", "unzip")) return Glyphs.FolderOpen;
             if (Has(id, "pack", "zip", "7z")) return Glyphs.Package;
             if (Has(id, "ocr", "text", "encoding", "utf")) return Glyphs.Text;

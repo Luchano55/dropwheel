@@ -30,6 +30,10 @@ public static class OperationCatalog
     private const string To720 =
         "scale=w='trunc(iw*min(720,min(iw,ih))/min(iw,ih)/2)*2':h='trunc(ih*min(720,min(iw,ih))/min(iw,ih)/2)*2'";
 
+    // GIF из видео: 15 кадров/с, не шире 640 px, своя палитра на ролик (palettegen/paletteuse), без звука, по кругу.
+    private const string Gif =
+        "-an -vf fps=15,scale='min(640,iw)':-1:flags=lanczos,split[a][b];[a]palettegen[p];[b][p]paletteuse -loop 0";
+
     public static readonly IReadOnlyList<Operation> All =
     [
         // Изображения — конвертация
@@ -55,7 +59,7 @@ public static class OperationCatalog
         // Видео — конвертация
         new("to-mp4",       "MP4",  Conv, Video, FFmpeg, $"-map 0:v:0 -map 0:a:0? -vf {Even} -crf {{crf}} {H264}", OutputRule.Fixed("mp4")),
         new("to-webm",      "WebM", Conv, Video, FFmpeg, "-map 0:v:0 -map 0:a:0? -c:v libvpx-vp9 -crf 32 -b:v 0 -row-mt 1 -deadline good -cpu-used 4 -c:a libopus -b:a 128k", OutputRule.Fixed("webm")),
-        new("to-gif",       "GIF",  Conv, Video, FFmpeg, "-an -vf fps=15,scale='min(640,iw)':-1:flags=lanczos,split[a][b];[a]palettegen[p];[b][p]paletteuse -loop 0", OutputRule.Fixed("gif")),
+        new("to-gif",       "GIF",  Conv, Video, FFmpeg, Gif, OutputRule.Fixed("gif")),
         new("video-to-mp3", "MP3",  Conv, Video, FFmpeg, "-vn -map 0:a:0 {acodec}", OutputRule.Fixed("mp3")),
         // Обложка: кадр на 1-й секунде. tpad дублирует последний кадр на секунду — у ролика короче секунды
         // берётся последний кадр, а не «ничего». -update 1 — один файл, а не серия.
@@ -76,6 +80,9 @@ public static class OperationCatalog
             OutputRule.Same("mp4", [.. Extensions.Video]), " (обрезано)") { Parameters = VideoTrim.ParameterNames, MaxFiles = 1 },
         new(VideoTrim.ExactId, "Обрезать точно", Tool, Video, FFmpeg, $"-ss {{start}} -to {{end}} -i {{in}} -map 0:v:0 -map 0:a:0? -vf {Even} -crf {{crf}} {H264}",
             OutputRule.Fixed("mp4"), " (обрезано)") { Parameters = VideoTrim.ParameterNames, MaxFiles = 1, OnWheel = false },
+        // Кусок → GIF (выбор «GIF» в окне «Обрезать…», D-TRIM): те же -ss/-to до -i и та же цепочка, что у «GIF».
+        new(VideoTrim.GifId, "GIF (кусок)", Tool, Video, FFmpeg, $"-ss {{start}} -to {{end}} -i {{in}} {Gif}",
+            OutputRule.Fixed("gif"), " (кусок)") { Parameters = VideoTrim.ParameterNames, MaxFiles = 1, OnWheel = false },
         // Кадр в секунду, не больше 300, в папку «видео (кадры)»: кадр-001.jpg … ({frame} — «кадр» / «frame»).
         new("video-frames", "Кадры", Tool, Video, FFmpeg, "-vf fps=1 -frames:v 300 -q:v 2 {out}/{frame}-%03d.jpg", OutputRule.Fixed("jpg"), " (кадры)") { Result = ResultKind.Folder },
 
@@ -140,6 +147,16 @@ public static class OperationCatalog
         // Быстрый Markdown: текст pdftotext в порядке чтения (без -layout — абзацы не рвутся колонками), без разметки.
         new("pdf-to-md-fast", "MD (быстро)", Conv, Pdf, Pdftotext, "-enc UTF-8 {in} {out}", OutputRule.Fixed("md")),
         new("pdf-rotate", "Повернуть ↻", Tool, Pdf, Qpdf, "--rotate=+90 {in} {out}", OutputRule.Fixed("pdf"), " (повёрнуто)"),
+        // PDFPASS — пароль на PDF (D-PDFPASS). Защитить: AES-256, пароль на открытие = пароль владельца (все права у того,
+        // кто знает пароль). Снять: --decrypt с паролем. Пароль — секрет: qpdf получает аргументы с ним из временного
+        // файла «@…» (Converter), в журнале — «••••». Только один PDF: пароль спрашивает окно.
+        new(PdfPassword.ProtectId, "Защитить…", Tool, Pdf, Qpdf,
+            "--encrypt --user-password={password} --owner-password={password} --bits=256 -- {in} {out}",
+            OutputRule.Fixed("pdf"), " (защищён)")
+            { Parameters = PdfPassword.ParameterNames, SecretParameters = PdfPassword.ParameterNames, MaxFiles = 1 },
+        new(PdfPassword.UnlockId, "Снять пароль…", Tool, Pdf, Qpdf, "--password={password} --decrypt {in} {out}",
+            OutputRule.Fixed("pdf"), " (без пароля)")
+            { Parameters = PdfPassword.ParameterNames, SecretParameters = PdfPassword.ParameterNames, MaxFiles = 1 },
 
         // OFFICE — Word / Excel / PowerPoint через COM (OfficeEngine), только если Office установлен.
         // Что именно делает Office для операции (коды форматов) — Engines.OfficeFormats.

@@ -98,7 +98,8 @@ public sealed class Converter(ToolLocator tools, ConversionSettings settings, IE
         // Параметры задачи (обрезка: начало и конец) — заданы и без «{}»: значения подставляются в шаблон как есть.
         if (op.MissingValues() is { Count: > 0 } missing)
             throw new ConversionException(Loc.F(Loc.T.ErrMissingValues, Loc.Label(op), string.Join(", ", missing)));
-        if (op.Values?.Values.Any(v => v.IndexOfAny(['{', '}']) >= 0) == true)
+        // Секреты (пароль) подставляются отдельно (ArgumentBuilder) — в них скобки можно.
+        if (op.Values?.Any(kv => !op.SecretParameters.Contains(kv.Key) && kv.Value.IndexOfAny(['{', '}']) >= 0) == true)
             throw new ArgumentException("Значение параметра с фигурными скобками", nameof(op));
 
         var settings = Settings;
@@ -230,9 +231,44 @@ public sealed class Converter(ToolLocator tools, ConversionSettings settings, IE
             return;
         }
         var args = ArgumentBuilder.Build(effective, inputs, output, settings);
-        await _runner.RunAsync(kind, args, progress, log, ct);
-        // У скана pdftotext «успешно» пишет пустой текст.
-        if (kind == EngineKind.Pdftotext) PdfText.EnsureHasText(output);
+        var secrets = op.SecretValues();
+        if (secrets.Count == 0)
+        {
+            await _runner.RunAsync(kind, args, progress, log, ct);
+            // У скана pdftotext «успешно» пишет пустой текст.
+            if (kind == EngineKind.Pdftotext) PdfText.EnsureHasText(output);
+            return;
+        }
+        await RunWithSecretsAsync(kind, op, args, secrets, output, progress, log, ct);
+    }
+
+    /// <summary>
+    /// Операция с паролем (D-PDFPASS): аргументы с паролем — во временные файлы «@…» рядом с временным результатом
+    /// (qpdf читает их сам), журнал и подробности ошибки — с «••••••» вместо пароля. Файлы удаляются сразу после запуска.
+    /// </summary>
+    private async Task RunWithSecretsAsync(EngineKind kind, Operation op, IReadOnlyList<string> args,
+        IReadOnlyList<string> secrets, string output, IProgress<double>? progress, Action<string>? log, CancellationToken ct)
+    {
+        if (!SecretArguments.SupportsArgFiles(kind))
+            throw new InvalidOperationException($"{kind} не умеет читать аргументы из файла — секрет некуда спрятать");
+        var files = new List<string>();
+        try
+        {
+            var hidden = SecretArguments.MoveToFiles(args, secrets, Path.GetDirectoryName(output)!, files);
+            await _runner.RunAsync(kind, hidden, progress, SecretArguments.MaskLog(log, secrets), ct);
+        }
+        catch (ConversionException ex)
+        {
+            // qpdf: «invalid password» — у «Снять пароль» это неверный пароль, у «Защитить» — PDF уже с паролем.
+            var message = ex.Message == Loc.T.ErrPdfPassword
+                ? op.Id == PdfPassword.UnlockId ? Loc.T.ErrWrongPassword : Loc.T.ErrPdfAlreadyProtected
+                : SecretArguments.Mask(ex.Message, secrets);
+            throw new ConversionException(message, SecretArguments.Mask(ex.Details, secrets));
+        }
+        finally
+        {
+            SecretArguments.Delete(files);
+        }
     }
 
     /// <summary>Копия «как есть» (исходник только читается) — во временный файл, дальше как у результата движка.</summary>

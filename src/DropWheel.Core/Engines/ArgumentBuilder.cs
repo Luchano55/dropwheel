@@ -19,7 +19,7 @@ public static class ArgumentBuilder
         var outExt = Extensions.Normalize(Path.GetExtension(output));
         var middle = WithValues(Expand(op.Args, outExt, settings), op);
 
-        return op.Engine switch
+        IReadOnlyList<string> args = op.Engine switch
         {
             // Вход «-i файл» — сразу после общих ключей; если в шаблоне есть {in} — там, где он стоит
             // (параметры входа, например «-ss … -to … -i {in}»). {in} подставляется последним — после {out}.
@@ -42,6 +42,24 @@ public static class ArgumentBuilder
             EngineKind.Qpdf or EngineKind.Pdftoppm or EngineKind.Pdftotext or EngineKind.SevenZip => Explicit(middle, inputs, output),
             _ => throw new ArgumentOutOfRangeException(nameof(op), op.Engine, "Встроенный движок — не процесс"),
         };
+        return RevealSecrets(args, op);
+    }
+
+    /// <summary>
+    /// Секреты (пароль) подставляются метками, а настоящие значения — в самом конце: так «{in}» или «{out}»
+    /// внутри пароля не заменятся путями.
+    /// </summary>
+    private static string SecretMark(int index) => $"\u0001secret{index}\u0001";
+
+    private static IReadOnlyList<string> RevealSecrets(IReadOnlyList<string> args, Operation op)
+    {
+        if (op.SecretParameters.Count == 0) return args;
+        return args.Select(a =>
+        {
+            for (var i = 0; i < op.SecretParameters.Count; i++)
+                if (op.Values?.TryGetValue(op.SecretParameters[i], out var v) == true) a = a.Replace(SecretMark(i), v);
+            return a;
+        }).ToList();
     }
 
     /// <summary>
@@ -98,9 +116,20 @@ public static class ArgumentBuilder
             throw new ConversionException(Loc.F(Loc.T.ErrMissingValues, Loc.Label(op), string.Join(", ", missing)));
         return tokens.Select(t =>
         {
-            foreach (var name in op.Parameters) t = t.Replace("{" + name + "}", op.Values![name]);
+            foreach (var name in op.Parameters)
+            {
+                var secret = IndexOf(op.SecretParameters, name);
+                t = t.Replace("{" + name + "}", secret >= 0 ? SecretMark(secret) : op.Values![name]);
+            }
             return t;
         }).ToArray();
+    }
+
+    private static int IndexOf(IReadOnlyList<string> list, string name)
+    {
+        for (var i = 0; i < list.Count; i++)
+            if (list[i] == name) return i;
+        return -1;
     }
 
     private static string[] Expand(string template, string outExt, ConversionSettings s)

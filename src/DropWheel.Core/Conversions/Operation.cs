@@ -88,6 +88,12 @@ public sealed record Operation(
     /// каждое — внутрь своего токена, так что пробелы значений не разбивают аргументы.
     /// </summary>
     public IReadOnlyDictionary<string, string>? Values { get; init; }
+    /// <summary>
+    /// Параметры-секреты (пароль PDF, решение D-PDFPASS): их значения не попадают ни в журнал, ни в подробности
+    /// ошибки, ни в командную строку утилиты (Converter передаёт такие аргументы qpdf через временный файл @…).
+    /// Фигурные скобки в них можно (в отличие от остальных параметров).
+    /// </summary>
+    public IReadOnlyList<string> SecretParameters { get; init; } = [];
 
     /// <summary>Есть параметры, а значений ещё нет — сначала спросить пользователя.</summary>
     public bool NeedsValues => Parameters.Count > 0 && Values is null;
@@ -99,6 +105,12 @@ public sealed record Operation(
     /// <summary>Параметры, для которых не задано значение (пустые тоже не в счёт).</summary>
     public IReadOnlyList<string> MissingValues() =>
         Parameters.Where(p => Values is null || !Values.TryGetValue(p, out var v) || string.IsNullOrWhiteSpace(v)).ToList();
+
+    /// <summary>Заданные значения параметров-секретов (для маскировки в журнале); пустые не в счёт.</summary>
+    public IReadOnlyList<string> SecretValues() =>
+        Values is null ? [] : SecretParameters
+            .Select(p => Values.TryGetValue(p, out var v) ? v : null)
+            .Where(v => !string.IsNullOrEmpty(v)).Select(v => v!).Distinct(StringComparer.Ordinal).ToList();
 
     /// <summary>Операция-конвертация не предлагается файлу, который уже в целевом формате.</summary>
     public bool AppliesTo(string inputExtension)

@@ -17,6 +17,12 @@ Each version section starts with `## <version>`; CI copies it into the GitHub re
   в уведомлении — «Скопировано в буфер обмена».
 - «Что нового»: после обновления программа сама показывает, что изменилось, — небольшое окно со списком изменений
   и ссылкой на все выпуски. Открыть ещё раз — пункт «Что нового» в меню значка.
+- GIF из куска видео: в окне «Обрезать…» выберите «Результат: GIF» — выбранный кусок станет анимированным GIF
+  (15 кадров в секунду, до 640 точек в ширину, без звука) — `видео (кусок).gif`. Если кусок длиннее 30 секунд,
+  окно подскажет, что GIF выйдет большим.
+- Пароль на PDF: «Инструменты» → «Защитить…» — PDF с паролем на открытие (шифрование AES-256), `документ (защищён).pdf`;
+  «Снять пароль…» — копия без пароля, `документ (без пароля).pdf`. Неверный пароль — понятная ошибка. Пароль нигде
+  не сохраняется и не пишется в журнал. Исходный файл не меняется.
 
 **English**
 - Beautify a picture: Tools → Beautify… opens a window with a live preview — background (three soft gradients, white,
@@ -26,6 +32,11 @@ Each version section starts with `## <version>`; CI copies it into the GitHub re
   a picture and a file, anything else as a file.
 - What's new: after an update DropWheel shows a small window listing the changes, with a link to all releases.
   Open it again from the tray menu → What's new.
+- GIF from a video clip: in the Trim window choose “Result: GIF” — the selected part becomes an animated GIF
+  (15 fps, up to 640 px wide, no sound), `video (clip).gif`. Clips over 30 seconds get a “the GIF will be large” hint.
+- PDF password: Tools → “Protect…” adds an open password (AES-256), `document (protected).pdf`; “Remove password…”
+  makes an unlocked copy, `document (unlocked).pdf`. A wrong password gives a clear error. The password is never saved
+  or written to the log. The original file is never changed.
 
 ## 1.1.1
 
