@@ -5,6 +5,16 @@
 
 Each version section starts with `## <version>`; CI copies it into the GitHub release notes.
 
+## 1.1.1
+
+**Исправлено**
+- Word, Excel, PowerPoint: документы, пришедшие по почте или скачанные из интернета, больше не падают с ошибкой
+  «Word не смог открыть файл» (Office открывал их в защищённом просмотре) — программа сама берёт чистую копию.
+
+**English**
+- Fixed: Office documents received by e-mail or downloaded from the internet no longer fail with “Word could not open
+  the file” (Office opened them in Protected View) — DropWheel retries with a clean copy.
+
 ## 1.1.0
 
 **Новое в этой версии**

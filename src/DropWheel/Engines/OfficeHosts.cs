@@ -111,7 +111,17 @@ internal abstract class OfficeHost(Action<string> log)
             // а мы бы его закрыли.
             if (IsOpen(input))
                 throw new ConversionException(Loc.F(Loc.T.ErrFileOpenIn, Name), input);
-            Convert(target, input, output, progress, ct);
+            try
+            {
+                Convert(target, input, output, progress, ct);
+            }
+            catch (ConversionException ex) when (!_dead && ex.Message == Loc.F(Loc.T.ErrAppCantOpen, Name))
+            {
+                // Файл «из интернета» (почта, браузер) Office открывает в защищённом просмотре, а без окон это
+                // «Ошибка команды» (0x800A1066). Копия, записанная заново, такой пометки не несёт — пробуем её.
+                Log($"{Name}: не открылся ({ex.Details}) — пробую чистую копию");
+                ConvertCleanCopy(target, input, output, progress, ct);
+            }
         }
         catch (Exception ex) when (ex is not ConversionException and not OperationCanceledException)
         {
@@ -378,6 +388,29 @@ internal abstract class OfficeHost(Action<string> log)
             if (com is not null && Marshal.IsComObject(com)) Marshal.FinalReleaseComObject(com);
         }
         catch { /* уже освобождён */ }
+    }
+
+    /// <summary>
+    /// Копия исходника во временной папке — байты заново, без пометки «скачано из интернета» (Zone.Identifier
+    /// живёт в отдельном потоке NTFS и при чтении/записи содержимого не переносится). Имя — как у исходника.
+    /// </summary>
+    private void ConvertCleanCopy(OfficeTarget target, string input, string output, IProgress<double>? progress, CancellationToken ct)
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "DropWheel", "office-" + Guid.NewGuid().ToString("N")[..8]);
+        try
+        {
+            Directory.CreateDirectory(dir);
+            var copy = Path.Combine(dir, Path.GetFileName(input));
+            using (var from = new FileStream(input, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            using (var to = new FileStream(copy, FileMode.CreateNew, FileAccess.Write))
+                from.CopyTo(to);
+            Convert(target, copy, output, progress, ct);
+        }
+        finally
+        {
+            try { Directory.Delete(dir, recursive: true); }
+            catch (Exception ex) { Log($"{Name}: временная копия не удалилась — {ex.Message}"); }
+        }
     }
 
     /// <summary>Шаг конвертации: ошибка Office → понятное сообщение (подробности — в лог).</summary>
