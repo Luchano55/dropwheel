@@ -130,6 +130,12 @@ The same three steps work for a **whole folder** (`Vacation` → `Vacation (JPG)
       MIT-licensed. No ads, no trial, no account, no limits.
     </td>
   </tr>
+  <tr>
+    <td width="33%" valign="top">
+      <h3>📸 Screenshots</h3>
+      <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>S</kbd>: select an area, click a window or take the whole screen — multiple monitors, any scaling — then <i>Copy</i>, <i>Save</i>, open the <i>Wheel</i> or grab the <i>Text</i>. Lightweight: nothing stays in memory afterwards.
+    </td>
+  </tr>
 </table>
 
 ## Screenshots
@@ -435,6 +441,16 @@ By default the cut is **instant and lossless** — `clip (trimmed).mp4`, same fo
 ### 📋 From the clipboard: <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>V</kbd>
 
 Copy files in Explorer (<kbd>Ctrl</kbd>+<kbd>C</kbd>) or take a screenshot (<kbd>Win</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd>, “Copy image” in a browser), then press <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>V</kbd> — or right-click the tray icon → **From clipboard…**. The wheel opens at the cursor: for copied files — the same as **Convert…**; a picture is first saved as `Clipboard 2026-10-22 10-31-05.png` in `Pictures\DropWheel` (or your shared output folder), then you pick JPG, WebP, PDF, ICO, text (OCR)… Only text in the clipboard → a short hint. In *Settings → General → Pictures from the clipboard and browser* you can choose your own folder for these pictures and turn off **Keep the original picture** — then only the result (say, the JPG) stays, and the intermediate PNG is deleted after a successful conversion. The shortcut can be turned off in the settings; if another program already uses it, DropWheel works without it (the tray item stays). Copied folders aren't picked up from the clipboard — use **Convert…** on the folder instead.
+
+### 📸 Screenshots: <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>S</kbd>
+
+Press <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>S</kbd> or right-click the tray icon → **Screenshot**. The screen freezes and dims:
+
+- **drag** in any direction to select an area (its size in pixels, e.g. `1280 × 720`, is shown next to it) — across monitors, too;
+- **click** without dragging to take the window under the cursor (it is highlighted as you move), **double-click** or <kbd>Enter</kbd> for the whole monitor;
+- <kbd>Esc</kbd> or a right click cancels.
+
+A toolbar appears next to the selection: **Copy** (picture to the clipboard; <kbd>Ctrl</kbd>+<kbd>C</kbd> or <kbd>Enter</kbd>), **Save** (`Screenshot 2026-10-24 15-30-05.png` in `Pictures\DropWheel` or your folder for clipboard pictures; <kbd>Ctrl</kbd>+<kbd>S</kbd>), **Wheel** (save and open the wheel right away: JPG, WebP, PDF, Crop…, text…) and **Text** (recognise the text with the OCR built into Windows and copy it). The screenshot is kept in memory only while the screen is frozen and released right after. Turn the shortcut off in *Settings → General*; if another program already uses it, the tray item still works. Annotations, scrolling screenshots and screen recording are not there yet.
 
 ### 🔔 Tray, jobs and notifications
 

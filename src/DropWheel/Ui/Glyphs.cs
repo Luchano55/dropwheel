@@ -41,6 +41,8 @@ public static class Glyphs
     public const string Undo = "\uE7A7";
     public const string Trim = "\uE78A";
     public const string Crop = "\uE7A8";
+    public const string Copy = "\uE8C8";
+    public const string Save = "\uE74E";
 }
 
 /// <summary>

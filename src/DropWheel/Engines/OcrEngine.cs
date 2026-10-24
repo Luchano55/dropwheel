@@ -42,9 +42,20 @@ public sealed class OcrEngine(Action<string>? log = null) : IInternalEngine
     {
         if (!CanRun(op)) throw new ConversionException(Loc.T.ErrOcrNoLanguage, op.Id);
 
-        using var bitmap = OnWhite(await LoadAsync(inputs[0], ct));
-        progress?.Report(0.3);
+        progress?.Report(0.1);
+        var lines = await RecognizeLinesAsync(inputs[0], log, ct);
+        progress?.Report(0.9);
+        if (lines.Count == 0) throw new ConversionException(Loc.T.ErrOcrNoText, inputs[0]);
+        await File.WriteAllLinesAsync(output, lines, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true), ct);
+    }
 
+    /// <summary>
+    /// Строки текста на картинке (пустые отброшены); текста нет — пустой список. Нужен язык распознавания
+    /// (<see cref="IsAvailable"/>), иначе — ConversionException. Им же пользуется «Текст» у снимка экрана (D-CAPTURE).
+    /// </summary>
+    internal static async Task<IReadOnlyList<string>> RecognizeLinesAsync(string path, Action<string>? log, CancellationToken ct)
+    {
+        using var bitmap = OnWhite(await LoadAsync(path, ct));
         var (engine, english) = CreateEngines();
         log?.Invoke($"OCR: {engine.RecognizerLanguage.LanguageTag}, {bitmap.PixelWidth}×{bitmap.PixelHeight}");
         var result = await engine.RecognizeAsync(bitmap).AsTask(ct);
@@ -53,11 +64,7 @@ public sealed class OcrEngine(Action<string>? log = null) : IInternalEngine
             log?.Invoke("OCR: кириллицы нет — перечитываем английской моделью");
             result = await english.RecognizeAsync(bitmap).AsTask(ct);
         }
-        progress?.Report(0.9);
-
-        var lines = result.Lines.Select(l => l.Text).Where(t => !string.IsNullOrWhiteSpace(t)).ToList();
-        if (lines.Count == 0) throw new ConversionException(Loc.T.ErrOcrNoText, inputs[0]);
-        await File.WriteAllLinesAsync(output, lines, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true), ct);
+        return result.Lines.Select(l => l.Text).Where(t => !string.IsNullOrWhiteSpace(t)).ToList();
     }
 
     private static bool IsCyrillic(char c) => c is >= 'Ѐ' and <= 'ӿ';

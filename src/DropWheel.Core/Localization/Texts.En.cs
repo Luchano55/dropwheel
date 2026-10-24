@@ -34,6 +34,25 @@ public sealed partial class Texts
         FolderFailed = "Failed: {0} — details are in the log",
         Folders = Noun.En("folder", "folders"),
 
+        // снимок экрана (Texts.Capture.cs)
+        TrayCapture = "Screenshot",
+        CaptureFile = "Screenshot {0}",
+        CaptureHint = "Drag to select an area · click — a window · Enter — the whole screen · Esc — cancel",
+        CaptureCopy = "Copy",
+        CaptureSave = "Save",
+        CaptureWheel = "Wheel",
+        CaptureText = "Text",
+        CaptureClose = "Close (Esc)",
+        CaptureCopied = "Screenshot copied",
+        CaptureCopiedHint = "Paste it anywhere with Ctrl+V",
+        CaptureTextCopied = "Text copied",
+        CaptureTextLines = "Lines: {0}. Paste it anywhere with Ctrl+V",
+        CaptureNoText = "No text found in the screenshot",
+        CaptureFailed = "Couldn't take a screenshot",
+        CaptureClipboardFailed = "Couldn't put it on the clipboard — another program is using it",
+        CaptureHotkeyTitle = "{0} — screenshot",
+        CaptureHotkeyHint = "Select an area, click a window or press Enter for the whole screen. Then copy, save or open the wheel.",
+
         // обновления
         UpdateAvailableTitle = "A new version of DropWheel is available",
         UpdateAvailableText = "Right-click the icon → “Update”.",

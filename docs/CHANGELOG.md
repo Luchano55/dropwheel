@@ -5,6 +5,20 @@
 
 Each version section starts with `## <version>`; CI copies it into the GitHub release notes.
 
+## 1.2.0
+
+**Новое в этой версии**
+- Снимок экрана: <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>S</kbd> или «Снимок экрана» в меню значка. Выделите область мышью,
+  щёлкните по окну или нажмите Enter — весь монитор; работает с несколькими мониторами и любым масштабом. Затем
+  «Копировать», «Сохранить» (PNG в «Изображения\DropWheel»), «Колесо» (сразу конвертировать или обрезать) или «Текст»
+  (распознать текст и положить в буфер). Сочетание выключается в настройках.
+
+**English**
+- Screenshots: <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>S</kbd> or *Screenshot* in the tray menu. Drag to select an area,
+  click a window or press Enter for the whole monitor — multiple monitors and any scaling. Then *Copy*, *Save*
+  (PNG in `Pictures\DropWheel`), *Wheel* (convert or crop right away) or *Text* (recognise the text and copy it).
+  The shortcut can be turned off in the settings.
+
 ## 1.1.1
 
 **Исправлено**
