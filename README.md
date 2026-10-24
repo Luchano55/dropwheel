@@ -9,7 +9,8 @@
 <p align="center">
   <b>DropWheel</b> is a free, offline file converter for Windows that lives in your tray:<br>
   drag a file, press <kbd>Space</kbd>, drop it on a format — the converted file appears right next to the original.<br>
-  Works for whole folders and for pictures dragged straight out of your browser, too.
+  Whole folders and pictures dragged out of your browser work too.<br>
+  It's also a lightweight screen tool: <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>S</kbd> for a screenshot with arrows and text, <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>R</kbd> for a screen recording in MP4 or GIF.
 </p>
 
 <p align="center">
@@ -58,6 +59,8 @@ Not a fan of drag-and-drop? Right-click a file → **Convert…** in the Explore
 
 The same three steps work for a **whole folder** (`Vacation` → `Vacation (JPG)`), for a **picture dragged out of Chrome, Edge or Firefox**, and for whatever you've copied: <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>V</kbd> opens the wheel for the clipboard.
 
+**The screen, too:** <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>S</kbd> freezes the screen — select an area, a window or the whole monitor, then copy it, save it, add arrows and text, or send it straight to the wheel. <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>R</kbd> records the same kind of selection to MP4 or GIF. Nothing runs in the background in between.
+
 ## Features
 
 <table>
@@ -78,7 +81,7 @@ The same three steps work for a **whole folder** (`Vacation` → `Vacation (JPG)
   <tr>
     <td width="33%" valign="top">
       <h3>📄 Office documents</h3>
-      Word, Excel and PowerPoint through your installed Microsoft Office — pre-warmed in the background, so it's fast. Every Office format needs an activated (licensed) Office. No Office, or Office not working? DOCX → PDF, TXT, HTML, Markdown and XLSX → CSV still work.
+      Word, Excel and PowerPoint through your installed Microsoft Office — pre-warmed in the background, so it's fast. No Office? The free LibreOffice works too, if it's installed; and DOCX → PDF, TXT, HTML, Markdown and XLSX → CSV work with neither.
     </td>
     <td width="33%" valign="top">
       <h3>🔎 Text from pictures</h3>
@@ -92,18 +95,8 @@ The same three steps work for a **whole folder** (`Vacation` → `Vacation (JPG)
   <tr>
     <td width="33%" valign="top">
       <h3>📚 Many files at once</h3>
-      Select several files: convert them all, merge PDFs, put photos into one PDF, or pack everything into a single archive. Or copy them and press <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>V</kbd> — works for screenshots too.
+      Select several files: convert them all, merge PDFs, put photos into one PDF, or pack everything into a single archive.
     </td>
-    <td width="33%" valign="top">
-      <h3>⚡ Quiet background queue</h3>
-      Up to two jobs in parallel, a Windows 11-style jobs flyout in the tray, a notification with a preview, <i>Open</i> and <i>Show in folder</i>.
-    </td>
-    <td width="33%" valign="top">
-      <h3>🖱️ Explorer integration</h3>
-      “Convert…” in the right-click menu opens the same wheel, for one file or a whole selection. Per-user, no admin rights.
-    </td>
-  </tr>
-  <tr>
     <td width="33%" valign="top">
       <h3>📁 Whole folders</h3>
       Right-click a folder → <i>Convert…</i>, or drag it and press <kbd>Space</kbd>. Up to 1000 files, subfolders included; results land in <code>Vacation (JPG)</code> next to it, with one notification for the lot.
@@ -112,15 +105,53 @@ The same three steps work for a **whole folder** (`Vacation` → `Vacation (JPG)
       <h3>🌐 Pictures from the browser</h3>
       Drag an image off a web page in Chrome, Edge or Firefox and press <kbd>Space</kbd>. No “Save image as…” first — and still offline: DropWheel takes the picture the browser hands over, it never downloads anything.
     </td>
+  </tr>
+  <tr>
     <td width="33%" valign="top">
-      <h3>✂️ Video trimming</h3>
-      <i>Tools → Trim…</i> opens a small window with a frame preview, a thumbnail strip and two handles. Instant and lossless by default, frame-accurate when you need it.
+      <h3>📸 Screenshots</h3>
+      <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>S</kbd> (or your own shortcut): an area, a window or the whole screen — multiple monitors, any scaling — then <i>Copy</i>, <i>Save</i>, <i>Wheel</i>, <i>Annotate</i> or <i>Text</i>. A 3- or 5-second delay is one click away in the tray menu.
+    </td>
+    <td width="33%" valign="top">
+      <h3>🎥 Screen recording</h3>
+      <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>R</kbd>: the same selection, then <i>Record</i> to MP4 or GIF. A thin red frame and a <i>Stop</i> pill show while recording — and stay out of the video. Trim it afterwards right from the notification.
+    </td>
+    <td width="33%" valign="top">
+      <h3>✏️ Annotations</h3>
+      Arrows, boxes, text, highlighter, pixelate and numbered steps on a screenshot or any picture — then <i>Copy</i> or <i>Save</i> a full-size PNG.
+    </td>
+  </tr>
+  <tr>
+    <td width="33%" valign="top">
+      <h3>✂️ Video tools</h3>
+      <i>Trim…</i> with a frame preview and two handles — instant and lossless, or frame-accurate; the trimmed part can also become a GIF. Plus rotate, frames and a poster frame.
+    </td>
+    <td width="33%" valign="top">
+      <h3>🖼️ Picture tools</h3>
+      <i>Crop…</i> with aspect presets, <i>Beautify…</i> (background, padding, rounded corners, shadow), compress, fit to 1920 px, strip metadata, make an icon.
+    </td>
+    <td width="33%" valign="top">
+      <h3>📕 PDF tools</h3>
+      Merge, split, rotate, lossless optimize, pages to images, PDF → text — and put a password on a PDF (AES-256) or remove a known one.
+    </td>
+  </tr>
+  <tr>
+    <td width="33%" valign="top">
+      <h3>⚡ Quiet background queue</h3>
+      Up to two jobs in parallel, a Windows 11-style jobs flyout in the tray, a notification with a preview, <i>Open</i> and <i>Show in folder</i>. Optionally the result goes straight to the clipboard.
+    </td>
+    <td width="33%" valign="top">
+      <h3>🖱️ Explorer integration</h3>
+      “Convert…” in the right-click menu opens the same wheel, for one file or a whole selection. Per-user, no admin rights.
+    </td>
+    <td width="33%" valign="top">
+      <h3>📋 From the clipboard</h3>
+      Copied files or a picture? Press <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>V</kbd> — the wheel opens at the cursor for whatever is in the clipboard.
     </td>
   </tr>
   <tr>
     <td width="33%" valign="top">
       <h3>📦 Installer or zip, updates itself</h3>
-      A per-user installer without admin rights, or just unzip and run — no .NET to install. New versions arrive with one click in the tray menu; stable releases or every test build — your choice.
+      A per-user installer without admin rights, or just unzip and run — no .NET to install. New versions arrive with one click in the tray menu, with a short “What's new” afterwards; stable releases or every test build — your choice.
     </td>
     <td width="33%" valign="top">
       <h3>🔤 Any file name, two languages</h3>
@@ -129,18 +160,6 @@ The same three steps work for a **whole folder** (`Vacation` → `Vacation (JPG)
     <td width="33%" valign="top">
       <h3>💸 Free &amp; open source</h3>
       MIT-licensed. No ads, no trial, no account, no limits.
-    </td>
-  </tr>
-  <tr>
-    <td width="33%" valign="top">
-      <h3>📸 Screenshots</h3>
-      <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>S</kbd>: select an area, click a window or take the whole screen — multiple monitors, any scaling — then <i>Copy</i>, <i>Save</i>, open the <i>Wheel</i> or grab the <i>Text</i>. Lightweight: nothing stays in memory afterwards.
-    </td>
-    <td width="33%" valign="top">
-      <h3>🎥 Screen recording</h3>
-      <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>R</kbd>: the same selection, then <i>Record</i> to MP4 or GIF. A thin red frame and a <i>Stop</i> pill show while recording — and stay out of the video.
-      <h3>✏️ Annotate</h3>
-      Arrows, boxes, text, highlighter, pixelate and numbered steps on a screenshot or any picture — then <i>Copy</i> or <i>Save</i> a full-size PNG.
     </td>
   </tr>
 </table>
@@ -154,7 +173,7 @@ The same three steps work for a **whole folder** (`Vacation` → `Vacation (JPG)
       <sub><b>Photo → Convert</b> — the petal under the cursor lights up in your accent colour</sub>
     </td>
     <td align="center" width="50%">
-      <img src="docs/assets/screenshots/wheel-photo-tools-en.png" alt="The wheel for a photo in Tools mode: compress, half size, fit 1920 px, no metadata, to ZIP, to 7Z" width="300"><br>
+      <img src="docs/assets/screenshots/wheel-photo-tools-en.png" alt="The wheel for a photo in Tools mode: Compress, Half size, Fit 1920 px, No metadata, Crop, Beautify, Annotate, To ZIP" width="300"><br>
       <sub><b>Photo → Tools</b> — press <kbd>Space</kbd> again to switch</sub>
     </td>
   </tr>
@@ -180,8 +199,18 @@ The same three steps work for a **whole folder** (`Vacation` → `Vacation (JPG)
   </tr>
   <tr>
     <td align="center" width="50%">
-      <img src="docs/assets/screenshots/capture-en.png" alt="Screenshot overlay: a selected area with its size in pixels and a toolbar — Copy, Save, Wheel, Text" width="340"><br>
-      <sub><b>Screenshot</b> — <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>S</kbd>: drag an area, click a window or press Enter for the whole screen</sub>
+      <img src="docs/assets/screenshots/capture-en.png" alt="Screenshot overlay: a selected area with its size in pixels and a toolbar — Copy, Save, Wheel, Annotate, Text" width="340"><br>
+      <sub><b>Screenshot</b> — <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>S</kbd>: drag an area, click a window or press <kbd>Enter</kbd> for the whole screen</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/assets/screenshots/annotate-en.png" alt="The Annotate window: a toolbar with arrow, rectangle, ellipse, pen, highlighter, text, pixelate and number tools, eight colours and three line widths; arrows, a box, numbered circles and text on a screenshot" width="340"><br>
+      <sub><b>Annotate</b> — arrows, boxes, text, highlighter, pixelate, numbered steps</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <img src="docs/assets/screenshots/record-en.png" alt="Screen recording: a selected area with its size and a toolbar — MP4, GIF and Record" width="340"><br>
+      <sub><b>Screen recording</b> — <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>R</kbd>: select, choose MP4 or GIF, press <i>Record</i></sub>
     </td>
     <td align="center" width="50%">
       <img src="docs/assets/screenshots/beautify-en.png" alt="The Beautify window: a picture on a gradient background with padding, rounded corners and a shadow" width="300"><br>
@@ -190,15 +219,18 @@ The same three steps work for a **whole folder** (`Vacation` → `Vacation (JPG)
   </tr>
   <tr>
     <td align="center" width="50%">
-      <img src="docs/assets/screenshots/pdf-password-en.png" alt="The Protect PDF with a password window: password and repeat fields" width="300"><br>
-      <sub><b>PDF password</b> — protect with AES-256 or remove a known password</sub>
+      <img src="docs/assets/screenshots/crop-en.png" alt="The Crop picture window: a crop frame with handles over a photo, aspect presets Free, 1:1, 4:3, 16:9, Original and the size in pixels" width="300"><br>
+      <sub><b>Crop</b> — drag the frame; Free, 1:1, 4:3, 16:9 or the original proportions</sub>
     </td>
-    <td align="center" width="50%"></td>
+    <td align="center" width="50%">
+      <img src="docs/assets/screenshots/trim-en.png" alt="The Trim video window: a frame preview, a thumbnail strip with start and end handles, start, length and end times, Result: Video or GIF, and the Frame-accurate checkbox" width="300"><br>
+      <sub><b>Trim video</b> — drag the handles; keep the part between them as a video or a GIF</sub>
+    </td>
   </tr>
   <tr>
     <td align="center" width="50%">
-      <img src="docs/assets/screenshots/trim-en.png" alt="The Trim video window: a frame preview, a thumbnail strip with start and end handles, start, length and end times, and the Frame-accurate checkbox" width="340"><br>
-      <sub><b>Trim video</b> — drag the handles; the part between them is kept</sub>
+      <img src="docs/assets/screenshots/pdf-password-en.png" alt="The Protect PDF with a password window: password and repeat fields" width="300"><br>
+      <sub><b>PDF password</b> — protect with AES-256 or remove a known password</sub>
     </td>
     <td align="center" width="50%">
       <img src="docs/assets/screenshots/jobs-light-en.png" alt="The jobs flyout above the tray: thumbnails, progress bars, Open and Show in folder buttons, an error with Details" width="300"><br>
@@ -207,14 +239,14 @@ The same three steps work for a **whole folder** (`Vacation` → `Vacation (JPG)
   </tr>
   <tr>
     <td align="center" colspan="2">
-      <img src="docs/assets/screenshots/settings-general-en.png" alt="The settings window, General page: hotkey, where to save results, language, and the wheel transparency slider with a live preview" width="640"><br>
-      <sub><b>Settings</b> — hotkey, output folder, language, wheel transparency with a live preview; further down — clipboard and browser pictures, autostart, update channel</sub>
+      <img src="docs/assets/screenshots/settings-general-en.png" alt="The settings window, General page: hotkey, where to save results, copy the result to the clipboard, language, and the wheel transparency slider with a live preview; Check for updates, Open log folder and Report a problem at the bottom left" width="640"><br>
+      <sub><b>Settings</b> — hotkey, output folder, copy the result to the clipboard, language, wheel transparency with a live preview</sub>
     </td>
   </tr>
   <tr>
     <td align="center" colspan="2">
-      <img src="docs/assets/screenshots/settings-general-lower-en.png" alt="The settings window, General page scrolled down: Start with Windows, the Explorer menu item, Ctrl+Alt+V, the folder for pictures from the clipboard and browser, Keep the original picture, update check and update channel" width="640"><br>
-      <sub><b>Settings, further down</b> — start with Windows, the Explorer menu, the folder for clipboard and browser pictures, <i>Keep the original picture</i>, the update channel</sub>
+      <img src="docs/assets/screenshots/settings-general-lower-en.png" alt="The settings window, General page scrolled down: Start with Windows, the Explorer menu item, Ctrl+Alt+V, Ctrl+Alt+S with a Change button, Ctrl+Alt+R, the folder for pictures from the clipboard and browser, Keep the original picture, update check and update channel" width="640"><br>
+      <sub><b>Settings, further down</b> — start with Windows, the Explorer menu, the clipboard, screenshot and recording shortcuts, the folder for clipboard and browser pictures, the update channel</sub>
     </td>
   </tr>
 </table>
@@ -382,8 +414,8 @@ Password-protected archives aren't supported — you get a clear message.
 ### Portable zip
 
 1. Download **`DropWheel-win-x64.zip`** from the same [release](https://github.com/Luchano55/dropwheel/releases/latest). The full archive (app + tools) is only needed for the first install.
-2. Unzip it to any folder **you can write to**, for example `C:\DropWheel` or a folder in your user profile — **not** `C:\Program Files`: self-update replaces files in this folder. Keep the `tools` folder next to `DropWheel.exe` — that's where the converters live.
-3. Run **`DropWheel.exe`**.
+2. Unzip it to any folder **you can write to**, for example `C:\DropWheel` or a folder in your user profile — **not** `C:\Program Files`: self-update replaces files in this folder. Inside: `DropWheel.exe` (the app), `dropwheel-cli.exe`, the `tools` folder (ffmpeg, ImageMagick, qpdf, poppler, 7-Zip) and `try-dropwheel.cmd`. Keep `tools` next to `DropWheel.exe` — that's where the converters live.
+3. Run **`DropWheel.exe`**. There's no window — a ring icon appears in the tray (it may hide under the <kbd>^</kbd> arrow next to the clock).
 
 To remove the portable version: right-click the tray icon → untick **“Convert…” in Explorer menu** → **Exit**. Then delete the folder and, if you like, `%AppData%\DropWheel` (settings and logs).
 
@@ -403,11 +435,11 @@ The package `Luchano55.DropWheel` has been submitted to the Windows Package Mana
 The installed app follows the channel it came from; switch any time in *Settings → General → Update channel*.
 
 > [!NOTE]
-> **“Windows protected your PC”?** DropWheel is a personal project and the build isn't code-signed, so Microsoft Defender SmartScreen warns about it. Click **More info → Run anyway**. Every build is made by [GitHub Actions](https://github.com/Luchano55/dropwheel/actions/workflows/build.yml) straight from the source code in this repository.
+> **“Windows protected your PC”?** DropWheel is a personal project and the build isn't code-signed, so Microsoft Defender SmartScreen may warn about it. Click **More info → Run anyway**. Every build is made by [GitHub Actions](https://github.com/Luchano55/dropwheel/actions/workflows/build.yml) straight from the source code in this repository.
 
-**Updates are automatic after that** (installer and zip alike): when a new build is out, the tray menu shows **Update to build N**. One click — DropWheel downloads only the app part (~100 MB; the tools only if they changed), verifies it with SHA-256, waits for running jobs to finish and restarts itself.
+**Updates are automatic after that** (installer and zip alike): when a new build is out, the tray menu shows **Update to build N**. One click — DropWheel downloads only the app part (about 120 MB; the tools only if they changed), verifies it with SHA-256, waits for running jobs to finish and restarts itself.
 
-**Requirements:** Windows 10 (1809 or newer) or Windows 11, 64-bit. Nothing else — .NET is built in. Optional: Microsoft Office 2013+ for the Office conversions; a Windows OCR language for text recognition.
+**Requirements:** Windows 10 (1809 or newer) or Windows 11, 64-bit. Nothing else — .NET is built in. Optional: Microsoft Office 2013+ or the free LibreOffice for Office documents; a Windows OCR language for text recognition. Screen recording hides its frame and *Stop* pill from the video on Windows 10 2004 or newer.
 
 ## Usage
 
@@ -421,7 +453,7 @@ The installed app follows the channel it came from; switch any time in *Settings
 | Drop on a petal | converts; the result appears next to the original |
 | Drop in the centre, press <kbd>Esc</kbd> or release outside | cancels, nothing happens |
 
-<kbd>Space</kbd> is only intercepted while you are dragging something — the rest of the time it types spaces and pauses videos as usual.
+<kbd>Space</kbd> is only intercepted while you are dragging something — the rest of the time it types spaces and pauses videos as usual. The key can be changed in the settings.
 
 ### 🖱️ Explorer: “Convert…”
 
@@ -446,9 +478,9 @@ Right-click a folder → **Convert…** (or drag the folder and press <kbd>Space
 | Pick a tool, e.g. **Compress** | `Vacation (compressed)`; the files inside keep their names — the tag is already in the folder name |
 | Pick **One PDF** or **Merge** | one file named after the folder: `Vacation (all).pdf`, `Documents (merged).pdf` |
 
-<img src="docs/assets/screenshots/wheel-folder-tools-en.png" alt="The Tools wheel for a folder of photos: Compress, Half size, Fit 1920 px, No metadata and One PDF" width="220" align="right">
+<img src="docs/assets/screenshots/wheel-folder-tools-en.png" alt="The Tools wheel for a folder of photos: Compress, Fit 1920 px, No metadata and One PDF" width="220" align="right">
 
-Files that are already in the target format are copied, so `Vacation (JPG)` holds all your photos, not only the former HEICs. Files the operation can't handle are skipped; hidden and system files (`desktop.ini`, `Thumbs.db`) are ignored. You get **one** notification for the whole folder — how many files are done, skipped or failed — with *Open* for the result folder. Up to 1000 files at a time; for a bigger folder DropWheel asks you to pick a smaller one. With *In one folder* in the settings, `Vacation (JPG)` goes there.
+Files that are already in the target format are copied, so `Vacation (JPG)` holds all your photos, not only the former HEICs. Files the operation can't handle are skipped; hidden and system files (`desktop.ini`, `Thumbs.db`) are ignored. You get **one** notification for the whole folder — how many files are done, skipped or failed — with *Open* for the result folder. Up to 1000 files at a time; for a bigger folder DropWheel asks you to pick a smaller one. With *In one folder* in the settings, `Vacation (JPG)` goes there. Tools that open a window (Crop, Beautify, Annotate, Trim) work on one file and aren't offered for folders.
 
 <br clear="right">
 
@@ -467,11 +499,11 @@ Drag a video → **Tools** → **Trim…** (it's on the Explorer-menu and clipbo
 - the frame at the handle you are moving, a strip of thumbnails and two handles — **start** and **end**; start, length and end times are shown below;
 - <kbd>←</kbd>/<kbd>→</kbd> move a handle by 0.1 s, with <kbd>Shift</kbd> by 1 s; <kbd>Home</kbd>/<kbd>End</kbd>; <kbd>Tab</kbd> switches handles; <kbd>Enter</kbd> trims, <kbd>Esc</kbd> cancels.
 
-By default the cut is **instant and lossless** — `clip (trimmed).mp4`, same format and quality; the start snaps to the nearest keyframe, so the clip may begin a fraction of a second earlier. Tick **Frame-accurate** to start exactly on the chosen frame: this re-encodes to H.264 + AAC (`.mp4`) and takes longer. One video at a time.
+By default the cut is **instant and lossless** — `clip (trimmed).mp4`, same format and quality; the start snaps to the nearest keyframe, so the clip may begin a fraction of a second earlier. Tick **Frame-accurate** to start exactly on the chosen frame: this re-encodes to H.264 + AAC (`.mp4`) and takes longer. Choose **Result: GIF** to turn the selected part into an animated GIF (`clip (clip).gif`, 15 fps, up to 640 px wide, no sound; the window warns when the part is longer than 30 s). One video at a time.
 
 ### 📋 From the clipboard: <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>V</kbd>
 
-Copy files in Explorer (<kbd>Ctrl</kbd>+<kbd>C</kbd>) or take a screenshot (<kbd>Win</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd>, “Copy image” in a browser), then press <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>V</kbd> — or right-click the tray icon → **From clipboard…**. The wheel opens at the cursor: for copied files — the same as **Convert…**; a picture is first saved as `Clipboard 2026-10-22 10-31-05.png` in `Pictures\DropWheel` (or your shared output folder), then you pick JPG, WebP, PDF, ICO, text (OCR)… Only text in the clipboard → a short hint. In *Settings → General → Pictures from the clipboard and browser* you can choose your own folder for these pictures and turn off **Keep the original picture** — then only the result (say, the JPG) stays, and the intermediate PNG is deleted after a successful conversion. The shortcut can be turned off in the settings; if another program already uses it, DropWheel works without it (the tray item stays). Copied folders aren't picked up from the clipboard — use **Convert…** on the folder instead.
+Copy files in Explorer (<kbd>Ctrl</kbd>+<kbd>C</kbd>) or a picture (a screenshot, “Copy image” in a browser), then press <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>V</kbd> — or right-click the tray icon → **From clipboard…**. The wheel opens at the cursor: for copied files — the same as **Convert…**; a picture is first saved as `Clipboard 2026-10-22 10-31-05.png` in `Pictures\DropWheel` (or your shared output folder), then you pick JPG, WebP, PDF, ICO, text (OCR)… Only text in the clipboard → a short hint. In *Settings → General → Pictures from the clipboard and browser* you can choose your own folder for these pictures and turn off **Keep the original picture** — then only the result (say, the JPG) stays, and the intermediate PNG is deleted after a successful conversion. The shortcut can be turned off in the settings; if another program already uses it, DropWheel works without it (the tray item stays). Copied folders aren't picked up from the clipboard — use **Convert…** on the folder instead.
 
 ### 📸 Screenshots: <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>S</kbd>
 
@@ -481,78 +513,101 @@ Press <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>S</kbd> or right-click the tray icon �
 - **click** without dragging to take the window under the cursor (it is highlighted as you move), **double-click** or <kbd>Enter</kbd> for the whole monitor;
 - <kbd>Esc</kbd> or a right click cancels.
 
-A toolbar appears next to the selection: **Copy** (picture to the clipboard; <kbd>Ctrl</kbd>+<kbd>C</kbd> or <kbd>Enter</kbd>), **Save** (`Screenshot 2026-10-24 15-30-05.png` in `Pictures\DropWheel` or your folder for clipboard pictures; <kbd>Ctrl</kbd>+<kbd>S</kbd>), **Wheel** (save and open the wheel right away: JPG, WebP, PDF, Crop…, text…), **Annotate** (arrows and text on top, see below) and **Text** (recognise the text with the OCR built into Windows and copy it). The screenshot is kept in memory only while the screen is frozen and released right after. Turn the shortcut off in *Settings → General*; if another program already uses it, the tray item still works. Scrolling screenshots and screen recording are not there yet.
+A toolbar appears next to the selection: **Copy** (picture to the clipboard; <kbd>Ctrl</kbd>+<kbd>C</kbd> or <kbd>Enter</kbd>), **Save** (`Screenshot 2026-10-24 15-30-05.png` in `Pictures\DropWheel` or your folder for clipboard pictures; <kbd>Ctrl</kbd>+<kbd>S</kbd>), **Wheel** (save and open the wheel right away: JPG, WebP, PDF, Crop…, text…), **Annotate** (arrows and text on top, see below) and **Text** (recognise the text with the OCR built into Windows and copy it). The screenshot is kept in memory only while the screen is frozen and released right after.
+
+- **Need a menu or a tooltip in the shot?** Tray menu → **Screenshot in 3 s** or **Screenshot in 5 s**: a 3… 2… 1… countdown appears next to the cursor (it doesn't get into the picture) — open what you need meanwhile.
+- **Another shortcut:** *Settings → General* → the *Ctrl+Alt+S — screenshot* card → **Change…** and press the new combination (e.g. <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>F9</kbd>). Combinations Windows keeps for itself (<kbd>Win</kbd> + a letter) and plain letters aren't accepted; if another program has taken it, you are told so and the old one stays. The same card turns the shortcut off; the tray item always works.
 
 ### 🎥 Screen recording: <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>R</kbd>
 
-Press <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>R</kbd> or right-click the tray icon → **Record screen**. You get the same frozen screen as for a screenshot: drag an area, click a window, or press <kbd>Enter</kbd> for the whole monitor. On the toolbar choose **MP4** or **GIF** and press **Record** (or <kbd>Enter</kbd>). While recording, a thin red frame marks the area, and a small pill next to it shows the time and a **Stop** button; the tray icon gets a red dot. The frame and the pill are hidden from the recording itself (Windows 10 2004 or newer). Stop with **Stop**, the same shortcut again, or the tray item **Stop recording** — then `Recording 2026-10-24 15-30-05.mp4` (or `.gif`) appears in `Videos\DropWheel` (or your folder for clipboard pictures / the shared output folder), with a notification: *Open*, *Show in folder*, *Trim…*. The mouse pointer is recorded at 30 fps; sound is not recorded yet; one recording lasts up to 30 minutes; protected video (online cinemas) comes out black. The shortcut can be turned off in *Settings → General*.
+Press <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>R</kbd> or right-click the tray icon → **Record screen**. You get the same frozen screen as for a screenshot: drag an area, click a window, or press <kbd>Enter</kbd> for the whole monitor. On the toolbar choose **MP4** or **GIF** and press **Record** (or <kbd>Enter</kbd>). While recording, a thin red frame marks the area, and a small pill next to it shows the time and a **Stop** button; the tray icon gets a red dot. The frame and the pill are hidden from the recording itself (Windows 10 2004 or newer).
+
+Stop with **Stop**, the same shortcut again, or the tray item **Stop recording** — then `Recording 2026-10-24 15-30-05.mp4` (or `.gif`) appears in `Videos\DropWheel` (or your folder for clipboard pictures / the shared output folder), with a notification: *Open*, *Show in folder*, *Trim…*. The mouse pointer is recorded at 30 fps; sound is not recorded yet; one recording lasts up to 30 minutes. The shortcut can be turned off in *Settings → General*.
 
 ### ✏️ Annotate a picture
 
-Click **Annotate** on the screenshot toolbar, or drop any picture on the wheel → *Tools* → **Annotate…**. The picture opens fitted into the window. Pick a tool at the top (or press <kbd>1</kbd>–<kbd>8</kbd>): **Arrow**, **Rectangle**, **Ellipse**, **Pen**, **Highlighter** (a wide see-through stroke), **Text** (click, type, <kbd>Enter</kbd>; <kbd>Shift</kbd>+<kbd>Enter</kbd> for a new line), **Pixelate** (big squares that hide passwords, names and faces — the text can't be read back) and **Number** (circles 1, 2, 3… for step-by-step instructions). Hold <kbd>Shift</kbd> for a straight arrow or a square. 8 colours and 3 line widths; <kbd>Ctrl</kbd>+<kbd>Z</kbd> / <kbd>Ctrl</kbd>+<kbd>Y</kbd> undo and redo, <kbd>Delete</kbd> removes the last mark. **Copy** puts the result into the clipboard, **Save** writes a PNG at the picture's full size — `photo (annotated).png` next to the original, or for a screenshot `Screenshot ….png` in `Pictures\DropWheel`. Closing with unsaved marks asks first. HEIC, AVIF, RAW and rotated phone photos open as they look.
+Click **Annotate** on the screenshot toolbar, or drop any picture on the wheel → *Tools* → **Annotate…**. The picture opens fitted into the window. Pick a tool at the top (or press <kbd>1</kbd>–<kbd>8</kbd>): **Arrow**, **Rectangle**, **Ellipse**, **Pen**, **Highlighter** (a wide see-through stroke), **Text** (click, type, <kbd>Enter</kbd>; <kbd>Shift</kbd>+<kbd>Enter</kbd> for a new line), **Pixelate** (big squares that hide passwords, names and faces — the text can't be read back) and **Number** (circles 1, 2, 3… for step-by-step instructions). Hold <kbd>Shift</kbd> for a straight arrow or a square. 8 colours and 3 line widths; <kbd>Ctrl</kbd>+<kbd>Z</kbd> / <kbd>Ctrl</kbd>+<kbd>Y</kbd> undo and redo, <kbd>Delete</kbd> removes the last mark.
+
+**Copy** puts the result into the clipboard, **Save** writes a PNG at the picture's full size — `photo (annotated).png` next to the original, or for a screenshot `Screenshot ….png` in `Pictures\DropWheel`. Closing with unsaved marks asks first. HEIC, AVIF, RAW and rotated phone photos open as they look. To make room on the photo wheel, *Half size* is now hidden by default — turn it back on in *Settings → Wheel*.
 
 ### 🔔 Tray, jobs and notifications
 
 - **Left click** the tray icon — the jobs flyout: thumbnails, progress bars, *Cancel*; finished jobs have *Open* and *Show in folder*, failed ones the reason and *Details*.
 - **Double click** — the settings window.
-- **Right click** — *Jobs*, *From clipboard…*, *Settings…*, the Explorer menu on/off switch, *Open log*, *Check for updates*, *What's new*, *Exit*.
-- While something is being converted, the icon shows an orange badge with the number of jobs.
+- **Right click** — *Jobs*, *From clipboard…*, *Screenshot*, *Screenshot in 3 s* / *5 s*, *Record screen* (*Stop recording* while it runs), *Settings…*, the Explorer menu on/off switch, *Open log*, *Check for updates*, *What's new*, *Report a problem*, *Exit*; plus *Update to build N* when there is one.
+- While something is being converted, the icon shows an orange badge with the number of jobs; while recording — a red dot.
 - **Notifications** show a preview of the result with *Open* and *Show in folder*. Several files finished together → one notification “Done: N files”; a whole folder → one notification for the folder.
 
 ### 🔄 Updates
 
-Once a day (and when you click *Check for updates*) DropWheel reads a small `version.json` from the [latest stable release](https://github.com/Luchano55/dropwheel/releases/latest) or, on the test channel, from the [`dev-build` release](https://github.com/Luchano55/dropwheel/releases/tag/dev-build) (*Settings → General → Update channel*). If there's a newer build, the tray menu offers **Update to build N** — nothing is downloaded until you click it. Don't want the check at all? Turn off *Check for updates* in the settings window. This is the only time DropWheel goes online.
+Once a day (and when you click *Check for updates*) DropWheel reads a small `version.json` from the [latest stable release](https://github.com/Luchano55/dropwheel/releases/latest) or, on the test channel, from the [`dev-build` release](https://github.com/Luchano55/dropwheel/releases/tag/dev-build) (*Settings → General → Update channel*). If there's a newer build, the tray menu offers **Update to build N** — nothing is downloaded until you click it. Don't want the check at all? Turn off *Check for updates* in the settings window.
 
-After an update, a small **What's new** window lists the changes (it's built into the program — nothing is fetched); open it again any time from the tray menu → *What's new*.
+After an update, a small **What's new** window lists the changes (it's built into the program — nothing is fetched) with a link to all releases; open it again any time from the tray menu → *What's new*.
+
+### 🆘 Report a problem
+
+Tray menu → **Report a problem** (or the link at the bottom of the settings window). Your browser opens a new GitHub issue with the DropWheel version, Windows version and the last lines of the log already filled in, and the same text is copied to the clipboard (if the page comes up empty, just paste it). Your user name in folder paths is replaced with `%USERPROFILE%`; file names stay, so the problem can be reproduced — have a look before sending. **Nothing is sent by DropWheel itself:** you read the text and press *Submit* (a GitHub account is needed).
 
 ### ⚙️ Settings
 
 Double-click the tray icon (or right click → *Settings…*). Every change applies immediately — no OK button — and is saved to `%AppData%\DropWheel\settings.json`.
 
 - **Hotkey** — <kbd>Space</kbd> (default), <kbd>Ё</kbd>/<kbd>`</kbd>, <kbd>Caps Lock</kbd>, <kbd>F1</kbd>–<kbd>F12</kbd> or any key of your own (*Custom…*: Tab, Num 5, F13… — not Ctrl/Shift/Alt/Win/Esc/Enter); works right away, no restart.
+- **Where results go** — next to the original, or all into one folder (default `Downloads\DropWheel`).
+- **Copy the result to the clipboard** (off by default) — a finished picture goes to the clipboard as a picture (paste it into a messenger or an editor), anything else — as a file (paste it in Explorer).
 - **Language** — *Same as Windows* (default: Russian on a Russian Windows, English otherwise), *Русский* or *English*; switches right away.
 - **Wheel transparency** — a slider from *solid* to *see-through* with a live preview; labels and the highlighted petal stay crisp.
-- **Where results go** — next to the original, or all into one folder (default `Downloads\DropWheel`).
-- **Quality** — JPG and WebP (50–100), video CRF (18–32, lower = better), MP3 bitrate (128–320 kbps). Applies to new jobs.
+- **Windows** — *Start with Windows*, the Explorer menu item, and the shortcuts: <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>V</kbd> for the clipboard, <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>S</kbd> for screenshots (with **Change…**), <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>R</kbd> for screen recording — each can be turned off.
 - **Pictures from the clipboard and browser** — the default folder or your own; **Keep the original picture** on or off.
-- **Copy the result to the clipboard** (off by default) — a finished picture goes to the clipboard as a picture (paste it into a messenger or an editor), anything else — as a file (paste it in Explorer).
-- **Start with Windows**, the Explorer menu item, <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>V</kbd> for the clipboard, the daily update check and the **update channel** (stable or test builds).
-- **Your own wheel** — for each file type (photo, video, audio, PDF, Word, Excel, PowerPoint, text, archives, any file): reorder the formats (drag or ↑/↓), hide the ones you never use, with a live preview of the wheel. **Last choice first** puts the format you picked last time for that type on top.
+- **Updates** — the daily check and the **update channel** (stable or test builds).
+- **Quality** — JPG and WebP (50–100), video CRF (18–32, lower = better), MP3 bitrate (128–320 kbps). Applies to new jobs.
+- **Your own wheel** — for each file type (photo, video, audio, PDF, Word, Excel, PowerPoint, text, archives, any file): reorder the formats (drag or ↑/↓), hide the ones you never use or bring back hidden ones (DOC, *Half size*, *To 7Z* for videos), with a live preview of the wheel. **Last choice first** puts the format you picked last time for that type on top.
+- At the bottom left: the version and build, *Check for updates*, *Open log folder*, *Report a problem*.
 
 ### ⌨️ Command line
 
-The archive also contains `dropwheel-cli.exe` for scripts and testing (everything except Office, Edge and OCR):
+The archive also contains `dropwheel-cli.exe` for scripts and testing. It can do everything except Microsoft Office, Edge and OCR operations and the screen tools (screenshots, recording, annotations); LibreOffice works here too.
+
+**The easiest way:** drag any file onto `try-dropwheel.cmd` — it lists the available operations and runs the one you type (e.g. `to-jpg`). The result appears next to the original.
+
+From the command line:
 
 ```bat
 dropwheel-cli.exe list "C:\Мои фото\тест 1.heic"
 dropwheel-cli.exe convert "C:\Мои фото\тест 1.heic" to-jpg
+dropwheel-cli.exe convert "1.pdf" "2.pdf" pdf-merge --out-dir "C:\Done"
 dropwheel-cli.exe convert "C:\Photos\Vacation" to-jpg
-dropwheel-cli.exe convert clip.mp4 video-trim --start 0:05 --end 0:12
+dropwheel-cli.exe convert clip.mp4 video-trim --start 0:05 --end 0:12 --exact
 ```
 
-Messages follow the system language; `--lang en` or `--lang ru` picks one explicitly.
-
-Or simply drag a file onto `try-dropwheel.cmd`: it lists the available operations and runs the one you type.
+`list` without a file shows every operation; a folder works instead of a file; `video-trim` takes `--start` and `--end` (without them — from the beginning / to the end) plus `--exact` (frame-accurate) or `--gif` (the part as a GIF); `img-crop` takes `--crop`, `img-beautify` takes `--style`; `pdf-protect` and `pdf-unlock` take `--password` (other programs can see it — use it on your own PC only); `--out-dir` sets where results go (default: next to the original); `-v` shows the tool commands; `--lang en` or `--lang ru` picks the message language (default: the system language).
 
 ## Privacy
 
 - **100% offline.** Every conversion happens on your PC. Your files are never uploaded anywhere — there is no server to upload them to.
-- **No telemetry, no analytics, no account, no ads.**
-- **The only thing DropWheel does online** is the update check: once a day (and when you click *Check for updates*) it reads a small `version.json` from this repository's [releases](https://github.com/Luchano55/dropwheel/releases/tag/dev-build). It sends no files and no personal data, and an update is only installed when you click it — the download is verified with SHA-256. Don't want even that? Set `"checkForUpdates": false` in `%AppData%\DropWheel\settings.json`.
+- **Screenshots and recordings stay on your PC.** They are saved only where you tell DropWheel to (or only copied to the clipboard). Nothing records in the background: a screenshot lives in memory only while the screen is frozen, and ffmpeg runs only between *Record* and *Stop*.
+- **No telemetry, no analytics, no account, no ads.** The download counter on this page comes from GitHub's own release statistics — the app reports nothing.
+- **The only thing DropWheel does online** is the update check: once a day (and when you click *Check for updates*) it reads a small `version.json` from this repository's [releases](https://github.com/Luchano55/dropwheel/releases). It sends no files and no personal data, and an update is only installed when you click it — the download is verified with SHA-256. Don't want even that? Turn off *Check for updates* in the settings (or set `"checkForUpdates": false` in `%AppData%\DropWheel\settings.json`).
+- **Report a problem sends nothing by itself.** It opens a pre-filled page in your browser and copies the same text to the clipboard; the report is sent only if you press *Submit* on GitHub yourself.
 - **Pictures dragged from a browser** are taken from what the browser hands over during the drag — DropWheel never fetches a link.
-- Microsoft Office, Edge WebView2 and Windows OCR, when used, run locally too.
+- Microsoft Office, LibreOffice, Edge WebView2 and Windows OCR, when used, run locally too.
 - Settings and logs stay on your computer in `%AppData%\DropWheel`. Logs contain file paths and error messages — have a quick look before attaching one to a bug report.
 
 ## Known limitations
 
 - **Windows running as administrator.** Windows doesn't let normal apps interact with elevated windows (UIPI): dragging from an app that runs as administrator won't open the wheel. Drag from a normal window instead.
-- **Office-free DOCX → PDF / HTML is an approximation.** Fonts, lists, tables, pictures, page size and margins are kept, but the browser breaks lines and pages, not Word — pages can shift by a line or two. Headers and footers, page numbers, footnotes, comments, text boxes, shapes, SmartArt, charts, old EMF/WMF pictures and columns aren't carried over. DOC, RTF, ODT, ODS and PowerPoint need Microsoft Office or LibreOffice. Need it exact? Use Office.
-- **OCR needs a Windows OCR language.** It comes with a Windows display language, or add one in *Settings → Time & language → Language & region*. Without any, the “Text (OCR)” petal simply doesn't appear. OCR reads JPG, PNG, BMP and TIFF — convert other formats to PNG first.
+- **Office-free DOCX → PDF / HTML is an approximation.** Fonts, lists, tables, pictures, page size and margins are kept, but the browser breaks lines and pages, not Word — pages can shift by a line or two. Headers and footers, page numbers, footnotes, comments, text boxes, shapes, SmartArt, charts, old EMF/WMF pictures and columns aren't carried over. Need it exact? Use Microsoft Office or LibreOffice.
+- **DOC, RTF, ODT, XLS, ODS and PowerPoint need Microsoft Office or LibreOffice.** LibreOffice isn't bundled (it's about 350 MB) — install it yourself if you need these; each file then takes a few seconds. Slides as PNG and PDF → DOCX / Markdown need Microsoft Office.
+- **OCR needs a Windows OCR language.** It comes with a Windows display language, or add one in *Settings → Time & language → Language & region*. Without any, the “Text (OCR)” petal and the *Text* screenshot button simply don't appear. OCR reads JPG, PNG, BMP and TIFF — convert other formats to PNG first.
 - **Scanned PDFs have no text**, so PDF → TXT reports it: export the pages as PNG and use OCR.
-- **Password-protected** archives and documents aren't supported.
+- **Password-protected** archives and Office documents aren't supported (PDF passwords are — see *Protect…* / *Remove password…*).
 - **From a browser — pictures only.** Dragging a picture works in Chrome, Edge and Firefox; other things on a page (videos, PDFs) aren't picked up — download them first. If the browser offers only a link to the picture, DropWheel shows a hint instead of downloading it.
 - **Folders: up to 1000 files at a time**, and ZIP / 7Z aren't offered for folders (Windows' own *Send to → Compressed (zipped) folder* keeps the subfolders). Folders copied to the clipboard are ignored by <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>V</kbd>.
 - **Trim** works on one video at a time; the instant mode starts at the nearest keyframe (tick *Frame-accurate* for an exact start). The trim window shows frames, it doesn't play the video.
+- **Screen recording has no sound yet** — neither system audio nor the microphone. Protected video (streaming services, other DRM content) comes out black; one recording lasts up to 30 minutes; there's no pause. The frame and *Stop* pill are hidden from the video only on Windows 10 2004 or newer.
+- **Screenshots:** no scrolling capture yet; to adjust a selection, simply drag a new one.
+- **Annotations** can't be moved or edited after drawing — undo with <kbd>Ctrl</kbd>+<kbd>Z</kbd> and draw again.
+- **<kbd>Ctrl</kbd>+<kbd>Alt</kbd> is <kbd>AltGr</kbd>** on some keyboard layouts (e.g. Polish), where <kbd>AltGr</kbd>+<kbd>S</kbd> types a letter. Change the screenshot shortcut in the settings or turn it off; the recording shortcut can be turned off there or changed in `settings.json` (`recordKeys`).
 - Log files are written in Russian (they are for bug reports, not for reading every day).
 
 ## FAQ
@@ -572,19 +627,19 @@ Never. The result is written to a temporary file first and only then renamed, so
 <details>
 <summary><b>Where does the converted file go? What are the tags like “(compressed)”?</b></summary>
 
-Right next to the original: `photo.heic` → `photo.jpg`. Tools keep the format, so they add a short tag to the name: `photo (compressed).jpg`, `clip (720p).mp4`, `clip (trimmed).mp4`, `song (normalized).flac`, `report (rotated).pdf`, `notes (UTF-8).txt`. Tags follow the interface language — in Russian it's `photo (сжато).jpg`. A whole folder goes to a sibling folder such as `Vacation (JPG)`. Want everything in one place? *Settings → General → Where to save results → In one folder*.
+Right next to the original: `photo.heic` → `photo.jpg`. Tools keep the format, so they add a short tag to the name: `photo (compressed).jpg`, `clip (720p).mp4`, `clip (trimmed).mp4`, `song (normalized).flac`, `report (rotated).pdf`, `notes (UTF-8).txt`. Tags follow the interface language — in Russian it's `photo (сжато).jpg`. A whole folder goes to a sibling folder such as `Vacation (JPG)`. Want everything in one place? *Settings → General → Where to save results → In one folder*. Screenshots go to `Pictures\DropWheel`, recordings to `Videos\DropWheel`.
 </details>
 
 <details>
 <summary><b>Do I need Microsoft Office?</b></summary>
 
-No. Full Office conversions need an activated Microsoft Office; without it (or with an unactivated one) you still get DOCX → PDF / TXT / HTML / Markdown, XLSX / XLS → CSV, CSV → XLSX and TXT / Markdown / HTML → PDF; with the free LibreOffice installed — also DOC, RTF, ODT, XLS, ODS and PowerPoint conversions. With Office you also get exact Word, Excel and PowerPoint conversions (DOC, RTF, ODT, ODS, PPT, PPTX, ODP, slides as PNG) and PDF → DOCX. DropWheel runs its own hidden Office instance and leaves your open documents alone; a pre-warmed Word or Excel uses roughly 100–200 MB of RAM until it closes after 5 idle minutes or when you exit DropWheel.
+No. Without any Office you still get DOCX → PDF / TXT / HTML / Markdown, XLSX / XLS → CSV, CSV → XLSX and TXT / Markdown / HTML → PDF. With the free LibreOffice installed you also get DOC, RTF, ODT, XLS, ODS and PowerPoint conversions — DropWheel finds it by itself. With an activated Microsoft Office you get exact Word, Excel and PowerPoint conversions (including slides as PNG) and PDF → DOCX / Markdown. DropWheel runs its own hidden Office instance and leaves your open documents alone; a pre-warmed Word or Excel uses roughly 100–200 MB of RAM until it closes after 5 idle minutes or when you exit DropWheel.
 </details>
 
 <details>
 <summary><b>Is the interface available in English?</b></summary>
 
-Yes. The interface is in Russian and English: it follows the Windows display language — Russian on a Russian Windows, English everywhere else. To switch, double-click the tray icon → *General* → *Language* (*Same as Windows* / *Русский* / *English*); the tray menu, the wheel and the windows change right away. Result names follow the language too: `photo (compressed).jpg` instead of `photo (compressed).jpg`. The command line uses the system language; add `--lang en` or `--lang ru` to choose.
+Yes. The interface is in Russian and English: it follows the Windows display language — Russian on a Russian Windows, English everywhere else. To switch, double-click the tray icon → *General* → *Language* (*Same as Windows* / *Русский* / *English*); the tray menu, the wheel and the windows change right away. Result names follow the language too: `photo (сжато).jpg` instead of `photo (compressed).jpg`. The command line uses the system language; add `--lang en` or `--lang ru` to choose.
 </details>
 
 <details>
@@ -600,6 +655,18 @@ Yes. The interface is in Russian and English: it follows the Windows display lan
 <summary><b>Space is busy in my workflow. Can I use another key?</b></summary>
 
 Yes. Double-click the tray icon → *General* → *Hotkey*: <kbd>`</kbd> / <kbd>Ё</kbd>, <kbd>Caps Lock</kbd>, <kbd>F1</kbd>–<kbd>F12</kbd>, or *Custom…* and press any key you like. It works right away, no restart needed.
+</details>
+
+<details>
+<summary><b>Can I change <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>S</kbd> or <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>R</kbd>?</b></summary>
+
+The screenshot shortcut — yes: *Settings → General* → *Ctrl+Alt+S — screenshot* → **Change…** and press the new combination. The recording shortcut can be turned off there; changing it is only possible in `%AppData%\DropWheel\settings.json` (`"recordKeys": "Ctrl+Shift+F10"`, for example). The tray menu items work either way.
+</details>
+
+<details>
+<summary><b>Does screen recording capture sound?</b></summary>
+
+Not yet — only the picture and the mouse pointer. System audio and the microphone are on the [roadmap](#roadmap).
 </details>
 
 <details>
@@ -635,38 +702,35 @@ It bundles ffmpeg, ImageMagick, qpdf, poppler and 7-Zip so that everything works
 <details>
 <summary><b>Something went wrong. How do I report it?</b></summary>
 
-Right-click the tray icon → *Open log*, take the newest `.log` file and attach it to a <a href="https://github.com/Luchano55/dropwheel/issues/new/choose">bug report</a> together with your Windows version and DropWheel build number.
+Right-click the tray icon → *Report a problem*. A new GitHub issue opens in your browser with the version, Windows and the last log lines already filled in — describe what happened and press *Submit*. Without a GitHub account, or if you prefer, take the newest `.log` file from *Open log* and send it with a short description.
 </details>
 
 ## Roadmap
 
-**Done in 1.0:**
+**Done:**
 
-- [x] Conversion core: images, video, audio — ffmpeg + ImageMagick, background queue, safe file naming
-- [x] Tray app, jobs flyout, notifications with preview
-- [x] The wheel: drag + <kbd>Space</kbd>, Convert/Tools modes, multi-monitor and high-DPI aware, light/dark theme and accent colour, adjustable transparency
-- [x] “Convert…” in the Explorer menu opens the same wheel in click mode
-- [x] PDF: merge, split, rotate, lossless optimize, pages → images, → TXT
-- [x] Office documents via installed Microsoft Office, pre-warmed in the background
-- [x] Documents without Office: DOCX → PDF / TXT / HTML / Markdown, XLSX / XLS → CSV, CSV → XLSX, TXT / Markdown / HTML → PDF
-- [x] OCR with the Windows recognition engine
+- [x] The wheel: drag + <kbd>Space</kbd>, Convert/Tools modes, multi-monitor and high-DPI aware, light/dark theme and accent colour, adjustable transparency, your own hotkey
+- [x] “Convert…” in the Explorer menu opens the same wheel in click mode; whole folders with subfolders mirrored
+- [x] Clipboard wheel (<kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>V</kbd>) and pictures dragged from Chrome, Edge and Firefox — offline, nothing downloaded
+- [x] Images: HEIC, AVIF, WebP, ICO, SVG / PSD / RAW input, compress, resize, strip metadata, crop with aspect presets, beautify (background, padding, rounded corners, shadow), OCR
+- [x] Video and audio: MP4, WebM, GIF, MP3…; trim (lossless, frame-accurate or to GIF), rotate, frames, poster, subtitles → SRT, loudness normalisation
+- [x] PDF: merge, split, rotate, lossless optimize, pages → images, → TXT / DOCX / Markdown, password protect and remove
+- [x] Documents: Microsoft Office (pre-warmed), LibreOffice when there's no working Office, and built-in libraries for the common cases
 - [x] Archives: ZIP built in; 7Z, RAR, TAR, GZ, BZ2, XZ via 7-Zip; pack to ZIP / 7Z
-- [x] Icons (ICO), SVG / PSD / RAW input, GIF → MP4 / WebM, subtitles → SRT, text → UTF-8
-- [x] Whole folders: Explorer menu or drag + <kbd>Space</kbd>, subfolders mirrored, one notification per folder
-- [x] Pictures dragged from Chrome, Edge and Firefox — offline, nothing downloaded
-- [x] Video: trim (lossless or frame-accurate), frames, poster, rotate
-- [x] Clipboard wheel (<kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>V</kbd>) for copied files and screenshots
-- [x] Settings window: hotkey, output folder, quality, language, transparency, autostart, clipboard pictures, update channel; your own wheel (order, hidden formats, last choice first)
-- [x] Interface in English and Russian (follows the Windows language; switch in Settings)
-- [x] Installer without admin rights, version numbers, stable and test update channels; self-update verified with SHA-256
+- [x] Screenshots (<kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>S</kbd>, your own shortcut, 3 / 5 s delay) and annotations: arrows, boxes, text, highlighter, pixelate, numbered steps
+- [x] Screen recording (<kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>R</kbd>) to MP4 or GIF
+- [x] Tray app, jobs flyout, notifications with preview, result to the clipboard, settings window with your own wheel
+- [x] Interface in English and Russian
+- [x] Installer without admin rights, stable and test update channels, self-update verified with SHA-256, “What's new” after an update, “Report a problem”
 - [x] Automated demo recording and end-to-end test on a real Windows machine in CI
 - [ ] winget package `Luchano55.DropWheel` — submitted, waiting for review
 
 **Next:**
 
-- [x] Pictures: crop with aspect presets (Free, 1:1, 4:3, 16:9, Original)
-- [x] Annotations: arrows, boxes, text, highlighter, pixelate, numbered steps
-- [ ] Built-in editors: background removal, add a background (palette, padding, rounded corners, shadow)
+- [ ] Screen recording with sound: system audio and the microphone; pause
+- [ ] Scrolling screenshots
+- [ ] Annotations: select and move a mark after drawing
+- [ ] Background removal for pictures
 - [ ] A smaller download: a custom ffmpeg build with only what DropWheel needs
 
 Have an idea? [Open a feature request](https://github.com/Luchano55/dropwheel/issues/new/choose).
