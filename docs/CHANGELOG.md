@@ -5,6 +5,14 @@
 
 Each version section starts with `## <version>`; CI copies it into the GitHub release notes.
 
+## 1.3.0
+
+**Новое в этой версии**
+- Документы без Microsoft Office: если установлен бесплатный LibreOffice (libreoffice.org), DropWheel сам его находит и конвертирует через него DOC, DOCX, RTF, ODT → PDF, DOCX, DOC, ODT, RTF, TXT; XLS, XLSX, ODS → PDF, XLSX, XLS, CSV, ODS; PPT, PPTX, ODP → PDF, PPTX, PPT, ODP. Он же выручает, когда Microsoft Office установлен, но не работает.
+
+**English**
+- Documents without Microsoft Office: if the free LibreOffice (libreoffice.org) is installed, DropWheel finds it and uses it for DOC, DOCX, RTF, ODT → PDF, DOCX, DOC, ODT, RTF, TXT; XLS, XLSX, ODS → PDF, XLSX, XLS, CSV, ODS; PPT, PPTX, ODP → PDF, PPTX, PPT, ODP. It also steps in when Microsoft Office is installed but not working.
+
 ## 1.2.0
 
 **Новое в этой версии**

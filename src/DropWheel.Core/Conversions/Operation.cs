@@ -12,7 +12,7 @@ public enum OperationMode { Convert, Tool }
 /// DocLibs — бесплатные библиотеки (OpenXML, ClosedXML, Markdig…); WebPdf — HTML → PDF через Edge (WebView2);
 /// Ocr — распознавание текста Windows; Text — перекодировка текста.
 /// </summary>
-public enum EngineKind { FFmpeg, ImageMagick, Qpdf, Pdftoppm, Pdftotext, Zip, Office, DocLibs, WebPdf, Ocr, SevenZip, Text }
+public enum EngineKind { FFmpeg, ImageMagick, Qpdf, Pdftoppm, Pdftotext, Zip, Office, DocLibs, WebPdf, Ocr, SevenZip, Text, LibreOffice }
 
 /// <summary>PerFile — каждый файл отдельно; Combine — все выбранные файлы в один результат (склеить PDF, ZIP).</summary>
 public enum InputMode { PerFile, Combine }

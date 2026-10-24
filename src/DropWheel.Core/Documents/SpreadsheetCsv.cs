@@ -95,6 +95,32 @@ public static class SpreadsheetCsv
         }
     }
 
+    /// <summary>
+    /// Номер (с 1) первого видимого листа XLSX/XLSM/XLS — для CSV через LibreOffice, который иначе берёт первый лист,
+    /// даже скрытый. null — не прочитали (пусть решает LibreOffice).
+    /// </summary>
+    public static int? FirstVisibleSheet(string input)
+    {
+        try
+        {
+            TextFiles.EnsureCodePages();
+            using var stream = TextFiles.OpenRead(input);
+            using var reader = ExcelReaderFactory.CreateReader(stream);
+            var number = 1;
+            do
+            {
+                if (reader.VisibleState is null or "visible") return number;
+                number++;
+            } while (reader.NextResult());
+            return null;
+        }
+        catch (Exception ex) when (ex is ExcelReaderException or InvalidDataException or IOException or NotSupportedException
+            or UnauthorizedAccessException)
+        {
+            return null;
+        }
+    }
+
     private static List<string[]> Trim(List<string[]> rows)
     {
         var lastRow = rows.FindLastIndex(r => r.Any(c => c.Length > 0));

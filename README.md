@@ -220,7 +220,7 @@ The wheel only offers what makes sense for the file you are dragging: a `.jpg` n
 
 **Folders** get the operations for the kind of file they mostly contain (a folder of photos → the photo wheel). The operation is applied to every file inside that it fits, subfolders included; results go to a new folder next to it — `Vacation` → `Vacation (JPG)`, `Vacation (compressed)` — with the same subfolders. Files already in the target format are copied as they are, unsuitable files are skipped and counted in the notification. *One PDF* and *Merge* make a single file named after the folder (`Vacation (all).pdf`). ZIP and 7Z aren't offered for folders.
 
-**Needs:** — = nothing, works on any PC right after unzipping · **Office** = Microsoft Office 2013 or newer installed · **Edge** = Edge WebView2 Runtime, already part of Windows 10/11 · **OCR** = a Windows OCR language (see [Known limitations](#known-limitations)). Office, Edge and OCR operations are done by the tray app, not by `dropwheel-cli`.
+**Needs:** — = nothing, works on any PC right after unzipping · **Office** = Microsoft Office 2013 or newer installed (most also work with the free LibreOffice — see Office documents) · **Edge** = Edge WebView2 Runtime, already part of Windows 10/11 · **OCR** = a Windows OCR language (see [Known limitations](#known-limitations)). Office, Edge and OCR operations are done by the tray app, not by `dropwheel-cli` (LibreOffice works in both).
 
 <details open>
 <summary><b>🖼️ Images</b> — JPG, PNG, WebP, HEIC, AVIF, BMP, TIFF, GIF · in: also SVG, PSD, camera RAW · out: also ICO, OCR text, GIF → video</summary>
@@ -315,9 +315,11 @@ Tools keep the format for ordinary pictures; HEIC, AVIF, SVG, PSD and RAW come o
 
 **With Microsoft Office** (2013 or newer) Office itself does the conversion — exactly like *Save as*. DropWheel starts its own invisible Office instance and never touches your open documents; files are opened read-only, macros are disabled, password-protected documents are reported instead of asking. Office is **pre-warmed**: as soon as the wheel shows an Office format, Word, Excel or PowerPoint starts in the background while you aim, so the drop is quick (cold start ~3–5 s, then ~1 s per document). It closes after 5 idle minutes. Word, Excel and PowerPoint are detected separately — only what you have shows up.
 
-> **Full Office support needs an activated, licensed Microsoft Office.** If Office is installed but not activated (or stuck on a first-run dialog), DropWheel falls back to the Office-free conversions below; DOC / RTF / ODT, XLS / ODS and all PowerPoint conversions then aren't available. DOC is hidden on the wheel by default — show it in Settings → Wheel.
+> **Full Office support needs an activated, licensed Microsoft Office.** If Office is installed but not activated (or stuck on a first-run dialog), DropWheel falls back to the Office-free conversions below; DOC / RTF / ODT, XLS / ODS and all PowerPoint conversions then aren't available — unless LibreOffice is installed (below). DOC is hidden on the wheel by default — show it in Settings → Wheel.
 
-**Without Office** built-in libraries and Edge cover the common cases.
+**No Microsoft Office? Install the free [LibreOffice](https://www.libreoffice.org)** — DropWheel finds it by itself, nothing to set up. It is used whenever Word, Excel or PowerPoint is missing or doesn't work: Word files (DOC, DOCX, DOCM, RTF, ODT) → PDF · DOCX · DOC · ODT · RTF · TXT; Excel files (XLS, XLSX, XLSM, ODS) → PDF · XLSX · XLS · CSV · ODS; PowerPoint files (PPT, PPTX, PPTM, ODP) → PDF · PPTX · PPT · ODP. Not through LibreOffice: slides as PNG and PDF → DOCX / Markdown. Each file takes a few seconds (LibreOffice starts fresh every time and never touches your own open LibreOffice); it isn't bundled with DropWheel (~350 MB).
+
+**Without any Office** built-in libraries and Edge cover the common cases.
 
 | Input | With Microsoft Office | Without Office | CLI id |
 |---|---|---|---|
@@ -528,7 +530,7 @@ Or simply drag a file onto `try-dropwheel.cmd`: it lists the available operation
 ## Known limitations
 
 - **Windows running as administrator.** Windows doesn't let normal apps interact with elevated windows (UIPI): dragging from an app that runs as administrator won't open the wheel. Drag from a normal window instead.
-- **Office-free DOCX → PDF / HTML is an approximation.** Fonts, lists, tables, pictures, page size and margins are kept, but the browser breaks lines and pages, not Word — pages can shift by a line or two. Headers and footers, page numbers, footnotes, comments, text boxes, shapes, SmartArt, charts, old EMF/WMF pictures and columns aren't carried over. DOC, RTF, ODT, ODS and PowerPoint need Office. Need it exact? Use Office.
+- **Office-free DOCX → PDF / HTML is an approximation.** Fonts, lists, tables, pictures, page size and margins are kept, but the browser breaks lines and pages, not Word — pages can shift by a line or two. Headers and footers, page numbers, footnotes, comments, text boxes, shapes, SmartArt, charts, old EMF/WMF pictures and columns aren't carried over. DOC, RTF, ODT, ODS and PowerPoint need Microsoft Office or LibreOffice. Need it exact? Use Office.
 - **OCR needs a Windows OCR language.** It comes with a Windows display language, or add one in *Settings → Time & language → Language & region*. Without any, the “Text (OCR)” petal simply doesn't appear. OCR reads JPG, PNG, BMP and TIFF — convert other formats to PNG first.
 - **Scanned PDFs have no text**, so PDF → TXT reports it: export the pages as PNG and use OCR.
 - **Password-protected** archives and documents aren't supported.
@@ -560,7 +562,7 @@ Right next to the original: `photo.heic` → `photo.jpg`. Tools keep the format,
 <details>
 <summary><b>Do I need Microsoft Office?</b></summary>
 
-No. Full Office conversions need an activated Microsoft Office; without it (or with an unactivated one) you still get DOCX → PDF / TXT / HTML / Markdown, XLSX / XLS → CSV, CSV → XLSX and TXT / Markdown / HTML → PDF. With Office you also get exact Word, Excel and PowerPoint conversions (DOC, RTF, ODT, ODS, PPT, PPTX, ODP, slides as PNG) and PDF → DOCX. DropWheel runs its own hidden Office instance and leaves your open documents alone; a pre-warmed Word or Excel uses roughly 100–200 MB of RAM until it closes after 5 idle minutes or when you exit DropWheel.
+No. Full Office conversions need an activated Microsoft Office; without it (or with an unactivated one) you still get DOCX → PDF / TXT / HTML / Markdown, XLSX / XLS → CSV, CSV → XLSX and TXT / Markdown / HTML → PDF; with the free LibreOffice installed — also DOC, RTF, ODT, XLS, ODS and PowerPoint conversions. With Office you also get exact Word, Excel and PowerPoint conversions (DOC, RTF, ODT, ODS, PPT, PPTX, ODP, slides as PNG) and PDF → DOCX. DropWheel runs its own hidden Office instance and leaves your open documents alone; a pre-warmed Word or Excel uses roughly 100–200 MB of RAM until it closes after 5 idle minutes or when you exit DropWheel.
 </details>
 
 <details>
