@@ -92,6 +92,12 @@ public sealed class DragDetector
         set => _wheelOpen = value;
     }
 
+    /// <summary>
+    /// true — колесо сейчас не открывать, клавиша проходит как обычно (приложение на весь экран — игра).
+    /// Спрашивается только в момент нажатия горячей клавиши при зажатой кнопке мыши.
+    /// </summary>
+    public Func<bool>? SuppressWheel { get; set; }
+
     /// <summary>Последние известные координаты курсора (физические пиксели).</summary>
     public (int X, int Y) LastPosition => (_lastX, _lastY);
 
@@ -173,7 +179,7 @@ public sealed class DragDetector
                 _wheelOpen = false;
             }
         }
-        else if (_dragCandidate && vk == _hotkeyVk)
+        else if (_dragCandidate && vk == _hotkeyVk && !(SuppressWheel?.Invoke() ?? false))
         {
             action = DragAction.ShowWheel;
             _wheelOpen = true;

@@ -41,7 +41,7 @@ internal sealed class DragWheelController : IDisposable
         _enqueue = enqueue;
         _log = log;
         var vk = Hotkeys.ToVirtualKey(hotkey) ?? Hotkeys.ToVirtualKey(Hotkeys.Default)!.Value;
-        _detector = new DragDetector(vk);
+        _detector = new DragDetector(vk) { SuppressWheel = FullscreenApp.IsActive };
 
         _wheel.FilesEntered += OnFilesEntered;
         _wheel.FilesDropped += OnFilesDropped;

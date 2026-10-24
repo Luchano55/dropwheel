@@ -13,6 +13,7 @@ Each version section starts with `## <version>`; CI copies it into the GitHub re
 - Если Office установлен, но не работает (не активирован, висит окно первого запуска), Word → PDF, TXT, HTML, Markdown
   и Excel ↔ CSV делаются без Office (PDF — печатью через встроенный в Windows Edge), а не падают с ошибкой.
 - DOC (старый формат Word) по умолчанию убран с колеса — включается в «Настройки → Колесо».
+- В играх и полноэкранных приложениях (окно без рамки на весь экран) колесо больше не появляется от зажатой мыши + Пробела.
 
 **English**
 - Fixed: Office documents received by e-mail or downloaded from the internet no longer fail with “Word could not open
@@ -20,6 +21,7 @@ Each version section starts with `## <version>`; CI copies it into the GitHub re
 - If Office is installed but not working (not activated, first-run dialog), conversions that also work without Office
   (Word → PDF via the built-in Edge, TXT, HTML, Markdown; Excel ↔ CSV) now fall back to that instead of failing.
 - DOC (the legacy Word format) is hidden on the wheel by default — show it in Settings → Wheel.
+- The wheel no longer pops up in games and other full-screen apps (borderless full-screen windows) on mouse hold + Space.
 
 ## 1.1.0
 
