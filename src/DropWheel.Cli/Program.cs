@@ -9,7 +9,8 @@ namespace DropWheel.Cli;
 
 public static class Program
 {
-    private static string Usage => Loc.T.CliUsage.TrimEnd() + "\n\n" + Loc.T.CliTrimUsage.TrimEnd() + "\n\n" + Loc.T.CropCliUsage;
+    private static string Usage => Loc.T.CliUsage.TrimEnd() + "\n\n" + Loc.T.CliTrimUsage.TrimEnd() + "\n\n" + Loc.T.CropCliUsage.TrimEnd()
+        + "\n\n" + Loc.T.CliPasswordUsage;
 
     public static async Task<int> Main(string[] args)
     {
@@ -40,8 +41,8 @@ public static class Program
         }
 
         var positional = new List<string>();
-        string? outDir = null, ffmpeg = null, magick = null, start = null, end = null, crop = null;
-        bool verbose = false, exact = false;
+        string? outDir = null, ffmpeg = null, magick = null, start = null, end = null, crop = null, password = null;
+        bool verbose = false, exact = false, gif = false;
         for (var i = 1; i < args.Length; i++)
         {
             switch (args[i])
@@ -54,6 +55,8 @@ public static class Program
                 case "--end": end = Value(args, ref i); break;
                 case "--exact": exact = true; break;
                 case "--crop": crop = Value(args, ref i); break;
+                case "--gif": gif = true; break;
+                case "--password": password = Value(args, ref i); break;
                 default: positional.Add(args[i]); break;
             }
         }
@@ -62,7 +65,7 @@ public static class Program
         {
             "list" => List(positional, stdout),
             "convert" => await Convert(positional, outDir, new ToolLocator { FfmpegPath = ffmpeg, MagickPath = magick },
-                new TrimOptions(start, end, exact, crop), verbose, stdout, stderr),
+                new TrimOptions(start, end, exact, crop, gif), password, verbose, stdout, stderr),
             _ => throw new UsageException(Loc.F(Loc.T.CliUnknownCommand, args[0])),
         };
     }
@@ -82,7 +85,7 @@ public static class Program
     }
 
     private static async Task<int> Convert(List<string> positional, string? outDir, ToolLocator tools,
-        TrimOptions trim, bool verbose, TextWriter stdout, TextWriter stderr)
+        TrimOptions trim, string? password, bool verbose, TextWriter stdout, TextWriter stderr)
     {
         if (positional.Count < 2) throw new UsageException(Loc.T.CliNeedFileAndOp);
         var opId = positional[^1];
@@ -90,6 +93,7 @@ public static class Program
         var op = OperationCatalog.Find(opId) ?? throw new UsageException(Loc.F(Loc.T.CliUnknownOperation, opId));
         op = WithTrim(op, trim);
         op = await WithCropAsync(op, files, trim.Crop, tools);
+        op = WithPassword(op, password);
 
         var settings = ConversionSettings.Default with
         {
@@ -141,9 +145,22 @@ public static class Program
         return failed == 0 ? 0 : 1;
     }
 
-    private sealed record TrimOptions(string? Start, string? End, bool Exact, string? Crop)
+    private sealed record TrimOptions(string? Start, string? End, bool Exact, string? Crop, bool Gif)
     {
-        public bool Any => Start is not null || End is not null || Exact;
+        public bool Any => Start is not null || End is not null || Exact || Gif;
+    }
+
+    /// <summary>pdf-protect / pdf-unlock: --password → значение-секрет задачи. У других операций --password — ошибка.</summary>
+    private static Operation WithPassword(Operation op, string? password)
+    {
+        if (!PdfPassword.IsPasswordOperation(op.Id))
+        {
+            if (password is not null) throw new UsageException(Loc.F(Loc.T.CliNoPassword, op.Id));
+            return op;
+        }
+        if (password is null) throw new UsageException(Loc.F(Loc.T.CliNeedPassword, op.Id));
+        if (!PdfPassword.IsValid(password)) throw new UsageException(Loc.T.CliBadPassword);
+        return PdfPassword.Bind(op.Id.Equals(PdfPassword.ProtectId, StringComparison.OrdinalIgnoreCase), password);
     }
 
     /// <summary>
@@ -175,12 +192,13 @@ public static class Program
     }
 
     /// <summary>
-    /// video-trim / video-trim-exact: --start и --end (12, 0:05, 1:02.5…) → значения задачи; --exact — точный вариант.
+    /// video-trim / video-trim-exact / video-trim-gif: --start и --end (12, 0:05, 1:02.5…) → значения задачи;
+    /// --exact — точный вариант, --gif — кусок в GIF (вместе — ошибка использования).
     /// Без --start — с начала, без --end — до конца ролика. У других операций эти ключи — ошибка.
     /// </summary>
     private static Operation WithTrim(Operation op, TrimOptions trim)
     {
-        var isTrim = op.Id is VideoTrim.Id or VideoTrim.ExactId;
+        var isTrim = op.Id is VideoTrim.Id or VideoTrim.ExactId or VideoTrim.GifId;
         if (!isTrim)
         {
             if (trim.Any) throw new UsageException(Loc.F(Loc.T.CliNoParameters, op.Id));
@@ -194,7 +212,10 @@ public static class Program
         if (trim.End is not null && !VideoTrim.TryParse(trim.End, out end))
             throw new UsageException(Loc.F(Loc.T.CliBadTime, trim.End));
         if (end - start < VideoTrim.MinLength) throw new UsageException(Loc.T.CliTrimRange);
-        return VideoTrim.Bind(trim.Exact || op.Id == VideoTrim.ExactId, start, end);
+        var exact = trim.Exact || op.Id == VideoTrim.ExactId;
+        var gif = trim.Gif || op.Id == VideoTrim.GifId;
+        if (exact && gif) throw new UsageException(Loc.T.CliTrimExactGif);
+        return gif ? VideoTrim.BindGif(start, end) : VideoTrim.Bind(exact, start, end);
     }
 
     private static string Value(string[] args, ref int i) =>

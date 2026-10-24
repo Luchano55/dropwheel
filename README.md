@@ -243,6 +243,7 @@ Tools keep the format for ordinary pictures; HEIC, AVIF, SVG, PSD and RAW come o
 | Tool | Mute | removes the audio without re-encoding → `clip (muted).mp4` | — | `video-mute` |
 | Tool | Rotate ↻ | 90° clockwise, re-encoded to H.264 + AAC → `clip (rotated).mp4` | — | `video-rotate-cw` |
 | Tool | Trim… | a window with start/end handles over a thumbnail strip → `clip (trimmed).mp4`, same container, instant and lossless (starts at a keyframe); “Frame-accurate” re-encodes to H.264 + AAC. One video at a time. CLI: `--start 0:05 --end 0:12 [--exact]` | — | `video-trim` |
+| Tool | Trim… → GIF | in the Trim window choose “Result: GIF” — the selected part as an animated GIF (15 fps, up to 640 px wide, no sound) → `clip (clip).gif`; a hint warns when the part is over 30 s. CLI: `video-trim --start 0:05 --end 0:12 --gif` | — | `video-trim-gif` |
 | Tool | Frames | one JPG per second (up to 300) → folder `clip (frames)` with `frame-001.jpg`… | — | `video-frames` |
 | Tool | Subtitles SRT | the first subtitle track → `clip.srt` next to the video (players pick it up automatically); picture subtitles from DVD/Blu-ray aren't supported | — | `video-subs` |
 
@@ -263,7 +264,7 @@ Tools keep the format for ordinary pictures; HEIC, AVIF, SVG, PSD and RAW come o
 </details>
 
 <details>
-<summary><b>📕 PDF</b> — pages → PNG/JPG, → TXT, → DOCX · merge, split, optimize, rotate</summary>
+<summary><b>📕 PDF</b> — pages → PNG/JPG, → TXT, → DOCX · merge, split, optimize, rotate, password</summary>
 
 <br>
 
@@ -278,6 +279,8 @@ Tools keep the format for ordinary pictures; HEIC, AVIF, SVG, PSD and RAW come o
 | Tool | Split | one PDF per page in a folder `report (split)` | — | `pdf-split` |
 | Tool | Optimize | lossless: object streams + maximum Flate compression → `report (optimized).pdf` | — | `pdf-optimize` |
 | Tool | Rotate ↻ | all pages 90° clockwise, nothing re-encoded → `report (rotated).pdf` | — | `pdf-rotate` |
+| Tool | Protect… | asks for a password (twice) and adds an open password, AES-256 → `report (protected).pdf`. The password is never saved or logged. CLI: `--password <password>` | — | `pdf-protect` |
+| Tool | Remove password… | asks for the password and makes a copy without it → `report (unlocked).pdf`; a wrong password gives “Wrong password”. CLI: `--password <password>` | — | `pdf-unlock` |
 
 </details>
 

@@ -41,6 +41,8 @@ public static class Glyphs
     public const string Undo = "\uE7A7";
     public const string Trim = "\uE78A";
     public const string Crop = "\uE7A8";
+    public const string Lock = "\uE72E";
+    public const string Unlock = "\uE785";
 }
 
 /// <summary>
@@ -74,6 +76,8 @@ public static class OperationGlyphs
             if (Has(id, "rotate")) return Glyphs.Rotate;
             if (Has(id, "trim")) return Glyphs.Trim;
             if (Has(id, "crop")) return Glyphs.Crop;
+            if (Has(id, "unlock")) return Glyphs.Unlock;
+            if (Has(id, "protect")) return Glyphs.Lock;
             if (Has(id, "extract", "unpack", "unzip")) return Glyphs.FolderOpen;
             if (Has(id, "pack", "zip", "7z")) return Glyphs.Package;
             if (Has(id, "ocr", "text", "encoding", "utf")) return Glyphs.Text;

@@ -11,7 +11,8 @@ namespace DropWheel.App;
 
 /// <summary>
 /// Содержимое окна «Обрезать видео» (D-TRIM): имя файла, кадр в месте ручки, шкала с миниатюрами и ручками
-/// «начало» / «конец», время (мм:сс.д), галочка «Точно по кадру», кнопки «Обрезать» и «Отмена».
+/// «начало» / «конец», время (мм:сс.д), результат «Видео» / «GIF», галочка «Точно по кадру» (только у видео;
+/// у GIF — подсказка и предупреждение про длинный кусок), кнопки «Обрезать» (у GIF — «Сделать GIF») и «Отмена».
 /// Ничего не запускает само: кадры приносит окно (<see cref="TrimWindow"/>) или скриншот-тест —
 /// так вид можно снять без ffmpeg.
 /// </summary>
@@ -25,6 +26,7 @@ public sealed class TrimView : Border
     private readonly string _fileName;
     private TrimRange? _range;
     private bool _exact;
+    private bool _gif;
     private string? _message;
     private bool _failed;
     private ImageSource? _frame;
@@ -39,6 +41,7 @@ public sealed class TrimView : Border
     private TextBlock _badgeText = null!;
     private TextBlock _start = null!, _length = null!, _end = null!, _duration = null!;
     private PrimaryButton _trim = null!;
+    private FrameworkElement? _gifWarning;
 
     public TrimView(SettingsPalette palette, string fileName)
     {
@@ -97,6 +100,20 @@ public sealed class TrimView : Border
         }
     }
 
+    /// <summary>Результат — GIF (а не видео): галочки «точно по кадру» нет, GIF всегда пересжимается.</summary>
+    public bool Gif
+    {
+        get => _gif;
+        set
+        {
+            _gif = value;
+            Build();
+        }
+    }
+
+    /// <summary>Выбран GIF и кусок длиннее <see cref="VideoTrim.GifLongSeconds"/> — показывается предупреждение.</summary>
+    public bool ShowsGifWarning => _gif && _range is { } r && VideoTrim.IsLongForGif(r.Length);
+
     /// <summary>Длительность прочитана: ручки — по краям ролика, можно выбирать.</summary>
     public void SetDuration(double seconds)
     {
@@ -136,7 +153,7 @@ public sealed class TrimView : Border
 
     /// <summary>Пользователь сдвинул ручку: показать кадр в этом месте (окно подгружает его с задержкой).</summary>
     public event Action<double>? PreviewRequested;
-    /// <summary>«Обрезать»: кусок и «точно по кадру».</summary>
+    /// <summary>«Обрезать»: кусок и «точно по кадру» (у GIF — всегда false; что выбран GIF — <see cref="Gif"/>).</summary>
     public event Action<TrimRange, bool>? TrimRequested;
     public event Action? CancelRequested;
 
@@ -146,7 +163,7 @@ public sealed class TrimView : Border
     /// <summary>Enter в окне.</summary>
     public void RequestTrim()
     {
-        if (CanTrim) TrimRequested?.Invoke(_range!, _exact);
+        if (CanTrim) TrimRequested?.Invoke(_range!, _exact && !_gif);
     }
 
     public void RequestCancel() => CancelRequested?.Invoke();
@@ -166,7 +183,7 @@ public sealed class TrimView : Border
             Padding = new Thickness(24, 16, 24, 18),
         };
         var buttons = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right };
-        _trim = new PrimaryButton(p, Loc.T.TrimButton) { MinWidth = 120 };
+        _trim = new PrimaryButton(p, _gif ? Loc.T.TrimButtonGif : Loc.T.TrimButton) { MinWidth = 120 };
         _trim.Click += RequestTrim;
         var cancel = new SettingsButton(p, Loc.T.Cancel) { MinWidth = 120, Margin = new Thickness(8, 0, 0, 0) };
         cancel.Click += RequestCancel;
@@ -248,32 +265,69 @@ public sealed class TrimView : Border
             TextWrapping = TextWrapping.Wrap,
         });
 
-        // «Точно по кадру» — в карточке, как настройки.
-        var check = new CheckMark(p, _exact, Loc.T.TrimExact) { VerticalAlignment = VerticalAlignment.Top, Margin = new Thickness(0, 1, 12, 0) };
-        check.Changed += on => _exact = on;
-        var texts = new StackPanel();
-        texts.Children.Add(new TextBlock { Text = Loc.T.TrimExact, FontSize = 14, Foreground = p.Text, TextWrapping = TextWrapping.Wrap });
-        texts.Children.Add(new TextBlock
+        // Карточка, как в настройках: результат «Видео» / «GIF»; у видео — галочка «Точно по кадру»,
+        // у GIF — что получится и предупреждение про длинный кусок.
+        var card = new StackPanel();
+        var resultRow = new DockPanel();
+        var results = new ChoicePills(p, [(false, Loc.T.TrimResultVideo), (true, Loc.T.TrimResultGif)], _gif, Loc.T.TrimResult)
         {
-            Text = Loc.T.TrimExactHint, FontSize = 12, Foreground = p.TextSecondary, TextWrapping = TextWrapping.Wrap,
-            Margin = new Thickness(0, 3, 0, 0),
-        });
-        var row = new DockPanel { Background = Brushes.Transparent, Cursor = Cursors.Arrow };
-        DockPanel.SetDock(check, Dock.Left);
-        row.Children.Add(check);
-        row.Children.Add(texts);
-        // Щелчок по подписи — тоже переключает.
-        texts.Background = Brushes.Transparent;
-        texts.MouseLeftButtonUp += (_, e) =>
-        {
-            e.Handled = true;
-            Exact = !_exact; // перестраивает вид с новой отметкой
+            VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(12, 0, -6, -6),
         };
+        results.SelectionChanged += value => Gif = (bool)value; // перестраивает вид
+        DockPanel.SetDock(results, Dock.Right);
+        resultRow.Children.Add(results);
+        resultRow.Children.Add(new TextBlock { Text = Loc.T.TrimResult, FontSize = 14, Foreground = p.Text, VerticalAlignment = VerticalAlignment.Center });
+        card.Children.Add(resultRow);
+        card.Children.Add(new Border { Height = 1, Background = p.Divider, Margin = new Thickness(-16, 12, -16, 12) });
+
+        if (_gif)
+        {
+            card.Children.Add(new TextBlock { Text = Loc.T.TrimGifHint, FontSize = 12, Foreground = p.TextSecondary, TextWrapping = TextWrapping.Wrap });
+            var warning = new DockPanel { Margin = new Thickness(0, 8, 0, 0) };
+            var icon = new TextBlock
+            {
+                Text = Glyphs.Info, FontFamily = UiFonts.Icons, FontSize = 14, Foreground = p.Accent,
+                VerticalAlignment = VerticalAlignment.Top, Margin = new Thickness(0, 1, 8, 0),
+            };
+            DockPanel.SetDock(icon, Dock.Left);
+            warning.Children.Add(icon);
+            warning.Children.Add(new TextBlock
+            {
+                Text = Loc.F(Loc.T.TrimGifLong, (int)VideoTrim.GifLongSeconds), FontSize = 12, Foreground = p.Text, TextWrapping = TextWrapping.Wrap,
+            });
+            card.Children.Add(warning);
+            _gifWarning = warning;
+        }
+        else
+        {
+            _gifWarning = null;
+            var check = new CheckMark(p, _exact, Loc.T.TrimExact) { VerticalAlignment = VerticalAlignment.Top, Margin = new Thickness(0, 1, 12, 0) };
+            check.Changed += on => _exact = on;
+            var texts = new StackPanel();
+            texts.Children.Add(new TextBlock { Text = Loc.T.TrimExact, FontSize = 14, Foreground = p.Text, TextWrapping = TextWrapping.Wrap });
+            texts.Children.Add(new TextBlock
+            {
+                Text = Loc.T.TrimExactHint, FontSize = 12, Foreground = p.TextSecondary, TextWrapping = TextWrapping.Wrap,
+                Margin = new Thickness(0, 3, 0, 0),
+            });
+            var row = new DockPanel { Background = Brushes.Transparent, Cursor = Cursors.Arrow };
+            DockPanel.SetDock(check, Dock.Left);
+            row.Children.Add(check);
+            row.Children.Add(texts);
+            // Щелчок по подписи — тоже переключает.
+            texts.Background = Brushes.Transparent;
+            texts.MouseLeftButtonUp += (_, e) =>
+            {
+                e.Handled = true;
+                Exact = !_exact; // перестраивает вид с новой отметкой
+            };
+            card.Children.Add(row);
+        }
         body.Children.Add(new Border
         {
             Background = p.Card, BorderBrush = p.CardBorder, BorderThickness = new Thickness(1),
             CornerRadius = new CornerRadius(8), Padding = new Thickness(16, 12, 16, 13), Margin = new Thickness(0, 16, 0, 0),
-            Child = row,
+            Child = card,
         });
 
         root.Children.Add(body);
@@ -308,6 +362,7 @@ public sealed class TrimView : Border
         _length.Text = _range is { } r3 ? VideoTrim.Format(r3.Length) : none;
         _duration.Text = _range is { } r4 ? VideoTrim.Format(r4.Duration) : "";
         _trim.SetEnabled(CanTrim);
+        if (_gifWarning is not null) _gifWarning.Visibility = ShowsGifWarning ? Visibility.Visible : Visibility.Hidden;
     }
 
     private void UpdateOverlay()

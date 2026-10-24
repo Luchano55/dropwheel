@@ -135,6 +135,30 @@ public class TrimScreenshots
         });
     }
 
+    /// <summary>Результат «GIF»: галочки «точно по кадру» нет, кусок 35 с — предупреждение «GIF выйдет очень большим».</summary>
+    [Fact]
+    public void Trim_window_gif()
+    {
+        Sta.Run(() =>
+        {
+            var view = Make(light: true);
+            view.Exact = true;
+            view.Gif = true;
+            Assert.True(view.ShowsGifWarning);
+            (TrimRange Range, bool Exact)? got = null;
+            view.TrimRequested += (r, e) => got = (r, e);
+            view.RequestTrim();
+            Assert.NotNull(got);
+            Assert.False(got!.Value.Exact); // GIF всегда пересжимается — «точно» не передаётся
+            Save(view, light: true, "trim-light-gif");
+
+            view.Range = new TrimRange(Duration).WithStart(10).WithEnd(20);
+            Assert.False(view.ShowsGifWarning);
+            view.Gif = false;
+            Assert.False(view.ShowsGifWarning);
+        });
+    }
+
     [Fact]
     public void Trim_button_gives_range_and_exact_flag()
     {

@@ -300,3 +300,65 @@ public class VideoTrimTests
         Assert.Equal(" (trimmed)", Loc.Suffix(OperationCatalog.Find(VideoTrim.ExactId)!, UiLanguage.En));
     }
 }
+
+/// <summary>GIF из куска видео (D-TRIM, выбор «GIF» в окне обрезки): скрытая операция, аргументы, подписи.</summary>
+public class VideoTrimGifTests
+{
+    private const string In = "/data/Мои видео/тест 1.mov";
+
+    [Fact]
+    public void Gif_variant_is_hidden_from_the_wheel_but_can_be_found()
+    {
+        var op = OperationCatalog.Find(VideoTrim.GifId)!;
+        Assert.False(op.OnWheel);
+        Assert.Equal(1, op.MaxFiles);
+        Assert.True(op.NeedsValues);
+        Assert.Equal("gif", op.Output.Resolve("mkv"));
+        Assert.DoesNotContain(VideoTrim.GifId, OperationCatalog.ForFile("clip.mp4").Select(o => o.Id));
+        Assert.DoesNotContain(VideoTrim.GifId, WheelGroups.Operations(WheelGroups.Video).Select(o => o.Id));
+    }
+
+    [Fact]
+    public void Gif_args_seek_on_input_and_reuse_the_gif_filter_chain()
+    {
+        var args = ArgumentBuilder.Build(VideoTrim.BindGif(1.5, 4), In, "/data/out.gif", ConversionSettings.Default).ToList();
+        var i = args.IndexOf("-i");
+        Assert.Equal(In, args[i + 1]);
+        Assert.Single(args, a => a == In);
+        Assert.Equal("1.5", args[args.IndexOf("-ss") + 1]);
+        Assert.Equal("4", args[args.IndexOf("-to") + 1]);
+        Assert.True(args.IndexOf("-ss") < i && args.IndexOf("-to") < i);
+        // Та же цепочка, что у «GIF» для целого ролика.
+        var whole = ArgumentBuilder.Build(OperationCatalog.Find("to-gif")!, In, "/data/out.gif", ConversionSettings.Default).ToList();
+        Assert.Equal(whole[(whole.IndexOf("-i") + 2)..], args[(i + 2)..]);
+        Assert.Contains("palettegen", args[args.IndexOf("-vf") + 1]);
+        Assert.Contains("fps=15", args[args.IndexOf("-vf") + 1]);
+        Assert.Contains("min(640,iw)", args[args.IndexOf("-vf") + 1]);
+        Assert.Contains("-an", args);
+    }
+
+    [Fact]
+    public void Long_piece_warning_threshold()
+    {
+        Assert.False(VideoTrim.IsLongForGif(30));
+        Assert.True(VideoTrim.IsLongForGif(30.1));
+    }
+
+    [Fact]
+    public void Progress_of_a_gif_is_relative_to_the_piece()
+    {
+        var args = ArgumentBuilder.Build(VideoTrim.BindGif(10, 20), In, "/data/out.gif", ConversionSettings.Default);
+        var p = FfmpegProgress.For(args);
+        p.ReadStderr("  Duration: 00:01:40.00, start: 0.000000, bitrate: 1000 kb/s");
+        Assert.Equal(0.5, p.ReadProgressLine("out_time_us=5000000")!.Value, 3);
+    }
+
+    [Fact]
+    public void Gif_labels_and_suffixes()
+    {
+        var op = OperationCatalog.Find(VideoTrim.GifId)!;
+        Assert.Equal(" (кусок)", Loc.Suffix(op, UiLanguage.Ru));
+        Assert.Equal(" (clip)", Loc.Suffix(op, UiLanguage.En));
+        Assert.Equal("GIF (clip)", Loc.Label(op, UiLanguage.En));
+    }
+}

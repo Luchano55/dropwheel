@@ -334,13 +334,14 @@ public sealed partial class Texts
     public string ErrMissingValues { get; init; } = "Для «{0}» не задано: {1}";
     public string CliTrimUsage { get; init; } = """
         Обрезка видео:
-          dropwheel convert <видео> video-trim --start 0:05 --end 0:12 [--exact]
+          dropwheel convert <видео> video-trim --start 0:05 --end 0:12 [--exact | --gif]
           --start, --end      начало и конец: 12, 12.5, 0:05, 1:02.5 или 1:00:00
           --exact             точно по кадру (с пересжатием в H.264, дольше)
+          --gif               кусок — в анимированный GIF
         """;
     public string CliBadTime { get; init; } = "Не понял время «{0}» (пример: 0:05 или 1:02.5)";
     public string CliTrimRange { get; init; } = "Конец (--end) должен быть позже начала (--start)";
-    public string CliNoParameters { get; init; } = "Операция {0} не принимает --start, --end, --exact и --crop";
+    public string CliNoParameters { get; init; } = "Операция {0} не принимает --start, --end, --exact, --gif и --crop";
 
     // ---------- обрезка картинки (D-CROP) ----------
     public string CropTitle { get; init; } = "Обрезать картинку";

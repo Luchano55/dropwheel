@@ -18,7 +18,8 @@ namespace DropWheel.App;
 /// (перетаскивание, меню проводника, буфер обмена). Длительность и кадры даёт ffmpeg (<see cref="VideoProbe"/>):
 /// кадр в месте ручки — с задержкой 120 мс, пока ручку тянут; полоса из 10 миниатюр — по очереди в фоне.
 /// Кадры — PNG во временной папке %TEMP%\DropWheel\trim-…: каждый читается в память и сразу удаляется,
-/// папка удаляется при закрытии окна. «Обрезать» отдаёт готовую операцию (<see cref="VideoTrim.Bind"/>) в очередь.
+/// папка удаляется при закрытии окна. «Обрезать» отдаёт готовую операцию (<see cref="VideoTrim.Bind"/>,
+/// у результата «GIF» — <see cref="VideoTrim.BindGif"/>) в очередь.
 /// Вид — как у окна настроек: системный заголовок, Mica в Windows 11 22H2+, тема и акцент Windows.
 /// </summary>
 internal sealed class TrimWindow : Window
@@ -58,7 +59,8 @@ internal sealed class TrimWindow : Window
         _view.PreviewRequested += SchedulePreview;
         _view.TrimRequested += (range, exact) =>
         {
-            var op = VideoTrim.Bind(exact, range.Start, range.End);
+            // «GIF» — кусок в анимированный GIF (video-trim-gif), иначе — видео (копией или точно по кадру).
+            var op = _view.Gif ? VideoTrim.BindGif(range.Start, range.End) : VideoTrim.Bind(exact, range.Start, range.End);
             _log.Write($"Обрезка: {op.Id} {VideoTrim.Arg(range.Start)}…{VideoTrim.Arg(range.End)} с, {video}");
             Close();
             _enqueue(op);

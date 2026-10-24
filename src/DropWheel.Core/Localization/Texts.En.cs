@@ -34,6 +34,36 @@ public sealed partial class Texts
         FolderFailed = "Failed: {0} — details are in the log",
         Folders = Noun.En("folder", "folders"),
 
+        // пароль PDF и GIF из куска (Texts.Password.cs)
+        TrimResult = "Result",
+        TrimResultVideo = "Video",
+        TrimResultGif = "GIF",
+        TrimButtonGif = "Make GIF",
+        TrimGifHint = "GIF — 15 frames per second, up to 640 pixels wide, no sound, looping.",
+        TrimGifLong = "The clip is longer than {0} seconds — the GIF will be very large. A shorter clip is better.",
+        CliTrimExactGif = "--exact and --gif can't be used together: a GIF is always re-encoded",
+        PdfProtectTitle = "Protect PDF with a password",
+        PdfUnlockTitle = "Remove the PDF password",
+        PdfProtectIntro = "The PDF won't open without the password. Remember it: it can't be recovered. The original file stays as it is.",
+        PdfUnlockIntro = "A copy without the password appears next to it. The original file stays as it is.",
+        PdfPasswordLabel = "Password",
+        PdfPasswordRepeat = "Repeat the password",
+        PdfPasswordShow = "Show password",
+        PdfPasswordMismatch = "The passwords don't match",
+        PdfProtectButton = "Protect",
+        PdfUnlockButton = "Remove password",
+        ErrWrongPassword = "Wrong password",
+        ErrPdfAlreadyProtected = "The PDF already has a password — remove it first",
+        CliPasswordUsage = """
+            PDF password:
+              dropwheel convert <file.pdf> pdf-protect --password <password>
+              dropwheel convert <file.pdf> pdf-unlock --password <password>
+              --password          the password (other programs can see the command line — use on your own computer)
+            """,
+        CliNeedPassword = "{0} needs a password: --password <password>",
+        CliBadPassword = "The password can't be empty or span several lines",
+        CliNoPassword = "Operation {0} doesn't take --password",
+
         // обновления
         UpdateAvailableTitle = "A new version of DropWheel is available",
         UpdateAvailableText = "Right-click the icon → “Update”.",
@@ -316,13 +346,14 @@ public sealed partial class Texts
         ErrMissingValues = "“{0}” needs: {1}",
         CliTrimUsage = """
             Trimming a video:
-              dropwheel convert <video> video-trim --start 0:05 --end 0:12 [--exact]
+              dropwheel convert <video> video-trim --start 0:05 --end 0:12 [--exact | --gif]
               --start, --end      start and end: 12, 12.5, 0:05, 1:02.5 or 1:00:00
               --exact             frame-accurate (re-encodes to H.264, slower)
+              --gif               the clip as an animated GIF
             """,
         CliBadTime = "Can't read the time “{0}” (e.g. 0:05 or 1:02.5)",
         CliTrimRange = "The end (--end) must be after the start (--start)",
-        CliNoParameters = "Operation {0} doesn't take --start, --end, --exact or --crop",
+        CliNoParameters = "Operation {0} doesn't take --start, --end, --exact, --gif or --crop",
         CropTitle = "Crop picture",
         CropButton = "Crop",
         CropFree = "Free",
