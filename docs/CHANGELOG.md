@@ -5,6 +5,22 @@
 
 Each version section starts with `## <version>`; CI copies it into the GitHub release notes.
 
+## 1.3.0
+
+**Новое в этой версии**
+- Пометки на картинке: стрелки, рамки, эллипсы, карандаш, маркер, текст, размытие (крупные квадраты — прочитать
+  нельзя) и номера 1, 2, 3 — для инструкций и «смотри сюда». Кнопка «Пометки» на панели снимка экрана или
+  «Инструменты» → «Пометить…» у любой картинки. 8 цветов, 3 толщины, Ctrl+Z — отменить. «Копировать» кладёт
+  картинку в буфер, «Сохранить» — `фото (пометки).png` рядом с исходником (у снимка — в «Изображения\DropWheel»),
+  в полном размере. Чтобы новый лепесток поместился, «Уменьшить ×2» теперь скрыт — включается в «Настройки → Колесо».
+
+**English**
+- Annotate a picture: arrows, rectangles, ellipses, pen, highlighter, text, pixelate (big squares — unreadable) and
+  numbered circles 1, 2, 3 — for instructions and “look here”. The Annotate button on the screenshot toolbar or
+  Tools → Annotate… for any picture. 8 colours, 3 line widths, Ctrl+Z to undo. Copy puts the picture into the
+  clipboard, Save writes `photo (annotated).png` next to the original (screenshots go to Pictures\DropWheel), at full
+  size. To make room on the wheel, Half size is now hidden — turn it on in Settings → Wheel.
+
 ## 1.2.0
 
 **Новое в этой версии**

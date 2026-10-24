@@ -93,6 +93,8 @@ public static class Program
         var opId = positional[^1];
         var files = positional[..^1];
         var op = OperationCatalog.Find(opId) ?? throw new UsageException(Loc.F(Loc.T.CliUnknownOperation, opId));
+        // «Пометить…» рисует окно приложения (D-ANNOTATE) — в командной строке рисовать нечего.
+        if (op.Id == ImageAnnotate.Id) throw new UsageException(Loc.F(Loc.T.CliAnnotateWindowOnly, op.Id));
         op = WithTrim(op, trim);
         op = await WithCropAsync(op, files, trim.Crop, tools);
         if (await WithStyleAsync(op, files, style, tools, stderr) is not { } styled) return 1;

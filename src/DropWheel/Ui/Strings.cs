@@ -1,3 +1,4 @@
+using DropWheel.Annotate;
 using DropWheel.Localization;
 using DropWheel.Updates;
 using DropWheel.Wheel;
@@ -132,6 +133,41 @@ internal static class Strings
             WheelGroups.Text => T.GroupText,
             WheelGroups.Archive => T.GroupArchive,
             _ => T.GroupAny,
+        };
+    }
+
+    /// <summary>Окно «Пометки» (D-ANNOTATE): названия инструментов и цветов палитры.</summary>
+    public static class Annotate
+    {
+        public static string Tool(AnnotationTool tool) => tool switch
+        {
+            AnnotationTool.Arrow => T.AnnotateArrow,
+            AnnotationTool.Rectangle => T.AnnotateRectangle,
+            AnnotationTool.Ellipse => T.AnnotateEllipse,
+            AnnotationTool.Pen => T.AnnotatePen,
+            AnnotationTool.Marker => T.AnnotateMarker,
+            AnnotationTool.Text => T.AnnotateText,
+            AnnotationTool.Blur => T.AnnotateBlur,
+            _ => T.AnnotateNumber,
+        };
+
+        public static string Color(string color) => color switch
+        {
+            AnnotationColors.Red => T.ColorRed,
+            AnnotationColors.Orange => T.ColorOrange,
+            AnnotationColors.Yellow => T.ColorYellow,
+            AnnotationColors.Green => T.ColorGreen,
+            AnnotationColors.Blue => T.ColorBlue,
+            AnnotationColors.Purple => T.ColorPurple,
+            AnnotationColors.Black => T.ColorBlack,
+            _ => T.ColorWhite,
+        };
+
+        public static string Size(StrokeSize size) => size switch
+        {
+            StrokeSize.Thin => T.AnnotateThin,
+            StrokeSize.Medium => T.AnnotateMedium,
+            _ => T.AnnotateThick,
         };
     }
 }

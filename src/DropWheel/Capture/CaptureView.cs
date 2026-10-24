@@ -16,6 +16,8 @@ internal enum CaptureAction
     Save,
     Wheel,
     Text,
+    /// <summary>Окно «Пометки» (D-ANNOTATE).</summary>
+    Annotate,
 }
 
 /// <summary>
@@ -196,6 +198,7 @@ internal sealed class CaptureView : Canvas
         Add(CaptureAction.Copy, Loc.T.CaptureCopy, Glyphs.Copy);
         Add(CaptureAction.Save, Loc.T.CaptureSave, Glyphs.Save);
         Add(CaptureAction.Wheel, Loc.T.CaptureWheel, Glyphs.Convert);
+        Add(CaptureAction.Annotate, Loc.T.CaptureAnnotate, Glyphs.Annotate);
         if (_ocr) Add(CaptureAction.Text, Loc.T.CaptureText, Glyphs.Text);
         row.Children.Add(new Border { Width = 1, Margin = new Thickness(4, 6, 6, 6), Background = p.Divider });
         var close = new SettingsButton(p, null, Glyphs.Cancel, Loc.T.CaptureClose, subtle: true);

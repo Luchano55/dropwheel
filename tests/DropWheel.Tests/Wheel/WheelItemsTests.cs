@@ -18,7 +18,8 @@ public class WheelItemsTests
         Assert.Equal("JPG", convert[0].Label);
 
         var tools = WheelItems.For(ops, OperationMode.Tool);
-        Assert.Equal(["img-compress", "img-half", "img-1920", "img-strip", "img-crop", "img-beautify", "zip-pack", "pack-7z"], tools.Select(i => i.Id));
+        // Запасной путь без настроек (всё скрыто): первые 8 по каталогу, скрытые по умолчанию тоже.
+        Assert.Equal(["img-compress", "img-half", "img-1920", "img-strip", "img-crop", "img-beautify", "img-annotate", "zip-pack"], tools.Select(i => i.Id));
         Assert.Equal("Сжать", tools[0].Label);
     }
 

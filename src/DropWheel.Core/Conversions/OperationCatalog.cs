@@ -44,7 +44,9 @@ public static class OperationCatalog
         new("to-pdf",  "PDF",  Conv, Image, ImageMagick, "-auto-orient -compress jpeg -quality {jpgq}",OutputRule.Fixed("pdf")),
         // Изображения — инструменты
         new("img-compress", "Сжать",          Tool, Image, ImageMagick, "-auto-orient -quality 80",               OutputRule.Same("jpg", "jpg", "jpeg", "webp"), " (сжато)"),
-        new("img-half",     "Уменьшить ×2",   Tool, Image, ImageMagick, "-auto-orient -resize 50%",               OutputRule.Same("jpg", RasterKeep), " (50%)"),
+        // «Уменьшить ×2» по умолчанию скрыт (D-ANNOTATE): у одной картинки 9 инструментов, а «До 1920 px» и «Сжать»
+        // закрывают ту же нужду. Показать — «Настройки → Колесо».
+        new("img-half",     "Уменьшить ×2",   Tool, Image, ImageMagick, "-auto-orient -resize 50%",               OutputRule.Same("jpg", RasterKeep), " (50%)") { HiddenByDefault = true },
         new("img-1920",     "До 1920 px",     Tool, Image, ImageMagick, "-auto-orient -resize 1920x1920>",        OutputRule.Same("jpg", RasterKeep), " (1920)"),
         new("img-strip",    "Без метаданных", Tool, Image, ImageMagick, "-auto-orient -strip",                    OutputRule.Same("jpg", RasterKeep), " (без метаданных)"),
         // Обрезать (D-CROP): область {x} {y} {w} {h} — в пикселях уже повёрнутой (-auto-orient) картинки, задаётся
@@ -55,6 +57,10 @@ public static class OperationCatalog
         // Значения {mask} {pad} {shadow} {canvas} {bg} — от стиля и размера картинки (ImageBeautify.Values).
         new(ImageBeautify.Id, "Оформить…",    Tool, Image, ImageMagick, ImageBeautify.Args,
             OutputRule.Fixed("png"), " (оформлено)") { Parameters = ImageBeautify.ParameterNames, MaxFiles = 1 },
+        // Пометить (D-ANNOTATE): стрелки, рамки, текст, размытие — рисует и сохраняет окно «Пометки» (WPF, полный размер),
+        // всегда PNG. ImageMagick нужен окну, чтобы открыть картинку (HEIC, RAW…, поворот по EXIF); шаблон не запускается.
+        new(ImageAnnotate.Id, "Пометить…",    Tool, Image, ImageMagick, "-auto-orient",
+            OutputRule.Fixed("png"), " (пометки)") { Parameters = ImageAnnotate.ParameterNames, MaxFiles = 1 },
 
         // Видео — конвертация
         new("to-mp4",       "MP4",  Conv, Video, FFmpeg, $"-map 0:v:0 -map 0:a:0? -vf {Even} -crf {{crf}} {H264}", OutputRule.Fixed("mp4")),

@@ -114,6 +114,9 @@ public partial class App
                 case CaptureAction.Text:
                     _ = RecognizeCaptureAsync(image);
                     break;
+                case CaptureAction.Annotate:
+                    AnnotateCapture(image);
+                    break;
             }
         }
         catch (Exception ex)

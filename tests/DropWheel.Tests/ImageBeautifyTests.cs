@@ -29,13 +29,14 @@ public class ImageBeautifyTests
     public void Default_image_tools_wheel_has_eight_petals_with_beautify_after_crop()
     {
         var (_, tools) = WheelArrangement.Arrange(OperationCatalog.ForFiles(["photo.jpg"]), WheelGroups.Photo, new WheelPreferences());
-        Assert.Equal(["img-compress", "img-half", "img-1920", "img-strip", ImageCrop.Id, ImageBeautify.Id, "zip-pack", "pack-7z"],
+        // «Уменьшить ×2» по умолчанию скрыт — на его месте «Пометить…» (D-ANNOTATE).
+        Assert.Equal(["img-compress", "img-1920", "img-strip", ImageCrop.Id, ImageBeautify.Id, ImageAnnotate.Id, "zip-pack", "pack-7z"],
             tools.Select(t => t.Id));
         Assert.Equal(WheelGeometry.MaxSectors, tools.Count);
 
         // Несколько картинок: «Обрезать…» и «Оформить…» уходят, появляется «Один PDF».
         var (_, many) = WheelArrangement.Arrange(OperationCatalog.ForFiles(["a.jpg", "b.jpg"]), WheelGroups.Photo, new WheelPreferences());
-        Assert.Equal(["img-compress", "img-half", "img-1920", "img-strip", "images-to-pdf", "zip-pack", "pack-7z"], many.Select(t => t.Id));
+        Assert.Equal(["img-compress", "img-1920", "img-strip", "images-to-pdf", "zip-pack", "pack-7z"], many.Select(t => t.Id));
     }
 
     [Fact]
