@@ -125,6 +125,7 @@ public partial class App : Application
         StartDragWheel();
         SetClipboardHotkey(Settings.ClipboardHotkey);
         SetCaptureHotkey(Settings.CaptureHotkey, Settings.CaptureKeys);
+        StartRecordFeature();
         StartUpdater(args.AfterUpdate);
         CheckWhatsNew(args.AfterUpdate is not null);
 
@@ -638,6 +639,7 @@ public partial class App : Application
         }
         if (now.ClipboardHotkey != old.ClipboardHotkey) SetClipboardHotkey(now.ClipboardHotkey);
         if (now.CaptureHotkey != old.CaptureHotkey || now.CaptureKeys != old.CaptureKeys) SetCaptureHotkey(now.CaptureHotkey, now.CaptureKeys);
+        if (now.RecordHotkey != old.RecordHotkey || now.RecordKeys != old.RecordKeys) SetRecordHotkey(now.RecordHotkey, now.RecordKeys);
         if (now.CheckForUpdates != old.CheckForUpdates)
         {
             if (now.CheckForUpdates) _updater?.Start();
@@ -674,6 +676,8 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        // Идёт запись — остановить штатно и сохранить MP4 (D-RECORD).
+        ShutdownRecording();
         _saver?.Dispose();
         _settingsWindow?.Close();
         _whatsNewWindow?.Close();

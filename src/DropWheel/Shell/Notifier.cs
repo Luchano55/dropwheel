@@ -16,7 +16,7 @@ namespace DropWheel.Shell;
 /// (ждём 1 с тишины, но не дольше 3 с). Ошибка — короткая причина и «Подробнее» (журнал).
 /// Вызывать Done/Failed из потока интерфейса.
 /// </summary>
-internal sealed class Notifier
+internal sealed partial class Notifier
 {
     private static readonly TimeSpan Quiet = TimeSpan.FromSeconds(1);
     private static readonly TimeSpan MaxWait = TimeSpan.FromSeconds(3);
@@ -322,6 +322,9 @@ internal sealed class Notifier
                 break;
             case LogAction:
                 OpenLog(_log);
+                break;
+            case TrimAction:
+                TrimRequested?.Invoke(path);
                 break;
         }
     }

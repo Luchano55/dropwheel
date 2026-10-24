@@ -71,6 +71,8 @@ internal static class Strings
         public static string ClipboardHotkeyHint => T.ClipboardHotkeyHint;
         public static string CaptureHotkey(string keys) => Loc.F(T.CaptureHotkeyTitle, keys);
         public static string CaptureHotkeyHint => T.CaptureHotkeyHint;
+        public static string RecordHotkey(string keys) => Loc.F(T.RecordHotkeyTitle, keys);
+        public static string RecordHotkeyHint => T.RecordHotkeyHint;
         public static string ClipboardImageTitle => T.ClipboardImageTitle;
         public static string ClipboardImageHint => T.ClipboardImageHint;
         public static string ClipboardFolderDefault => T.ClipboardFolderDefault;

@@ -115,6 +115,22 @@ public sealed partial class Texts
         CaptureClipboardFailed = "Couldn't put it on the clipboard — another program is using it",
         CaptureHotkeyTitle = "{0} — screenshot",
         CaptureHotkeyHint = "Select an area, click a window or press Enter for the whole screen. Then copy, save or open the wheel.",
+        // запись экрана (Texts.Record.cs)
+        TrayRecord = "Record screen",
+        TrayRecordStop = "Stop recording",
+        RecordFile = "Recording {0}",
+        RecordHint = "Drag to select an area to record · click — a window · Enter — the whole screen · Esc — cancel",
+        RecordStart = "Record",
+        RecordStop = "Stop",
+        RecordTrayStatus = "recording {0}",
+        RecordSaving = "saving the recording…",
+        RecordSaved = "Recording saved",
+        RecordTrim = "Trim…",
+        RecordFailed = "Couldn't record the screen",
+        RecordNothing = "Nothing was recorded — not a single frame",
+        RecordLimit = "Recording stopped after {0} min — the limit for one recording",
+        RecordHotkeyTitle = "{0} — screen recording",
+        RecordHotkeyHint = "Select an area, a window or the whole screen and press “Record” (MP4 or GIF). Stop with the same shortcut or “Stop”.",
 
         // обновления
         UpdateAvailableTitle = "A new version of DropWheel is available",

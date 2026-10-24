@@ -5,6 +5,22 @@
 
 Each version section starts with `## <version>`; CI copies it into the GitHub release notes.
 
+## 1.3.0
+
+**Новое в этой версии**
+- Запись экрана: Ctrl+Alt+R или «Записать экран» в меню значка. Выделите область, щёлкните по окну или нажмите
+  Enter — весь монитор, выберите MP4 или GIF и нажмите «Записать». Пока идёт запись, область обведена тонкой красной
+  рамкой, рядом — время и кнопка «Стоп» (в саму запись они не попадают). Остановить — «Стоп», то же сочетание или пункт
+  в меню значка. Готовая запись — `Запись 2026-10-24 15-30-05.mp4` в папке «Видео\DropWheel», в уведомлении —
+  «Открыть», «Показать в папке» и «Обрезать…». Курсор записывается, звук — пока нет; одна запись — до 30 минут.
+
+**English**
+- Screen recording: Ctrl+Alt+R or *Record screen* in the tray menu. Drag an area, click a window or press Enter for
+  the whole monitor, choose MP4 or GIF and press *Record*. While recording, a thin red frame marks the area, with the time
+  and a *Stop* button next to it (neither shows up in the video). Stop with *Stop*, the same shortcut or the tray menu.
+  The result is `Recording 2026-10-24 15-30-05.mp4` in `Videos\DropWheel`; the notification offers *Open*,
+  *Show in folder* and *Trim…*. The mouse pointer is recorded, sound is not yet; one recording lasts up to 30 minutes.
+
 ## 1.2.0
 
 **Новое в этой версии**
