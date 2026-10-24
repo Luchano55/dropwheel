@@ -213,7 +213,9 @@ public sealed class ScreenRecorder : IDisposable
         if (!HasExited)
         {
             Kill();
-            _process.WaitForExit(10_000); // под нагрузкой (тесты параллельно) 2 с не хватало
+            _process.WaitForExit(10_000);
+            // Exited — задача WaitForExitAsync: после синхронного ожидания она завершается чуть позже — дождаться.
+            try { Exited.Wait(5_000); } catch (Exception) { }
         }
         Release();
         _process.Dispose();

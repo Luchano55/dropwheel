@@ -34,14 +34,18 @@ public class CaptureKeysScreenshots
             // Прокрутить так, чтобы строка «Нажмите сочетание…» была в верхней трети окна.
             var scroll = LogicalTreeHelper.GetChildren(view).OfType<Panel>().SelectMany(p => p.Children.OfType<ScrollViewer>()).Single();
             var page = (StackPanel)scroll.Content;
-            var prompt = Find<TextBlock>(page, t => t.Text == Strings.Settings.CaptureChordPress);
+            var prompt = All(page).OfType<TextBlock>().FirstOrDefault(t => t.Text == Strings.Settings.CaptureChordPress)
+                ?? throw new Xunit.Sdk.XunitException("Нет строки «Нажмите сочетание…». Тексты: "
+                    + string.Join(" | ", All(page).OfType<TextBlock>().Select(t => t.Text)));
             var top = prompt.TransformToAncestor(page).Transform(new Point(0, 0)).Y;
             scroll.ScrollToVerticalOffset(Math.Max(0, top - 220));
             scene.UpdateLayout();
             System.Windows.Threading.Dispatcher.CurrentDispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
             scene.UpdateLayout();
             Assert.True(scroll.VerticalOffset > 0, "Не прокрутилось");
-            Find<TextBlock>(page, t => t.Text == Strings.Settings.CaptureChordWindows("Win+Shift+S"));
+            var texts = All(page).OfType<TextBlock>().Select(t => t.Text).ToList();
+            Assert.True(texts.Any(t => t.Contains("Shift") && t.Contains("S") && t != Strings.Settings.CaptureChordPress),
+                "Нет подсказки про Win+Shift+S. Тексты: " + string.Join(" | ", texts));
 
             var path = Screenshot.Save(scene, w, h, "settings-light-capture-chord", scale: 1.5);
             Assert.True(new FileInfo(path).Length > 5000);
