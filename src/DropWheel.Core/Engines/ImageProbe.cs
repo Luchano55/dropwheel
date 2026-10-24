@@ -39,6 +39,17 @@ public static class ImageProbe
         return ParseSize(stdout);
     }
 
+    /// <summary>
+    /// Полная картинка для окна «Пометки» (D-ANNOTATE): PNG без уменьшения, повёрнутый по EXIF
+    /// (<see cref="ImageAnnotate.LoadArgs"/>), и её размер. null — ImageMagick картинку не открыл.
+    /// </summary>
+    public static async Task<(int W, int H)?> FullAsync(ToolLocator tools, string image, string png, CancellationToken ct = default)
+    {
+        var (code, stdout, _) = await VideoProbe.RunProcessAsync(tools.Resolve(EngineKind.ImageMagick), ImageAnnotate.LoadArgs(image, png), ct);
+        if (code != 0 || !File.Exists(png) || new FileInfo(png).Length == 0) return null;
+        return ParseSize(stdout);
+    }
+
     /// <summary>Размер картинки после -auto-orient; null — не открылась.</summary>
     public static async Task<(int W, int H)?> SizeAsync(ToolLocator tools, string image, CancellationToken ct = default)
     {

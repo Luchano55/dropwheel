@@ -210,6 +210,7 @@ public partial class LocalizationTests
     [InlineData("img-strip", "No metadata", " (no metadata)")]
     [InlineData("img-crop", "Crop…", " (cropped)")]
     [InlineData("img-beautify", "Beautify…", " (styled)")]
+    [InlineData("img-annotate", "Annotate…", " (annotated)")]
     [InlineData("video-mute", "Mute", " (muted)")]
     [InlineData("video-720p", "720p", " (720p)")]
     [InlineData("video-subs", "Subtitles SRT", "")]

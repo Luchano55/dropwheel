@@ -479,7 +479,7 @@ public partial class App : Application
     /// </summary>
     private void AskValues(IReadOnlyList<string> paths, Operation op)
     {
-        if (op.Id is not (VideoTrim.Id or ImageCrop.Id or ImageBeautify.Id or PdfPassword.ProtectId or PdfPassword.UnlockId) || paths.Count != 1)
+        if (op.Id is not (VideoTrim.Id or ImageCrop.Id or ImageBeautify.Id or ImageAnnotate.Id or PdfPassword.ProtectId or PdfPassword.UnlockId) || paths.Count != 1)
         {
             Log.Write($"{op.Id}: нечем спросить параметры для {paths.Count} файл(ов) — пропускаю");
             return;
@@ -494,6 +494,7 @@ public partial class App : Application
                 var tools = new ToolLocator { FfmpegPath = Settings.FfmpegPath, MagickPath = Settings.MagickPath };
                 void Enqueue(Operation bound) => Queue.EnqueueSelection([file], bound);
                 if (op.Id == ImageBeautify.Id) new BeautifyWindow(file, tools, Log, Enqueue).ShowAndActivate();
+                else if (op.Id == ImageAnnotate.Id) AnnotateFile(file, tools); // сохраняет само окно (D-ANNOTATE)
                 else if (op.Id == ImageCrop.Id) new CropWindow(file, tools, Log, Enqueue).ShowAndActivate();
                 else if (PdfPassword.IsPasswordOperation(op.Id))
                     new PasswordWindow(file, op.Id == PdfPassword.ProtectId, Log, Enqueue).ShowAndActivate();

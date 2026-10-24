@@ -47,6 +47,10 @@ public static class Glyphs
     public const string Lock = "\uE72E";
     public const string Unlock = "\uE785";
     public const string Save = "\uE74E";
+    /// <summary>Карандаш — «Пометки» (D-ANNOTATE).</summary>
+    public const string Annotate = "\uE70F";
+    public const string Redo = "\uE7A6";
+    public const string Delete = "\uE74D";
 }
 
 /// <summary>
@@ -81,6 +85,7 @@ public static class OperationGlyphs
             if (Has(id, "trim")) return Glyphs.Trim;
             if (Has(id, "crop")) return Glyphs.Crop;
             if (Has(id, "beautify")) return Glyphs.Beautify;
+            if (Has(id, "annotate")) return Glyphs.Annotate;
             if (Has(id, "unlock")) return Glyphs.Unlock;
             if (Has(id, "protect")) return Glyphs.Lock;
             if (Has(id, "extract", "unpack", "unzip")) return Glyphs.FolderOpen;

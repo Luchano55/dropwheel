@@ -22,6 +22,11 @@ Each version section starts with `## <version>`; CI copies it into the GitHub re
   в меню значка. Готовая запись — `Запись 2026-10-24 15-30-05.mp4` в папке «Видео\DropWheel», в уведомлении —
   «Открыть», «Показать в папке» и «Обрезать…». Курсор записывается, звук — пока нет; одна запись — до 30 минут.
 - Документы без Microsoft Office: если установлен бесплатный LibreOffice (libreoffice.org), DropWheel сам его находит и конвертирует через него DOC, DOCX, RTF, ODT → PDF, DOCX, DOC, ODT, RTF, TXT; XLS, XLSX, ODS → PDF, XLSX, XLS, CSV, ODS; PPT, PPTX, ODP → PDF, PPTX, PPT, ODP. Он же выручает, когда Microsoft Office установлен, но не работает.
+- Пометки на картинке: стрелки, рамки, эллипсы, карандаш, маркер, текст, размытие (крупные квадраты — прочитать
+  нельзя) и номера 1, 2, 3 — для инструкций и «смотри сюда». Кнопка «Пометки» на панели снимка экрана или
+  «Инструменты» → «Пометить…» у любой картинки. 8 цветов, 3 толщины, Ctrl+Z — отменить. «Копировать» кладёт
+  картинку в буфер, «Сохранить» — `фото (пометки).png` рядом с исходником (у снимка — в «Изображения\DropWheel»),
+  в полном размере. Чтобы новый лепесток поместился, «Уменьшить ×2» теперь скрыт — включается в «Настройки → Колесо».
 
 **English**
 - Your own screenshot shortcut: Settings → General → Windows → Change… and press a new shortcut (e.g. Ctrl+Shift+F9).
@@ -37,6 +42,11 @@ Each version section starts with `## <version>`; CI copies it into the GitHub re
   The result is `Recording 2026-10-24 15-30-05.mp4` in `Videos\DropWheel`; the notification offers *Open*,
   *Show in folder* and *Trim…*. The mouse pointer is recorded, sound is not yet; one recording lasts up to 30 minutes.
 - Documents without Microsoft Office: if the free LibreOffice (libreoffice.org) is installed, DropWheel finds it and uses it for DOC, DOCX, RTF, ODT → PDF, DOCX, DOC, ODT, RTF, TXT; XLS, XLSX, ODS → PDF, XLSX, XLS, CSV, ODS; PPT, PPTX, ODP → PDF, PPTX, PPT, ODP. It also steps in when Microsoft Office is installed but not working.
+- Annotate a picture: arrows, rectangles, ellipses, pen, highlighter, text, pixelate (big squares — unreadable) and
+  numbered circles 1, 2, 3 — for instructions and “look here”. The Annotate button on the screenshot toolbar or
+  Tools → Annotate… for any picture. 8 colours, 3 line widths, Ctrl+Z to undo. Copy puts the picture into the
+  clipboard, Save writes `photo (annotated).png` next to the original (screenshots go to Pictures\DropWheel), at full
+  size. To make room on the wheel, Half size is now hidden — turn it on in Settings → Wheel.
 
 ## 1.2.0
 

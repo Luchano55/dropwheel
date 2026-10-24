@@ -28,7 +28,9 @@ public class ImageCropTests
     {
         var ops = OperationCatalog.ForFiles(["photo.jpg"]);
         var (_, tools) = WheelArrangement.Arrange(ops, WheelGroups.Photo, new WheelPreferences());
-        Assert.Equal(["img-compress", "img-half", "img-1920", "img-strip", ImageCrop.Id, ImageBeautify.Id, "zip-pack", "pack-7z"], tools.Select(t => t.Id));
+        // «Уменьшить ×2» скрыт по умолчанию (D-ANNOTATE), но остаётся в списке настроек колеса.
+        Assert.Equal(["img-compress", "img-1920", "img-strip", ImageCrop.Id, ImageBeautify.Id, ImageAnnotate.Id, "zip-pack", "pack-7z"], tools.Select(t => t.Id));
+        Assert.Contains(WheelArrangement.Ordered(ops, OperationMode.Tool, null), e => e.Operation.Id == "img-half" && e.Hidden);
     }
 
     [Fact]

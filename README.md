@@ -139,6 +139,8 @@ The same three steps work for a **whole folder** (`Vacation` → `Vacation (JPG)
     <td width="33%" valign="top">
       <h3>🎥 Screen recording</h3>
       <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>R</kbd>: the same selection, then <i>Record</i> to MP4 or GIF. A thin red frame and a <i>Stop</i> pill show while recording — and stay out of the video.
+      <h3>✏️ Annotate</h3>
+      Arrows, boxes, text, highlighter, pixelate and numbered steps on a screenshot or any picture — then <i>Copy</i> or <i>Save</i> a full-size PNG.
     </td>
   </tr>
 </table>
@@ -242,11 +244,12 @@ The wheel only offers what makes sense for the file you are dragging: a `.jpg` n
 | Convert | → Text (OCR) | the recognised text in `scan.txt` (from JPG, PNG, BMP, TIFF) | **OCR** | `img-ocr` |
 | Convert | GIF → MP4 · WebM | an animated GIF as a real video (H.264 / VP9, no sound) — much smaller | — | `gif-to-mp4` `gif-to-webm` |
 | Tool | Compress | JPG/WebP at quality 80 → `photo (compressed).jpg` | — | `img-compress` |
-| Tool | Downscale ×2 | half the width and height → `photo (50%).jpg` | — | `img-half` |
+| Tool | Downscale ×2 | half the width and height → `photo (50%).jpg`; hidden on the wheel by default — turn it on in *Settings → Wheel* | — | `img-half` |
 | Tool | Fit to 1920 px | longest side ≤ 1920 px, small pictures are left as is → `photo (1920).jpg` | — | `img-1920` |
 | Tool | Strip metadata | removes EXIF, GPS location, camera info → `photo (no metadata).jpg` | — | `img-strip` |
 | Tool | Crop… | a window with a crop frame (8 handles) and aspect presets Free / 1:1 / 4:3 / 16:9 / Original → `photo (cropped).jpg`, same format; transparency kept. One picture at a time. CLI: `--crop 800x600+100+50` | — | `img-crop` |
 | Tool | Beautify… | a window with a live preview: rounded corners, a soft shadow and padding on a background (3 gradients, white, grey, dark or transparent) → `photo (styled).png` — handy for screenshots. *Copy* puts the picture into the clipboard without saving. One picture at a time. CLI: `--style "bg=sunset;pad=8;radius=12;shadow=1"` | — | `img-beautify` |
+| Tool | Annotate… | a window with arrows, rectangles, ellipses, pen, highlighter, text, pixelate and numbered circles → `photo (annotated).png` at full size; *Copy* puts the picture into the clipboard. One picture at a time; not in the CLI | — | `img-annotate` |
 | Tool | One PDF (2+ images) | every image becomes a page → `photo (all).pdf` | — | `images-to-pdf` |
 
 Tools keep the format for ordinary pictures; HEIC, AVIF, SVG, PSD and RAW come out as JPG.
@@ -478,11 +481,15 @@ Press <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>S</kbd> or right-click the tray icon �
 - **click** without dragging to take the window under the cursor (it is highlighted as you move), **double-click** or <kbd>Enter</kbd> for the whole monitor;
 - <kbd>Esc</kbd> or a right click cancels.
 
-A toolbar appears next to the selection: **Copy** (picture to the clipboard; <kbd>Ctrl</kbd>+<kbd>C</kbd> or <kbd>Enter</kbd>), **Save** (`Screenshot 2026-10-24 15-30-05.png` in `Pictures\DropWheel` or your folder for clipboard pictures; <kbd>Ctrl</kbd>+<kbd>S</kbd>), **Wheel** (save and open the wheel right away: JPG, WebP, PDF, Crop…, text…) and **Text** (recognise the text with the OCR built into Windows and copy it). The screenshot is kept in memory only while the screen is frozen and released right after. Turn the shortcut off in *Settings → General*; if another program already uses it, the tray item still works. Annotations and scrolling screenshots are not there yet.
+A toolbar appears next to the selection: **Copy** (picture to the clipboard; <kbd>Ctrl</kbd>+<kbd>C</kbd> or <kbd>Enter</kbd>), **Save** (`Screenshot 2026-10-24 15-30-05.png` in `Pictures\DropWheel` or your folder for clipboard pictures; <kbd>Ctrl</kbd>+<kbd>S</kbd>), **Wheel** (save and open the wheel right away: JPG, WebP, PDF, Crop…, text…), **Annotate** (arrows and text on top, see below) and **Text** (recognise the text with the OCR built into Windows and copy it). The screenshot is kept in memory only while the screen is frozen and released right after. Turn the shortcut off in *Settings → General*; if another program already uses it, the tray item still works. Scrolling screenshots and screen recording are not there yet.
 
 ### 🎥 Screen recording: <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>R</kbd>
 
 Press <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>R</kbd> or right-click the tray icon → **Record screen**. You get the same frozen screen as for a screenshot: drag an area, click a window, or press <kbd>Enter</kbd> for the whole monitor. On the toolbar choose **MP4** or **GIF** and press **Record** (or <kbd>Enter</kbd>). While recording, a thin red frame marks the area, and a small pill next to it shows the time and a **Stop** button; the tray icon gets a red dot. The frame and the pill are hidden from the recording itself (Windows 10 2004 or newer). Stop with **Stop**, the same shortcut again, or the tray item **Stop recording** — then `Recording 2026-10-24 15-30-05.mp4` (or `.gif`) appears in `Videos\DropWheel` (or your folder for clipboard pictures / the shared output folder), with a notification: *Open*, *Show in folder*, *Trim…*. The mouse pointer is recorded at 30 fps; sound is not recorded yet; one recording lasts up to 30 minutes; protected video (online cinemas) comes out black. The shortcut can be turned off in *Settings → General*.
+
+### ✏️ Annotate a picture
+
+Click **Annotate** on the screenshot toolbar, or drop any picture on the wheel → *Tools* → **Annotate…**. The picture opens fitted into the window. Pick a tool at the top (or press <kbd>1</kbd>–<kbd>8</kbd>): **Arrow**, **Rectangle**, **Ellipse**, **Pen**, **Highlighter** (a wide see-through stroke), **Text** (click, type, <kbd>Enter</kbd>; <kbd>Shift</kbd>+<kbd>Enter</kbd> for a new line), **Pixelate** (big squares that hide passwords, names and faces — the text can't be read back) and **Number** (circles 1, 2, 3… for step-by-step instructions). Hold <kbd>Shift</kbd> for a straight arrow or a square. 8 colours and 3 line widths; <kbd>Ctrl</kbd>+<kbd>Z</kbd> / <kbd>Ctrl</kbd>+<kbd>Y</kbd> undo and redo, <kbd>Delete</kbd> removes the last mark. **Copy** puts the result into the clipboard, **Save** writes a PNG at the picture's full size — `photo (annotated).png` next to the original, or for a screenshot `Screenshot ….png` in `Pictures\DropWheel`. Closing with unsaved marks asks first. HEIC, AVIF, RAW and rotated phone photos open as they look.
 
 ### 🔔 Tray, jobs and notifications
 
@@ -658,7 +665,8 @@ Right-click the tray icon → *Open log*, take the newest `.log` file and attach
 **Next:**
 
 - [x] Pictures: crop with aspect presets (Free, 1:1, 4:3, 16:9, Original)
-- [ ] Built-in editors: background removal, add a background (palette, padding, rounded corners, shadow), annotations
+- [x] Annotations: arrows, boxes, text, highlighter, pixelate, numbered steps
+- [ ] Built-in editors: background removal, add a background (palette, padding, rounded corners, shadow)
 - [ ] A smaller download: a custom ffmpeg build with only what DropWheel needs
 
 Have an idea? [Open a feature request](https://github.com/Luchano55/dropwheel/issues/new/choose).

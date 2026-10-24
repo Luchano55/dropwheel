@@ -122,7 +122,7 @@ public class ImageCropConversionTests : IDisposable
     }
 
     /// <summary>JPEG с EXIF, где только тег Orientation (вставляется сразу после SOI).</summary>
-    private static byte[] WithExifOrientation(byte[] jpeg, ushort orientation)
+    internal static byte[] WithExifOrientation(byte[] jpeg, ushort orientation)
     {
         var tiff = new List<byte> { (byte)'I', (byte)'I', 42, 0, 8, 0, 0, 0, 1, 0 };
         tiff.AddRange([0x12, 0x01, 3, 0, 1, 0, 0, 0, (byte)orientation, (byte)(orientation >> 8), 0, 0, 0, 0, 0, 0]);
