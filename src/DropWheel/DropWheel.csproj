@@ -36,5 +36,7 @@
   <ItemGroup>
     <!-- Тот же значок для трея и окон (берётся нужный размер). -->
     <EmbeddedResource Include="Assets\DropWheel.ico" LogicalName="DropWheel.ico" />
+    <!-- «Что нового» после обновления (D-WHATSNEW): текст берётся из docs/CHANGELOG.md. -->
+    <EmbeddedResource Include="..\..\docs\CHANGELOG.md" LogicalName="CHANGELOG.md" Link="CHANGELOG.md" />
   </ItemGroup>
 </Project>

@@ -5,6 +5,16 @@
 
 Each version section starts with `## <version>`; CI copies it into the GitHub release notes.
 
+## 1.2.0
+
+**Новое в этой версии**
+- «Что нового»: после обновления программа сама показывает, что изменилось, — небольшое окно со списком изменений
+  и ссылкой на все выпуски. Открыть ещё раз — пункт «Что нового» в меню значка.
+
+**English**
+- What's new: after an update DropWheel shows a small window listing the changes, with a link to all releases.
+  Open it again from the tray menu → What's new.
+
 ## 1.1.1
 
 **Исправлено**

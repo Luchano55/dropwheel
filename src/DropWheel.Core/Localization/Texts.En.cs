@@ -37,6 +37,11 @@ public sealed partial class Texts
         // обновления
         UpdateAvailableTitle = "A new version of DropWheel is available",
         UpdateAvailableText = "Right-click the icon → “Update”.",
+        TrayWhatsNew = "What's new",
+        WhatsNewTitle = "What's new in DropWheel {0}",
+        WhatsNewOk = "Got it",
+        WhatsNewAll = "All changes",
+        WhatsNewMissing = "No notes for this version — see all changes on the releases page.",
         UpdatedTitle = "DropWheel updated",
         UpdatedText = "Build {0}. Ready to go.",
         NoUpdatesTitle = "No updates",
