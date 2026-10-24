@@ -5,6 +5,15 @@
 
 Each version section starts with `## <version>`; CI copies it into the GitHub release notes.
 
+## 1.3.1
+
+**Исправлено**
+- Колесо больше не остаётся на экране, если зажали кнопку мыши и нажали клавишу колеса, ничего не перетаскивая
+  (рамка выделения на рабочем столе, перенос окна): оно само прячется через полсекунды.
+
+**Fixed**
+- The wheel no longer stays open when the hotkey is pressed while dragging nothing (a selection box or a window).
+
 ## 1.3.0
 
 **Новое в этой версии**

@@ -99,6 +99,9 @@ public sealed class WheelWindow : Window
     /// <summary>Колесо открыто и ждёт выбора (во время анимации закрытия — уже false).</summary>
     public bool IsOpen => _open;
 
+    /// <summary>С последнего ShowAt над колесом было хоть одно перетаскивание (DragEnter любого содержимого).</summary>
+    public bool DragSeen { get; private set; }
+
     public WheelWindow()
     {
         Title = "DropWheel";
@@ -165,6 +168,7 @@ public sealed class WheelWindow : Window
     {
         FinishClose();
         _anchor = (screenX, screenY);
+        DragSeen = false;
         ShowActivated = activate;
         _keyboard = false;
         _lastMouse = null;
@@ -389,6 +393,7 @@ public sealed class WheelWindow : Window
             e.Effects = DragDropEffects.None;
             return;
         }
+        DragSeen = true;
         var content = ReadContent(e.Data);
         switch (content.Kind)
         {

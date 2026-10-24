@@ -19,10 +19,17 @@ internal sealed class DragWheelController : IDisposable
     /// </summary>
     private static readonly TimeSpan ReleaseGrace = TimeSpan.FromMilliseconds(400);
 
+    /// <summary>
+    /// Кнопку зажали и повели, но тащат не файл: выделяют рамкой на рабочем столе, двигают окно.
+    /// Тогда DragEnter не придёт вовсе (курсор после показа мы шевелим сами) — прячем пустое колесо.
+    /// </summary>
+    private static readonly TimeSpan NoDragGrace = TimeSpan.FromMilliseconds(600);
+
     private readonly WheelWindow _wheel = new();
     private readonly DragDetector _detector;
     private readonly LowLevelHooks _hooks;
     private readonly DispatcherTimer _releaseTimer;
+    private readonly DispatcherTimer _noDragTimer;
     private readonly Converter _converter;
     private readonly Action<IReadOnlyList<string>, Operation> _enqueue;
     private readonly Action<DraggedImage, Operation> _enqueueImage;
@@ -56,6 +63,15 @@ internal sealed class DragWheelController : IDisposable
         {
             _releaseTimer.Stop();
             if (_wheel.IsOpen && !_wheel.CloseOnDeactivate) _wheel.Cancel();
+        };
+
+        _noDragTimer = new DispatcherTimer(DispatcherPriority.Normal, ui) { Interval = NoDragGrace };
+        _noDragTimer.Tick += (_, _) =>
+        {
+            _noDragTimer.Stop();
+            if (!_wheel.IsOpen || _wheel.CloseOnDeactivate || _wheel.DragSeen) return;
+            _log.Write("Колесо: перетаскивания файла нет (рамка выделения или окно) — прячем");
+            _wheel.Cancel();
         };
 
         _hooks = new LowLevelHooks(_detector, ui, OnAction, log.Write);
@@ -95,6 +111,8 @@ internal sealed class DragWheelController : IDisposable
                 _detector.WheelOpen = true;
                 // D10: DragEnter приходит новому окну только после движения мыши — шевельнём курсор.
                 CursorNudge.NudgeWithInput();
+                _noDragTimer.Stop();
+                _noDragTimer.Start();
                 break;
             case DragAction.ToggleMode:
                 if (_wheel.IsOpen) _wheel.ToggleMode();
@@ -147,6 +165,7 @@ internal sealed class DragWheelController : IDisposable
     public void Dispose()
     {
         _releaseTimer.Stop();
+        _noDragTimer.Stop();
         _hooks.Dispose();
         _wheel.Close();
     }
