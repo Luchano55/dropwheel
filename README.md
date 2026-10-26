@@ -517,6 +517,7 @@ A toolbar appears next to the selection: **Copy** (picture to the clipboard; <kb
 
 - **Need a menu or a tooltip in the shot?** Tray menu → **Screenshot in 3 s** or **Screenshot in 5 s**: a 3… 2… 1… countdown appears next to the cursor (it doesn't get into the picture) — open what you need meanwhile.
 - **Another shortcut:** *Settings → General* → the *Ctrl+Alt+S — screenshot* card → **Change…** and press the new combination (e.g. <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>F9</kbd>). Combinations Windows keeps for itself (<kbd>Win</kbd> + a letter) and plain letters aren't accepted; if another program has taken it, you are told so and the old one stays. The same card turns the shortcut off; the tray item always works.
+- **Screenshot on the <kbd>Print Screen</kbd> key** instead of the built-in Snipping Tool — see the [FAQ below](#printscreen-en).
 
 ### 🎥 Screen recording: <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>R</kbd>
 
@@ -634,6 +635,23 @@ Right next to the original: `photo.heic` → `photo.jpg`. Tools keep the format,
 <summary><b>Do I need Microsoft Office?</b></summary>
 
 No. Without any Office you still get DOCX → PDF / TXT / HTML / Markdown, XLSX / XLS → CSV, CSV → XLSX and TXT / Markdown / HTML → PDF. With the free LibreOffice installed you also get DOC, RTF, ODT, XLS, ODS and PowerPoint conversions — DropWheel finds it by itself. With an activated Microsoft Office you get exact Word, Excel and PowerPoint conversions (including slides as PNG) and PDF → DOCX / Markdown. DropWheel runs its own hidden Office instance and leaves your open documents alone; a pre-warmed Word or Excel uses roughly 100–200 MB of RAM until it closes after 5 idle minutes or when you exit DropWheel.
+</details>
+
+<details id="printscreen-en">
+<summary><b>How do I take screenshots with Print Screen instead of the Snipping Tool?</b></summary>
+
+On Windows 11 the <kbd>Print Screen</kbd> key belongs to the built-in Snipping Tool by default. To make it open DropWheel's screenshot:
+
+1. **Settings** (<kbd>Win</kbd>+<kbd>I</kbd>) → **Accessibility** → **Keyboard** → turn off “Use the Print screen key to open screen capture”.
+2. Windows sometimes doesn't save that switch. To be sure, open **PowerShell** (no admin rights needed) and run:
+   ```
+   Set-ItemProperty 'HKCU:\Control Panel\Keyboard' -Name PrintScreenKeyForSnippingEnabled -Value 0 -Type DWord
+   ```
+3. **Restart the PC.**
+4. In DropWheel: *Settings → General* → the screenshot card → **Change…** → press <kbd>Print Screen</kbd>.
+5. If the Snipping Tool still opens, **restart DropWheel** (right-click the tray icon → Exit, then start it again).
+
+If DropWheel says the key is taken, another screenshot program holds it — turn <kbd>Print Screen</kbd> off in its settings. To get the Snipping Tool back, turn the same Windows switch on again.
 </details>
 
 <details>
