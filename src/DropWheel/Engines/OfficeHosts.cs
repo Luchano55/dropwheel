@@ -85,11 +85,54 @@ internal abstract class OfficeHost(Action<string> log)
     /// <summary>Прогрев: запустить заранее, пока пользователь выбирает сектор колеса.</summary>
     public void Prewarm()
     {
-        EnsureStarted();
+        var foreground = OfficeNative.GetForegroundWindow();
+        try { EnsureStarted(); }
+        finally { ReturnFocus(foreground); }
         LastUsedUtc = DateTime.UtcNow;
     }
 
     public void Run(OfficeTarget target, string input, string output, IProgress<double>? progress, CancellationToken ct)
+    {
+        var foreground = OfficeNative.GetForegroundWindow();
+        try { RunCore(target, input, output, progress, ct); }
+        finally { ReturnFocus(foreground); }
+    }
+
+    /// <summary>
+    /// Невидимый Office при запуске или открытии файла иногда становится активным окном: окно спрятано, а нажатия
+    /// клавиш уходят в него — у пользователя «перестаёт работать клавиатура», пока Office не закроется.
+    /// Если после нашей задачи активно окно нашего экземпляра (или никакое) — вернуть активность окну, которое было
+    /// активным до неё. Чужой экземпляр (Office пользователя) не трогаем. Никогда не бросает.
+    /// </summary>
+    private void ReturnFocus(IntPtr before)
+    {
+        try
+        {
+            if (!_owned || _pid == 0 || before == IntPtr.Zero || !OfficeNative.IsWindow(before)) return;
+            var now = OfficeNative.GetForegroundWindow();
+            if (now == before) return;
+            if (now != IntPtr.Zero)
+            {
+                OfficeNative.GetWindowThreadProcessId(now, out var pid);
+                if (pid != _pid) return; // пользователь сам переключился на другое окно
+            }
+            // Сменить активное окно может только тот, кто сейчас получает ввод: на миг подключаемся к потоку
+            // активного окна (нашего Office), как это делают сами программы при «вернуть фокус».
+            var thread = now == IntPtr.Zero ? 0 : OfficeNative.GetWindowThreadProcessId(now, out _);
+            var self = OfficeNative.GetCurrentThreadId();
+            var attached = thread != 0 && thread != self && OfficeNative.AttachThreadInput(self, thread, true);
+            try { OfficeNative.SetForegroundWindow(before); }
+            finally { if (attached) OfficeNative.AttachThreadInput(self, thread, false); }
+            Log($"{Name}: забрал активное окно (клавиатуру) — вернули прежнему окну"
+                + (OfficeNative.GetForegroundWindow() == before ? "" : ", но Windows не дала"));
+        }
+        catch (Exception ex)
+        {
+            Log($"{Name}: не удалось вернуть активное окно — {ex.Message}");
+        }
+    }
+
+    private void RunCore(OfficeTarget target, string input, string output, IProgress<double>? progress, CancellationToken ct)
     {
         EnsureStarted();
         ct.ThrowIfCancellationRequested();
@@ -775,4 +818,22 @@ internal static partial class OfficeNative
 
     [LibraryImport("user32.dll")]
     public static partial uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
+
+    [LibraryImport("user32.dll")]
+    public static partial IntPtr GetForegroundWindow();
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool SetForegroundWindow(IntPtr hWnd);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool IsWindow(IntPtr hWnd);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool AttachThreadInput(uint idAttach, uint idAttachTo, [MarshalAs(UnmanagedType.Bool)] bool fAttach);
+
+    [LibraryImport("kernel32.dll")]
+    public static partial uint GetCurrentThreadId();
 }

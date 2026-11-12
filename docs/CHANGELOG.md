@@ -16,6 +16,15 @@ Each version section starts with `## <version>`; CI copies it into the GitHub re
 - Screenshot: adjust the selected area — drag an edge or a corner (they have small handles) to resize, drag from inside
   to move it, arrow keys nudge it by a pixel (Shift — by 10). Works for screen recording too.
 
+**Исправлено**
+- После конвертации через Microsoft Office (например, Word → PDF) могла «пропасть» клавиатура: невидимый Word
+  забирал себе нажатия, пока DropWheel не перезапустят. Теперь DropWheel сразу возвращает клавиатуру окну,
+  в котором вы работали.
+
+**Fixed**
+- After a conversion through Microsoft Office (e.g. Word → PDF) the keyboard could stop responding: the hidden Word
+  took the key presses until DropWheel was restarted. DropWheel now gives the keyboard back to your window right away.
+
 ## 1.3.1
 
 **Исправлено**
