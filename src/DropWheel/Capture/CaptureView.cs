@@ -47,6 +47,10 @@ internal sealed partial class CaptureView : Canvas
         Cursor = Cursors.Arrow,
         Effect = new DropShadowEffect { BlurRadius = 16, ShadowDepth = 4, Direction = 270, Opacity = 0.35 },
     };
+    /// <summary>Ручки рамки: углы, затем середины сторон (за них тянут, чтобы подогнать выделение).</summary>
+    private readonly Rectangle[] _grips = new Rectangle[8];
+    /// <summary>Сторона ручки, DIP.</summary>
+    private const double GripSize = 7;
     private readonly bool _ocr;
     private SettingsPalette _palette;
 
@@ -67,6 +71,15 @@ internal sealed partial class CaptureView : Canvas
         Children.Add(_dim);
         Children.Add(_halo);
         Children.Add(_frame);
+        for (var i = 0; i < _grips.Length; i++)
+        {
+            _grips[i] = new Rectangle
+            {
+                Width = GripSize, Height = GripSize, Fill = Brushes.White, Stroke = Halo,
+                IsHitTestVisible = false, SnapsToDevicePixels = true, Visibility = Visibility.Collapsed,
+            };
+            Children.Add(_grips[i]);
+        }
         Children.Add(_label);
         Children.Add(_hint);
         Children.Add(_toolbar);
@@ -100,18 +113,19 @@ internal sealed partial class CaptureView : Canvas
 
     private DipRect? _highlight;
     private string? _size;
-    private bool _showToolbar, _showHint;
+    private bool _showToolbar, _showHint, _showGrips;
 
     /// <summary>
-    /// Нарисовать: подсвеченная область (DIP окна; может выходить за окно), подпись размера, панель кнопок, подсказка.
-    /// highlight = null — затемнено всё.
+    /// Нарисовать: подсвеченная область (DIP окна; может выходить за окно), подпись размера, панель кнопок, подсказка,
+    /// ручки рамки (область выбрана — её можно подогнать). highlight = null — затемнено всё.
     /// </summary>
-    public void Show(DipRect? highlight, string? sizeText, bool toolbar, bool hint)
+    public void Show(DipRect? highlight, string? sizeText, bool toolbar, bool hint, bool grips = false)
     {
         _highlight = highlight;
         _size = sizeText;
         _showToolbar = toolbar && highlight is not null;
         _showHint = hint;
+        _showGrips = grips && highlight is not null;
         Render();
     }
 
@@ -141,6 +155,8 @@ internal sealed partial class CaptureView : Canvas
             _dim.Data = full;
             _frame.Visibility = _halo.Visibility = Visibility.Collapsed;
         }
+
+        PlaceGrips(px);
 
         _label.Background = SettingsPalette.B(_palette.Solid);
         _label.BorderBrush = _palette.ControlBorder;
@@ -174,6 +190,27 @@ internal sealed partial class CaptureView : Canvas
             var (tx, ty) = CaptureLayout.Toolbar(t, _toolbar.DesiredSize.Width, _toolbar.DesiredSize.Height, area);
             SetLeft(_toolbar, Math.Round(tx));
             SetTop(_toolbar, Math.Round(ty));
+        }
+    }
+
+    /// <summary>Квадратики на углах и серединах сторон рамки. У маленькой рамки середины не рисуются — только углы.</summary>
+    private void PlaceGrips(double px)
+    {
+        if (!_showGrips || _highlight is not { } s)
+        {
+            foreach (var g in _grips) g.Visibility = Visibility.Collapsed;
+            return;
+        }
+        double l = s.X, t = s.Y, r = s.Right, b = s.Bottom, cx = (l + r) / 2, cy = (t + b) / 2;
+        var points = new (double X, double Y)[] { (l, t), (r, t), (l, b), (r, b), (cx, t), (cx, b), (l, cy), (r, cy) };
+        var mids = s.Width >= 4 * GripSize && s.Height >= 4 * GripSize;
+        for (var i = 0; i < _grips.Length; i++)
+        {
+            var g = _grips[i];
+            g.StrokeThickness = px;
+            g.Visibility = i < 4 || mids ? Visibility.Visible : Visibility.Collapsed;
+            SetLeft(g, Math.Round(points[i].X - GripSize / 2));
+            SetTop(g, Math.Round(points[i].Y - GripSize / 2));
         }
     }
 

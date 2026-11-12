@@ -73,7 +73,7 @@ public class CaptureScreenshots
         {
             // Выделено: заголовок и список из окна «Заметки».
             var sel = new DipRect(262, 160, 420, 196);
-            view.Show(sel, CaptureLayout.SizeText(new PixelRect(0, 0, (int)(sel.Width * Scale), (int)(sel.Height * Scale))), toolbar: true, hint: false);
+            view.Show(sel, CaptureLayout.SizeText(new PixelRect(0, 0, (int)(sel.Width * Scale), (int)(sel.Height * Scale))), toolbar: true, hint: false, grips: true);
         }
         else
         {

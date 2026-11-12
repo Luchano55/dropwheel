@@ -68,6 +68,115 @@ public class CaptureTests : IDisposable
         Assert.Equal(s.Selection, s.Highlight);
     }
 
+    // ---------- подгонка выбранной области ----------
+
+    private static CaptureSession Selected(PixelRect rect, IReadOnlyList<PixelRect>? windows = null)
+    {
+        var s = new CaptureSession([Main], windows);
+        s.Press(rect.X, rect.Y);
+        s.Release(rect.Right, rect.Bottom);
+        Assert.Equal(rect, s.Selection);
+        return s;
+    }
+
+    [Theory]
+    [InlineData(100, 100, CaptureGrip.TopLeft)]
+    [InlineData(305, 96, CaptureGrip.TopRight)]
+    [InlineData(94, 252, CaptureGrip.BottomLeft)]
+    [InlineData(300, 250, CaptureGrip.BottomRight)]
+    [InlineData(100, 170, CaptureGrip.Left)]
+    [InlineData(306, 170, CaptureGrip.Right)]
+    [InlineData(200, 93, CaptureGrip.Top)]
+    [InlineData(200, 257, CaptureGrip.Bottom)]
+    [InlineData(200, 170, CaptureGrip.Move)]
+    [InlineData(500, 170, CaptureGrip.None)]
+    [InlineData(200, 260, CaptureGrip.None)] // дальше зоны захвата
+    public void Grip_is_found_by_edges_corners_and_inside(int x, int y, CaptureGrip expected)
+    {
+        var s = Selected(PixelRect.FromEdges(100, 100, 300, 250));
+        Assert.Equal(expected, s.GripAt(x, y, 8));
+    }
+
+    [Fact]
+    public void No_grip_without_selection()
+    {
+        var s = new CaptureSession([Main]);
+        Assert.Equal(CaptureGrip.None, s.GripAt(100, 100, 8));
+    }
+
+    [Fact]
+    public void Dragging_a_corner_resizes_and_keeps_opposite_corner()
+    {
+        var s = Selected(PixelRect.FromEdges(100, 100, 300, 250));
+        s.Press(300, 250, 8);
+        Assert.True(s.IsAdjusting);
+        s.Move(350, 300);
+        Assert.Equal(PixelRect.FromEdges(100, 100, 350, 300), s.Highlight);
+        Assert.Equal(PixelRect.FromEdges(100, 100, 352, 301), s.Release(352, 301));
+        Assert.False(s.IsAdjusting);
+    }
+
+    [Fact]
+    public void Dragging_an_edge_changes_one_side_and_can_flip()
+    {
+        var s = Selected(PixelRect.FromEdges(100, 100, 300, 250));
+        s.Press(100, 170, 8); // левый край
+        Assert.Equal(PixelRect.FromEdges(40, 100, 300, 250), s.Release(40, 400));
+
+        // Перетянули левый край за правый — рамка «вывернулась», правым краем стал бывший левый.
+        s.Press(40, 170, 8);
+        Assert.Equal(PixelRect.FromEdges(300, 100, 400, 250), s.Release(400, 170));
+    }
+
+    [Fact]
+    public void Moving_keeps_size_and_stays_on_screen()
+    {
+        var s = Selected(PixelRect.FromEdges(100, 100, 300, 250));
+        s.Press(200, 170, 8);
+        s.Move(260, 200);
+        Assert.Equal(PixelRect.FromEdges(160, 130, 360, 280), s.Highlight);
+        // Утащили за правый нижний угол экрана — упирается в край, размер прежний.
+        Assert.Equal(PixelRect.FromEdges(1720, 930, 1920, 1080), s.Release(5000, 5000));
+    }
+
+    [Fact]
+    public void Edge_cannot_be_squeezed_below_min_size()
+    {
+        var s = Selected(PixelRect.FromEdges(100, 100, 300, 250));
+        s.Press(300, 170, 8);
+        s.Move(101, 170); // ширина 1 px — слишком тонко, остаётся последняя годная рамка
+        Assert.Equal(PixelRect.FromEdges(100, 100, 300, 250), s.Highlight);
+        Assert.Equal(PixelRect.FromEdges(100, 100, 300, 250), s.Release(101, 170));
+    }
+
+    [Fact]
+    public void Click_inside_selection_still_picks_window_and_press_outside_starts_new()
+    {
+        PixelRect editor = new(150, 120, 100, 80);
+        var s = Selected(PixelRect.FromEdges(100, 100, 300, 250), [editor]);
+        s.Press(200, 160, 8);
+        Assert.Equal(editor, s.Release(201, 161));
+
+        s.Press(800, 600, 8); // далеко от рамки — новое выделение
+        Assert.False(s.IsAdjusting);
+        Assert.Null(s.Selection);
+        Assert.Equal(PixelRect.FromEdges(800, 600, 900, 700), s.Release(900, 700));
+
+        // Без зоны захвата (старый вызов) нажатие всегда начинает новое выделение.
+        s.Press(850, 650);
+        Assert.False(s.IsAdjusting);
+    }
+
+    [Fact]
+    public void Arrows_nudge_selection_within_screen()
+    {
+        var s = Selected(PixelRect.FromEdges(100, 100, 300, 250));
+        Assert.Equal(PixelRect.FromEdges(101, 100, 301, 250), s.Nudge(1, 0));
+        Assert.Equal(PixelRect.FromEdges(101, 90, 301, 240), s.Nudge(0, -10));
+        Assert.Equal(PixelRect.FromEdges(0, 90, 200, 240), s.Nudge(-5000, 0));
+        Assert.Null(new CaptureSession([Main]).Nudge(1, 1));
+    }
+
     [Fact]
     public void Click_picks_topmost_window_then_monitor()
     {

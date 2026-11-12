@@ -91,12 +91,38 @@ internal sealed partial class CaptureOverlay
         Closed?.Invoke();
     }
 
+    /// <summary>Насколько далеко от линии рамки можно взяться за край или угол, DIP.</summary>
+    private const double GripDip = 8;
+
     private void OnMove()
     {
         if (Cursor() is not { } p) return;
         if (_session.IsDragging) _session.Move(p.X, p.Y);
-        else _session.Hover(p.X, p.Y);
+        else
+        {
+            _session.Hover(p.X, p.Y);
+            SetGripCursor(_session.GripAt(p.X, p.Y, GripTolerance(p.X, p.Y)));
+        }
         Render();
+    }
+
+    /// <summary>Зона захвата края в физических пикселях монитора под курсором (8 DIP: при 150 % — 12 px).</summary>
+    private int GripTolerance(int x, int y) => (int)Math.Round(GripDip * MonitorWindowAt(x, y).Monitor.Scale);
+
+    /// <summary>Курсор над рамкой: стрелки у краёв и углов, крестик со стрелками внутри, прицел — вне выделения.</summary>
+    private void SetGripCursor(CaptureGrip grip)
+    {
+        var cursor = grip switch
+        {
+            CaptureGrip.Move => Cursors.SizeAll,
+            CaptureGrip.Left or CaptureGrip.Right => Cursors.SizeWE,
+            CaptureGrip.Top or CaptureGrip.Bottom => Cursors.SizeNS,
+            CaptureGrip.TopLeft or CaptureGrip.BottomRight => Cursors.SizeNWSE,
+            CaptureGrip.TopRight or CaptureGrip.BottomLeft => Cursors.SizeNESW,
+            _ => Cursors.Cross,
+        };
+        foreach (var (_, window) in _windows)
+            if (!ReferenceEquals(window.View.Cursor, cursor)) window.View.Cursor = cursor;
     }
 
     private void OnPress(CaptureWindow window, MouseButtonEventArgs e)
@@ -107,7 +133,7 @@ internal sealed partial class CaptureOverlay
         else
         {
             _hintMonitor = null;
-            _session.Press(p.X, p.Y);
+            _session.Press(p.X, p.Y, GripTolerance(p.X, p.Y));
             // Мышь — этому окну до отпускания, даже если курсор ушёл на другой монитор.
             window.CaptureMouse();
         }
@@ -148,6 +174,22 @@ internal sealed partial class CaptureOverlay
                 e.Handled = true;
                 Finish(CaptureAction.Copy);
                 break;
+            case Key.Left or Key.Right or Key.Up or Key.Down when _session.Selection is not null && !_session.IsDragging:
+            {
+                // Стрелки — сдвинуть рамку на пиксель, с Shift — на 10.
+                e.Handled = true;
+                var step = (Keyboard.Modifiers & ModifierKeys.Shift) != 0 ? 10 : 1;
+                var (dx, dy) = e.Key switch
+                {
+                    Key.Left => (-step, 0),
+                    Key.Right => (step, 0),
+                    Key.Up => (0, -step),
+                    _ => (0, step),
+                };
+                _session.Nudge(dx, dy);
+                Render();
+                break;
+            }
             case Key.S when ctrl:
                 e.Handled = true;
                 Finish(CaptureAction.Save);
@@ -195,8 +237,10 @@ internal sealed partial class CaptureOverlay
             var local = highlight is { } r ? monitor.ToLocalDip(r) : (DipRect?)null;
             // Подпись размера — только на мониторе с левым верхним углом подсветки.
             var labelHere = highlight is { } hl && ReferenceEquals(MonitorWindowAt(hl.X, hl.Y).Monitor, monitor);
-            window.View.Show(local, labelHere ? size : null, toolbar: ReferenceEquals(monitor, toolbarMonitor),
-                hint: ReferenceEquals(monitor, _hintMonitor) && selection is null && !_session.IsDragging);
+            // Пока тянут край или рамку — панель прячется, чтобы не мешать; появится у новой рамки.
+            window.View.Show(local, labelHere ? size : null, toolbar: ReferenceEquals(monitor, toolbarMonitor) && !_session.IsAdjusting,
+                hint: ReferenceEquals(monitor, _hintMonitor) && selection is null && !_session.IsDragging,
+                grips: selection is not null);
         }
     }
 

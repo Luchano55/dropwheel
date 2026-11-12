@@ -5,6 +5,17 @@
 
 Each version section starts with `## <version>`; CI copies it into the GitHub release notes.
 
+## 1.4.0
+
+**Новое в этой версии**
+- Снимок экрана: выделенную область можно подогнать. Тяните за край или угол рамки (на них квадратики-ручки) —
+  меняется размер; тяните изнутри — рамка двигается целиком; стрелки сдвигают её на пиксель, с Shift — на 10.
+  Щелчок внутри рамки по-прежнему выбирает окно, нажатие снаружи — начинает новое выделение. То же — в записи экрана.
+
+**New**
+- Screenshot: adjust the selected area — drag an edge or a corner (they have small handles) to resize, drag from inside
+  to move it, arrow keys nudge it by a pixel (Shift — by 10). Works for screen recording too.
+
 ## 1.3.1
 
 **Исправлено**

@@ -25,7 +25,7 @@ public class RecordScreenshots
             Width = W, Height = H, Frame = CaptureScreenshots.FakeDesktop(light),
         };
         var size = new PixelRect(0, 0, (int)(Selection.Width * Scale), (int)(Selection.Height * Scale));
-        view.Show(Selection, CaptureLayout.SizeText(size), toolbar: true, hint: false);
+        view.Show(Selection, CaptureLayout.SizeText(size), toolbar: true, hint: false, grips: true);
         Assert.Equal(format, view.RecordMode);
         return view;
     }
