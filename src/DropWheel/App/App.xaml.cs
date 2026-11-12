@@ -295,7 +295,8 @@ public partial class App : Application
         }
         catch (Exception ex)
         {
-            _tray?.ShowInfo(Loc.T.UpdateCheckFailed, ex.Message);
+            Log.Write("Проверка обновлений не удалась: " + ex);
+            _tray?.ShowInfo(Loc.T.UpdateCheckFailed, UpdateErrors.Explain(ex));
         }
     }
 
@@ -314,7 +315,7 @@ public partial class App : Application
         {
             Log.Write("Обновление не удалось: " + ex);
             _tray?.SetStatus(null);
-            _tray?.ShowInfo(Loc.T.UpdateFailed, ex.Message);
+            _tray?.ShowInfo(Loc.T.UpdateFailed, UpdateErrors.Explain(ex));
         }
     }
 

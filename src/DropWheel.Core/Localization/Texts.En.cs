@@ -203,6 +203,13 @@ public sealed partial class Texts
         NoUpdatesTitle = "No updates",
         NoUpdatesText = "You have the latest build ({0}).",
         UpdateCheckFailed = "Couldn't check for updates",
+        UpdateErrBlocked = "GitHub can't be reached from this PC — the network, an antivirus or the hosts file blocks it. " +
+            "Check whether github.com opens in a browser, or download the new version from the releases page.",
+        UpdateErrOffline = "No internet connection. Check the network and try again.",
+        UpdateErrTimeout = "GitHub didn't answer in time — slow network or a busy site. Try again later.",
+        UpdateErrSecure = "Couldn't make a secure connection to GitHub — usually an antivirus or a proxy intercepts it. " +
+            "Try again later or download the new version from the releases page.",
+        UpdateErrBusy = "GitHub is limiting requests for now. Try again in an hour.",
         UpdatingTitle = "Updating",
         UpdatingText = "Downloading build {0}… DropWheel will restart by itself.",
         UpdateFailed = "Update failed",

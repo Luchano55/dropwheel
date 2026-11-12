@@ -47,6 +47,15 @@ public sealed partial class Texts
     public string NoUpdatesTitle { get; init; } = "Обновлений нет";
     public string NoUpdatesText { get; init; } = "У вас последняя сборка ({0}).";
     public string UpdateCheckFailed { get; init; } = "Не удалось проверить обновления";
+    public string UpdateErrBlocked { get; init; } =
+        "GitHub недоступен с этого компьютера — его блокирует сеть, антивирус или файл hosts. " +
+        "Проверьте, открывается ли github.com в браузере, или скачайте версию вручную со страницы выпусков.";
+    public string UpdateErrOffline { get; init; } = "Нет подключения к интернету. Проверьте сеть и попробуйте ещё раз.";
+    public string UpdateErrTimeout { get; init; } = "GitHub не ответил вовремя — медленная сеть или сайт перегружен. Попробуйте позже.";
+    public string UpdateErrSecure { get; init; } =
+        "Не удалось установить защищённое соединение с GitHub — обычно его перехватывает антивирус или прокси. " +
+        "Попробуйте позже или скачайте новую версию вручную со страницы выпусков.";
+    public string UpdateErrBusy { get; init; } = "GitHub временно ограничил запросы. Попробуйте через час.";
     public string UpdatingTitle { get; init; } = "Обновление";
     public string UpdatingText { get; init; } = "Скачиваю сборку {0}… Программа перезапустится сама.";
     public string UpdateFailed { get; init; } = "Обновление не удалось";

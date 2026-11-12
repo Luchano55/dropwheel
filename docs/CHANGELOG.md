@@ -20,10 +20,15 @@ Each version section starts with `## <version>`; CI copies it into the GitHub re
 - После конвертации через Microsoft Office (например, Word → PDF) могла «пропасть» клавиатура: невидимый Word
   забирал себе нажатия, пока DropWheel не перезапустят. Теперь DropWheel сразу возвращает клавиатуру окну,
   в котором вы работали.
+- Если обновление не удалось проверить из-за сети, DropWheel объясняет понятными словами, что случилось и что делать
+  (например, «GitHub недоступен с этого компьютера — его блокирует сеть, антивирус или файл hosts»), вместо системного
+  сообщения вроде «Требуемый адрес для своего контекста неверен».
 
 **Fixed**
 - After a conversion through Microsoft Office (e.g. Word → PDF) the keyboard could stop responding: the hidden Word
   took the key presses until DropWheel was restarted. DropWheel now gives the keyboard back to your window right away.
+- When an update check fails because of the network, DropWheel now says in plain words what happened and what to do
+  instead of a raw system message.
 
 ## 1.3.1
 
