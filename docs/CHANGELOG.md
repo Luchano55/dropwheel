@@ -11,10 +11,14 @@ Each version section starts with `## <version>`; CI copies it into the GitHub re
 - «В ZIP» и «В 7Z» для папок: перетащите на колесо одну или несколько папок (можно вместе с файлами) — они попадут
   в один архив целиком, со всеми подпапками. Одна папка → «Отпуск.zip», несколько → архив по имени папки, где они
   лежат. Для архива нет ограничения в 1000 файлов.
+- Запись экрана со звуком с микрофона: на панели записи выберите «Микрофон» (для MP4). Берётся микрофон Windows
+  по умолчанию; если он не найден или занят, запись идёт без звука, и DropWheel скажет об этом. Выбор запоминается.
 
 **New**
 - *To ZIP* and *To 7Z* for folders: drop one or several folders (files may be mixed in) on the wheel — they go into one
   archive whole, with every subfolder. No 1000-file limit for archives.
+- Screen recording with microphone sound: pick *Microphone* in the recording toolbar (MP4). Uses the Windows default
+  microphone; if it's missing or busy, the video is recorded without sound and DropWheel says so.
 
 ## 1.4.0
 

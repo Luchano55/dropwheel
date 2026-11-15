@@ -31,7 +31,7 @@ public class RecordTests : IDisposable
         // Монитор левее и выше основного: координаты отрицательные — gdigrab понимает их как есть.
         var args = ScreenRecord.GdigrabInput(new PixelRect(-1280, -300, 1281, 1025));
         Assert.Equal(
-            ["-f", "gdigrab", "-framerate", "30", "-draw_mouse", "1", "-offset_x", "-1280", "-offset_y", "-300",
+            ["-f", "gdigrab", "-thread_queue_size", "512", "-framerate", "30", "-draw_mouse", "1", "-offset_x", "-1280", "-offset_y", "-300",
              "-video_size", "1280x1024", "-i", "desktop"],
             args);
     }
@@ -78,6 +78,61 @@ public class RecordTests : IDisposable
         var args = ScreenRecord.Arguments(["-f", "lavfi", "-i", "testsrc"], "out.mp4", TimeSpan.FromSeconds(2));
         Assert.Equal("-f lavfi -i testsrc", string.Join(' ', args.Skip(3).Take(4)));
         Assert.Equal(["-t", "2", "out.mp4"], args.TakeLast(3));
+    }
+
+    // ---------- микрофон ----------
+
+    [Fact]
+    public void Microphone_adds_dshow_input_and_aac()
+    {
+        var args = ScreenRecord.Arguments(new PixelRect(0, 0, 800, 600), "out.mp4", "Микрофон (Realtek(R) Audio)").ToArray();
+
+        // Имя устройства — одним аргументом, с пробелами и скобками.
+        Assert.Contains("audio=Микрофон (Realtek(R) Audio)", args);
+        var joined = string.Join(' ', args);
+        Assert.Contains("-f dshow -thread_queue_size 1024 -i", joined);
+        Assert.Contains("-c:a aac -b:a 160k", joined);
+        // Оба входа — до кодеков; экран первым (дорожка 0 — видео).
+        Assert.True(Array.IndexOf(args, "gdigrab") < Array.IndexOf(args, "dshow"));
+        Assert.True(Array.LastIndexOf(args, "-i") < Array.IndexOf(args, "-c:v"));
+
+        var silent = string.Join(' ', ScreenRecord.Arguments(new PixelRect(0, 0, 800, 600), "out.mp4", null));
+        Assert.DoesNotContain("dshow", silent);
+        Assert.DoesNotContain("-c:a", silent);
+    }
+
+    [Fact]
+    public void Audio_devices_are_read_from_new_and_old_ffmpeg_output()
+    {
+        const string modern = """
+            [dshow @ 000001c2] "Integrated Webcam" (video)
+            [dshow @ 000001c2]   Alternative name "@device_pnp_\\?\usb#vid_0bda"
+            [dshow @ 000001c2] "Микрофон (Realtek(R) Audio)" (audio)
+            [dshow @ 000001c2]   Alternative name "@device_cm_{33D9A762-90C8-11D0-BD43-00A0C911CE86}\wave_{1}"
+            [dshow @ 000001c2] "Headset Microphone (Arctis 7 Chat)" (audio)
+            dummy: Immediate exit requested
+            """;
+        Assert.Equal(["Микрофон (Realtek(R) Audio)", "Headset Microphone (Arctis 7 Chat)"], ScreenRecord.ParseAudioDevices(modern));
+
+        const string old = "[dshow @ 0x1] DirectShow video devices (some may be both video and audio devices)\r\n" +
+                           "[dshow @ 0x1]  \"Integrated Webcam\"\r\n" +
+                           "[dshow @ 0x1] DirectShow audio devices\r\n" +
+                           "[dshow @ 0x1]  \"Microphone (Realtek High Defini\"\r\n" +
+                           "[dshow @ 0x1]     Alternative name \"@device_cm_{X}\\wave_{Y}\"\r\n";
+        Assert.Equal(["Microphone (Realtek High Defini"], ScreenRecord.ParseAudioDevices(old));
+        Assert.Empty(ScreenRecord.ParseAudioDevices("dummy: Immediate exit requested"));
+    }
+
+    [Fact]
+    public void Microphone_is_picked_from_settings_then_windows_default_then_first()
+    {
+        string[] devices = ["Microphone (Realtek High Defini", "Headset Microphone (Arctis 7 Chat)"];
+        Assert.Equal("Headset Microphone (Arctis 7 Chat)", ScreenRecord.PickMicrophone(devices, "Headset Microphone (Arctis 7 Chat)", "Microphone (Realtek High Definition Audio)"));
+        // Выбранного в настройках нет — микрофон Windows; старый DirectShow обрезал имя до 31 символа.
+        Assert.Equal("Microphone (Realtek High Defini", ScreenRecord.PickMicrophone(devices, "Отключённый", "Microphone (Realtek High Definition Audio)"));
+        Assert.Equal("Headset Microphone (Arctis 7 Chat)", ScreenRecord.PickMicrophone(devices, null, "Headset Microphone (Arctis 7 Chat)"));
+        Assert.Equal("Microphone (Realtek High Defini", ScreenRecord.PickMicrophone(devices, null, null));
+        Assert.Null(ScreenRecord.PickMicrophone([], null, "Микрофон"));
     }
 
     [Fact]

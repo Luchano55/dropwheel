@@ -30,6 +30,10 @@ public sealed record AppSettings
     public string RecordKeys { get; init; } = Capture.ScreenRecord.DefaultKeys;
     /// <summary>Последний выбор на панели записи: true — GIF, false — MP4.</summary>
     public bool RecordGif { get; init; }
+    /// <summary>Последний выбор на панели записи: писать звук с микрофона (только MP4).</summary>
+    public bool RecordMicrophone { get; init; }
+    /// <summary>Микрофон для записи по имени устройства; null — микрофон Windows по умолчанию.</summary>
+    public string? RecordMicrophoneDevice { get; init; }
     public bool AutoStart { get; init; }
     /// <summary>null — искать в tools/ рядом с exe.</summary>
     public string? FfmpegPath { get; init; }

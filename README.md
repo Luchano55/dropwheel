@@ -522,9 +522,9 @@ A toolbar appears next to the selection: **Copy** (picture to the clipboard; <kb
 
 ### 🎥 Screen recording: <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>R</kbd>
 
-Press <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>R</kbd> or right-click the tray icon → **Record screen**. You get the same frozen screen as for a screenshot: drag an area, click a window, or press <kbd>Enter</kbd> for the whole monitor. On the toolbar choose **MP4** or **GIF** and press **Record** (or <kbd>Enter</kbd>). While recording, a thin red frame marks the area, and a small pill next to it shows the time and a **Stop** button; the tray icon gets a red dot. The frame and the pill are hidden from the recording itself (Windows 10 2004 or newer).
+Press <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>R</kbd> or right-click the tray icon → **Record screen**. You get the same frozen screen as for a screenshot: drag an area, click a window, or press <kbd>Enter</kbd> for the whole monitor. On the toolbar choose **MP4** or **GIF**, for MP4 also **Microphone** or **No sound**, and press **Record** (or <kbd>Enter</kbd>). While recording, a thin red frame marks the area, and a small pill next to it shows the time and a **Stop** button; the tray icon gets a red dot. The frame and the pill are hidden from the recording itself (Windows 10 2004 or newer).
 
-Stop with **Stop**, the same shortcut again, or the tray item **Stop recording** — then `Recording 2026-10-24 15-30-05.mp4` (or `.gif`) appears in `Videos\DropWheel` (or your folder for clipboard pictures / the shared output folder), with a notification: *Open*, *Show in folder*, *Trim…*. The mouse pointer is recorded at 30 fps; sound is not recorded yet; one recording lasts up to 30 minutes. The shortcut can be turned off in *Settings → General*.
+Stop with **Stop**, the same shortcut again, or the tray item **Stop recording** — then `Recording 2026-10-24 15-30-05.mp4` (or `.gif`) appears in `Videos\DropWheel` (or your folder for clipboard pictures / the shared output folder), with a notification: *Open*, *Show in folder*, *Trim…*. The mouse pointer is recorded at 30 fps; sound comes from the microphone when *Microphone* is on in the toolbar (the Windows default microphone; if it's missing or busy, the video is recorded without sound and DropWheel says so); computer audio isn't recorded yet; one recording lasts up to 30 minutes. The shortcut can be turned off in *Settings → General*.
 
 ### ✏️ Annotate a picture
 
@@ -606,7 +606,7 @@ dropwheel-cli.exe convert clip.mp4 video-trim --start 0:05 --end 0:12 --exact
 - **From a browser — pictures only.** Dragging a picture works in Chrome, Edge and Firefox; other things on a page (videos, PDFs) aren't picked up — download them first. If the browser offers only a link to the picture, DropWheel shows a hint instead of downloading it.
 - **Folders: up to 1000 files at a time** (except *To ZIP* / *To 7Z*: folders of any size are packed whole). Folders copied to the clipboard are ignored by <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>V</kbd>.
 - **Trim** works on one video at a time; the instant mode starts at the nearest keyframe (tick *Frame-accurate* for an exact start). The trim window shows frames, it doesn't play the video.
-- **Screen recording has no sound yet** — neither system audio nor the microphone. Protected video (streaming services, other DRM content) comes out black; one recording lasts up to 30 minutes; there's no pause. The frame and *Stop* pill are hidden from the video only on Windows 10 2004 or newer.
+- **Screen recording captures only the microphone** — no computer audio (video, calls, games) yet; GIFs have no sound. Protected video (streaming services, other DRM content) comes out black; one recording lasts up to 30 minutes; there's no pause. The frame and *Stop* pill are hidden from the video only on Windows 10 2004 or newer.
 - **Screenshots:** no scrolling capture yet; to adjust a selection, simply drag a new one.
 - **Annotations** can't be moved or edited after drawing — undo with <kbd>Ctrl</kbd>+<kbd>Z</kbd> and draw again.
 - **<kbd>Ctrl</kbd>+<kbd>Alt</kbd> is <kbd>AltGr</kbd>** on some keyboard layouts (e.g. Polish), where <kbd>AltGr</kbd>+<kbd>S</kbd> types a letter. Change the screenshot shortcut in the settings or turn it off; the recording shortcut can be turned off there or changed in `settings.json` (`recordKeys`).
@@ -685,7 +685,7 @@ The screenshot shortcut — yes: *Settings → General* → *Ctrl+Alt+S — scre
 <details>
 <summary><b>Does screen recording capture sound?</b></summary>
 
-Not yet — only the picture and the mouse pointer. System audio and the microphone are on the [roadmap](#roadmap).
+The microphone — yes: choose **Microphone** in the recording toolbar (MP4 only). DropWheel uses the Windows default microphone (*Settings → Sound → Input*). If Windows blocks access (*Settings → Privacy → Microphone → Let desktop apps access*), the video is recorded without sound and DropWheel tells you. Computer audio is on the [roadmap](#roadmap).
 </details>
 
 <details>
@@ -746,7 +746,7 @@ Right-click the tray icon → *Report a problem*. A new GitHub issue opens in yo
 
 **Next:**
 
-- [ ] Screen recording with sound: system audio and the microphone; pause
+- [ ] Screen recording: computer audio (the microphone is already there); pause
 - [ ] Scrolling screenshots
 - [ ] Annotations: select and move a mark after drawing
 - [ ] Background removal for pictures

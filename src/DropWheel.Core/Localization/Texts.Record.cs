@@ -11,6 +11,13 @@ public sealed partial class Texts
         "Выделите область для записи · щелчок — окно · Enter — весь экран · Esc — отмена";
     public string RecordStart { get; init; } = "Записать";
     public string RecordStop { get; init; } = "Стоп";
+    public string RecordMicOff { get; init; } = "Без звука";
+    public string RecordMicOn { get; init; } = "Микрофон";
+    public string RecordMicName { get; init; } = "Звук: без звука / микрофон";
+    public string RecordMicMissing { get; init; } = "Микрофон не найден — записываю без звука.";
+    public string RecordMicFailed { get; init; } =
+        "Микрофон недоступен — записываю без звука. Возможно, он занят другой программой или запрещён " +
+        "в «Параметры → Конфиденциальность → Микрофон» (доступ для классических приложений).";
     /// <summary>Подсказка значка в трее во время записи ({0} — «00:12»).</summary>
     public string RecordTrayStatus { get; init; } = "идёт запись {0}";
     public string RecordSaving { get; init; } = "сохраняю запись…";

@@ -14,6 +14,9 @@ internal sealed partial class CaptureView
 {
     private RecordFormat? _record;
 
+    /// <summary>Писать звук с микрофона (выбор на панели записи; для GIF не действует — у GIF нет звука).</summary>
+    public bool Microphone { get; private set; }
+
     /// <summary>Режим записи: формат на панели; null — обычный снимок.</summary>
     public RecordFormat? RecordMode => _record;
 
@@ -36,6 +39,13 @@ internal sealed partial class CaptureView
         };
         formats.SelectionChanged += value => _record = (RecordFormat)value;
         row.Children.Add(formats);
+        var sound = new ChoicePills(p, [(false, Loc.T.RecordMicOff), (true, Loc.T.RecordMicOn)], Microphone, Loc.T.RecordMicName)
+        {
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(0, 0, 6, 0),
+        };
+        sound.SelectionChanged += value => Microphone = (bool)value;
+        row.Children.Add(sound);
         var start = new TrimView.PrimaryButton(p, "●  " + Loc.T.RecordStart) { Margin = new Thickness(0, 0, 2, 0) };
         start.Click += RequestRecord;
         row.Children.Add(start);

@@ -140,6 +140,12 @@ public sealed partial class Texts
         RecordHint = "Drag to select an area to record · click — a window · Enter — the whole screen · Esc — cancel",
         RecordStart = "Record",
         RecordStop = "Stop",
+        RecordMicOff = "No sound",
+        RecordMicOn = "Microphone",
+        RecordMicName = "Sound: none / microphone",
+        RecordMicMissing = "No microphone found — recording without sound.",
+        RecordMicFailed = "The microphone isn't available — recording without sound. Another app may be using it, or it's blocked " +
+            "in Settings → Privacy → Microphone (access for desktop apps).",
         RecordTrayStatus = "recording {0}",
         RecordSaving = "saving the recording…",
         RecordSaved = "Recording saved",

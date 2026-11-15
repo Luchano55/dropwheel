@@ -51,6 +51,8 @@ public static class ScreenRecord
         return
         [
             "-f", "gdigrab",
+            // Очередь кадров побольше: со звуком два входа читаются параллельно, иначе ffmpeg теряет кадры.
+            "-thread_queue_size", "512",
             "-framerate", Num(FrameRate),
             "-draw_mouse", "1",
             "-offset_x", Num(r.X),
@@ -61,21 +63,84 @@ public static class ScreenRecord
     }
 
     /// <summary>
-    /// Полная команда ffmpeg: общие ключи, вход (<see cref="GdigrabInput"/>; в тестах — генератор картинки),
-    /// H.264 во временный MP4. stdin оставлен открытым: «q» в него — штатная остановка с дописанным файлом.
+    /// Вход ffmpeg «микрофон»: DirectShow-устройство по имени, как его показывает <see cref="ParseAudioDevices"/>.
+    /// Имя передаётся отдельным аргументом целиком (ArgumentList) — пробелы и скобки в нём не мешают.
     /// </summary>
-    public static IReadOnlyList<string> Arguments(IReadOnlyList<string> input, string output, TimeSpan? maxDuration = null) =>
+    public static IReadOnlyList<string> MicrophoneInput(string device) =>
+        ["-f", "dshow", "-thread_queue_size", "1024", "-i", "audio=" + device];
+
+    /// <summary>
+    /// Полная команда ffmpeg: общие ключи, вход (<see cref="GdigrabInput"/>, со звуком — ещё <see cref="MicrophoneInput"/>;
+    /// в тестах — генераторы), H.264 (и AAC, если есть звук) во временный MP4.
+    /// stdin оставлен открытым: «q» в него — штатная остановка с дописанным файлом.
+    /// </summary>
+    public static IReadOnlyList<string> Arguments(IReadOnlyList<string> input, string output, TimeSpan? maxDuration = null,
+        bool audio = false) =>
     [
         "-hide_banner", "-nostats", "-y",
         .. input,
         "-c:v", "libx264", "-preset", "veryfast", "-crf", "23", "-pix_fmt", "yuv420p",
+        .. (audio ? (string[])["-c:a", "aac", "-b:a", "160k"] : []),
         "-movflags", "+faststart",
         "-t", Num((int)(maxDuration ?? MaxDuration).TotalSeconds),
         output,
     ];
 
-    /// <summary>Команда записи области экрана.</summary>
-    public static IReadOnlyList<string> Arguments(PixelRect region, string output) => Arguments(GdigrabInput(region), output);
+    /// <summary>Команда записи области экрана; <paramref name="microphone"/> — имя устройства или null (без звука).</summary>
+    public static IReadOnlyList<string> Arguments(PixelRect region, string output, string? microphone = null) =>
+        microphone is { Length: > 0 }
+            ? Arguments([.. GdigrabInput(region), .. MicrophoneInput(microphone)], output, audio: true)
+            : Arguments(GdigrabInput(region), output);
+
+    /// <summary>Команда, после которой ffmpeg перечисляет устройства DirectShow в stderr (и выходит с ошибкой — это нормально).</summary>
+    public static IReadOnlyList<string> ListDevicesArguments { get; } =
+        ["-hide_banner", "-list_devices", "true", "-f", "dshow", "-i", "dummy"];
+
+    /// <summary>
+    /// Имена микрофонов из вывода <see cref="ListDevicesArguments"/>. Новые сборки ffmpeg пишут
+    /// <c>"Микрофон (Realtek(R) Audio)" (audio)</c>, старые — раздел «DirectShow audio devices» со строками в кавычках;
+    /// строки «Alternative name» (служебные пути устройств) пропускаются.
+    /// </summary>
+    public static IReadOnlyList<string> ParseAudioDevices(string stderr)
+    {
+        var result = new List<string>();
+        var audioSection = false;
+        foreach (var raw in stderr.Split('\n'))
+        {
+            var line = raw.TrimEnd('\r');
+            if (line.Contains("DirectShow audio devices", StringComparison.OrdinalIgnoreCase)) { audioSection = true; continue; }
+            if (line.Contains("DirectShow video devices", StringComparison.OrdinalIgnoreCase)) { audioSection = false; continue; }
+            if (line.Contains("Alternative name", StringComparison.OrdinalIgnoreCase)) continue;
+            var start = line.IndexOf('"');
+            var end = start < 0 ? -1 : line.IndexOf('"', start + 1);
+            if (end <= start + 1) continue;
+            var name = line[(start + 1)..end];
+            var tail = line[(end + 1)..];
+            var isAudio = tail.Contains("(audio)", StringComparison.OrdinalIgnoreCase)
+                || (audioSection && !tail.Contains("(video)", StringComparison.OrdinalIgnoreCase));
+            if (isAudio && !result.Contains(name)) result.Add(name);
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// Какой микрофон писать: выбранный в настройках (если он подключён) → микрофон Windows по умолчанию →
+    /// первый в списке; микрофонов нет — null. Старый DirectShow обрезает имена до 31 символа, поэтому имя
+    /// по умолчанию из Windows может быть длиннее имени устройства — тогда сравнивается начало.
+    /// </summary>
+    public static string? PickMicrophone(IReadOnlyList<string> devices, string? preferred, string? windowsDefault)
+    {
+        if (devices.Count == 0) return null;
+        if (preferred is { Length: > 0 } && devices.Contains(preferred)) return preferred;
+        if (windowsDefault is { Length: > 0 })
+        {
+            if (devices.Contains(windowsDefault)) return windowsDefault;
+            var prefix = devices.Where(d => d.Length >= 8 && windowsDefault.StartsWith(d, StringComparison.Ordinal))
+                .MaxBy(d => d.Length);
+            if (prefix is not null) return prefix;
+        }
+        return devices[0];
+    }
 
     /// <summary>Вторая ступень для GIF — операция «GIF» каталога (15 кадров/с, не шире 640 px, своя палитра).</summary>
     public static Operation GifOperation => OperationCatalog.Find("to-gif")

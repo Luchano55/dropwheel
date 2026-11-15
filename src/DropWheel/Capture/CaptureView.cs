@@ -55,11 +55,13 @@ internal sealed partial class CaptureView : Canvas
     private SettingsPalette _palette;
 
     /// <param name="record">Режим записи экрана (D-RECORD) и выбранный в нём формат; null — снимок.</param>
-    public CaptureView(SettingsPalette palette, bool ocr, RecordFormat? record = null)
+    /// <param name="microphone">Режим записи: звук с микрофона включён на панели.</param>
+    public CaptureView(SettingsPalette palette, bool ocr, RecordFormat? record = null, bool microphone = false)
     {
         _palette = palette;
         _ocr = ocr;
         _record = record;
+        Microphone = microphone;
         ClipToBounds = true;
         Background = Brushes.Black;
         Cursor = Cursors.Cross;

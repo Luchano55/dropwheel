@@ -11,8 +11,8 @@ internal sealed partial class CaptureOverlay
 {
     private readonly bool _recordMode;
 
-    /// <summary>Нажата «Записать»: область, мониторы (границы и DPI) и формат.</summary>
-    public event Action<PixelRect, IReadOnlyList<CaptureMonitor>, RecordFormat>? RecordRequested;
+    /// <summary>Нажата «Записать»: область, мониторы (границы и DPI), формат и звук с микрофона.</summary>
+    public event Action<PixelRect, IReadOnlyList<CaptureMonitor>, RecordFormat, bool>? RecordRequested;
 
     /// <summary>Клавиши режима записи. true — обработано (Esc и прочее — как у снимка).</summary>
     private bool OnRecordKey(KeyEventArgs e)
@@ -44,8 +44,9 @@ internal sealed partial class CaptureOverlay
     {
         if (_closed || _session.Selection is not { } selection) return;
         var monitors = _frame.Monitors;
-        _log.Write($"Запись экрана: область {selection}, {format}");
+        var microphone = ToolbarView()?.Microphone ?? false;
+        _log.Write($"Запись экрана: область {selection}, {format}" + (microphone ? ", с микрофоном" : ""));
         Close();
-        RecordRequested?.Invoke(selection, monitors, format);
+        RecordRequested?.Invoke(selection, monitors, format, microphone);
     }
 }

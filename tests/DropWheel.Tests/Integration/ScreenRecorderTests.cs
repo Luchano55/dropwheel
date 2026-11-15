@@ -52,6 +52,22 @@ public class ScreenRecorderTests : IDisposable
     }
 
     [SkippableFact]
+    public async Task Recording_with_microphone_has_an_audio_track()
+    {
+        Skip.IfNot(Tools.HasFfmpeg, "нет ffmpeg");
+        // Вместо микрофона (dshow есть только в Windows) — генератор тона в реальном времени.
+        using var recorder = ScreenRecorder.Start(Tools.Locator, _dir.Path, temp => ScreenRecord.Arguments(
+            ["-re", "-f", "lavfi", "-i", "testsrc=size=320x240:rate=30", "-re", "-f", "lavfi", "-i", "sine=frequency=440:sample_rate=48000"],
+            temp, TimeSpan.FromSeconds(1), audio: true));
+        await recorder.Exited;
+
+        var path = await recorder.SaveAsync(RecordFormat.Mp4, _dir.Path, ScreenRecord.FileStem(Now), _converter);
+
+        Assert.Equal("h264\naac", Probe(path, "stream=codec_name").Replace("\r", "").Trim());
+        AssertNoTemp();
+    }
+
+    [SkippableFact]
     public async Task Second_recording_in_the_same_second_gets_free_name()
     {
         Skip.IfNot(Tools.HasFfmpeg, "нет ffmpeg");

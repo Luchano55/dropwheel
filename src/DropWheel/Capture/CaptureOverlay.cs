@@ -27,7 +27,8 @@ internal sealed partial class CaptureOverlay
     private bool _wasActive;
 
     /// <param name="record">Режим записи экрана (D-RECORD) с форматом по умолчанию; null — снимок.</param>
-    public CaptureOverlay(ScreenCapture.Frame frame, bool ocr, FileLog log, RecordFormat? record = null)
+    /// <param name="microphone">Режим записи: звук с микрофона включён на панели (последний выбор).</param>
+    public CaptureOverlay(ScreenCapture.Frame frame, bool ocr, FileLog log, RecordFormat? record = null, bool microphone = false)
     {
         _frame = frame;
         _log = log;
@@ -39,7 +40,7 @@ internal sealed partial class CaptureOverlay
             var b = monitor.Bounds;
             var part = new CroppedBitmap(frame.Image, new Int32Rect(b.X - frame.Bounds.X, b.Y - frame.Bounds.Y, b.Width, b.Height));
             part.Freeze();
-            var view = new CaptureView(palette, ocr, record) { Frame = part, Width = monitor.DipWidth, Height = monitor.DipHeight };
+            var view = new CaptureView(palette, ocr, record, microphone) { Frame = part, Width = monitor.DipWidth, Height = monitor.DipHeight };
             var window = new CaptureWindow(monitor, view);
             view.ActionRequested += Finish;
             view.CloseRequested += Close;

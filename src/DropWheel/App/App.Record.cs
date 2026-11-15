@@ -22,6 +22,10 @@ public partial class App
     private (RecordFormat Format, string Folder, string Stem)? _recordTarget;
     private RecordFrameWindow? _recordFrame;
     private RecordPillWindow? _recordPill;
+    /// <summary>Что записываем сейчас — чтобы при сбое микрофона перезапустить ту же запись без звука.</summary>
+    private (PixelRect Region, IReadOnlyList<CaptureMonitor> Monitors, string Folder, string? Microphone, DateTime Started)? _recordRun;
+    /// <summary>ffmpeg с микрофоном вышел раньше этого — микрофон не открылся (занят, запрещён): пишем без звука.</summary>
+    private static readonly TimeSpan MicFailureWindow = TimeSpan.FromSeconds(3);
     private DispatcherTimer? _recordTimer;
 
     /// <summary>Сколько ждать, пока ffmpeg допишет файл после «q», прежде чем убить его.</summary>
@@ -100,7 +104,8 @@ public partial class App
         try
         {
             var frame = ScreenCapture.Take();
-            var overlay = new CaptureOverlay(frame, ocr: false, Log, Settings.RecordGif ? RecordFormat.Gif : RecordFormat.Mp4);
+            var overlay = new CaptureOverlay(frame, ocr: false, Log, Settings.RecordGif ? RecordFormat.Gif : RecordFormat.Mp4,
+                Settings.RecordMicrophone);
             overlay.RecordRequested += OnRecordRequested;
             overlay.Closed += () =>
             {
@@ -122,29 +127,39 @@ public partial class App
         }
     }
 
-    private void OnRecordRequested(PixelRect region, IReadOnlyList<CaptureMonitor> monitors, RecordFormat format)
+    private void OnRecordRequested(PixelRect region, IReadOnlyList<CaptureMonitor> monitors, RecordFormat format, bool microphone)
     {
         if (!_recordSession.Start(DateTime.Now)) return;
-        UpdateSettings(s => s with { RecordGif = format == RecordFormat.Gif });
+        UpdateSettings(s => s with { RecordGif = format == RecordFormat.Gif, RecordMicrophone = microphone });
         var folder = ScreenRecord.Folder(Settings.ClipboardFolder, Settings.Conversion);
         _recordTarget = (format, folder, ScreenRecord.FileStem(DateTime.Now));
+        // Микрофон ищем, пока оверлей исчезает (запуск ffmpeg со списком устройств — доли секунды). У GIF звука нет.
+        var withSound = microphone && format == RecordFormat.Mp4;
+        var tools = new ToolLocator { FfmpegPath = Settings.FfmpegPath, MagickPath = Settings.MagickPath };
+        var preferred = Settings.RecordMicrophoneDevice;
+        var device = withSound
+            ? Task.Run(() => Microphones.Find(tools, preferred, Log.Write))
+            : Task.FromResult<string?>(null);
         var timer = new DispatcherTimer(DispatcherPriority.Normal, Dispatcher) { Interval = RecordStartDelay };
-        timer.Tick += (_, _) =>
+        timer.Tick += async (_, _) =>
         {
             timer.Stop();
-            StartRecorder(region, monitors, folder);
+            var mic = await device;
+            if (withSound && mic is null) _tray?.ShowInfo(Loc.T.TrayRecord, Loc.T.RecordMicMissing);
+            StartRecorder(region, monitors, folder, mic);
         };
         timer.Start();
     }
 
-    private void StartRecorder(PixelRect region, IReadOnlyList<CaptureMonitor> monitors, string folder)
+    private void StartRecorder(PixelRect region, IReadOnlyList<CaptureMonitor> monitors, string folder, string? microphone)
     {
         var area = ScreenRecord.EvenSize(region);
         ScreenRecorder recorder;
         try
         {
             var tools = new ToolLocator { FfmpegPath = Settings.FfmpegPath, MagickPath = Settings.MagickPath };
-            recorder = ScreenRecorder.Start(tools, folder, temp => ScreenRecord.Arguments(area, temp), Log.Write);
+            recorder = ScreenRecorder.Start(tools, folder, temp => ScreenRecord.Arguments(area, temp, microphone), Log.Write);
+            _recordRun = (region, monitors, folder, microphone, DateTime.Now);
         }
         catch (Exception ex)
         {
@@ -198,6 +213,18 @@ public partial class App
     private void OnRecorderExited(ScreenRecorder recorder)
     {
         if (!ReferenceEquals(recorder, _recorder)) return;
+        // С микрофоном ffmpeg вышел сразу, а «Стоп» не нажимали: микрофон не открылся — та же запись без звука.
+        if (_recordRun is { Microphone: not null } run && _recordSession.State == RecordState.Recording
+            && DateTime.Now - run.Started < MicFailureWindow)
+        {
+            Log.Write($"Запись экрана: с микрофоном «{run.Microphone}» не началась — пишу без звука\n{recorder.StderrTail}");
+            CloseRecordWindows();
+            _recorder = null;
+            recorder.Dispose();
+            _tray?.ShowInfo(Loc.T.TrayRecord, Loc.T.RecordMicFailed);
+            StartRecorder(run.Region, run.Monitors, run.Folder, null);
+            return;
+        }
         var elapsed = _recordSession.Elapsed(DateTime.Now);
         // ffmpeg вышел сам: сработал предел длины или ошибка (монитор отключили, захват недоступен).
         if (_recordSession.Stop())
@@ -232,6 +259,7 @@ public partial class App
             {
                 _recorder = null;
                 _recordTarget = null;
+                _recordRun = null;
                 _recordSession.Finished();
                 _tray?.SetRecording(null);
             }
