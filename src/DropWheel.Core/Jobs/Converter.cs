@@ -92,12 +92,14 @@ public sealed class Converter(ToolLocator tools, ConversionSettings settings, IE
         if (inputs.Count < op.MinFiles)
             throw new ConversionException(Loc.F(Loc.T.ErrMinFiles, Loc.Label(op), op.MinFiles));
 
-        var full = inputs.Select(Path.GetFullPath).ToList();
+        // «C:\Отпуск\» → «C:\Отпуск»: иначе папкой результата стала бы сама папка, а не её родитель.
+        var full = inputs.Select(p => Path.TrimEndingDirectorySeparator(Path.GetFullPath(p))).ToList();
         // Файл уже в нужном формате: в папку-результат — копией (только по просьбе target).
         var copyAsIs = target is { CopySameFormat: true } && full.Count == 1
             && !op.AppliesTo(Path.GetExtension(full[0])) && op.AlreadyIn(Path.GetExtension(full[0]));
         foreach (var input in full)
         {
+            if (op.AcceptsFolders && Directory.Exists(input)) continue; // папка в архив — целиком
             if (!File.Exists(input)) throw new ConversionException(Loc.T.ErrFileNotFound, input);
             if (!copyAsIs && !op.AppliesTo(Path.GetExtension(input)))
                 throw new ConversionException(Loc.F(Loc.T.ErrNotApplicable, Loc.Label(op)), $"{op.Id}: {input}");

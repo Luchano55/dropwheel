@@ -405,7 +405,7 @@ public partial class App : Application
     {
         Log.Write($"Выбор операции для {paths.Count} файл(ов)");
         folders ??= ExpandFolders(paths);
-        if (folders is not null && !CanOfferFolders(folders)) return;
+        if (folders is not null && !CanOfferFolders(folders, packOnly: true)) return;
         var offer = folders is null
             ? new WheelOffer(OperationCatalog.ForFiles(paths, Queue.Converter.CanRun), WheelGroups.ForFiles(paths), null)
             : FolderPlan.OfferFor(folders, Queue.Converter.CanRun);
@@ -459,7 +459,14 @@ public partial class App : Application
             return;
         }
         string group;
-        if (folders is not null)
+        if (folders is not null && op.AcceptsFolders)
+        {
+            // «В ZIP» / «В 7Z»: папки — в архив целиком, с подпапками; одна задача на весь выбор.
+            Log.Write($"{op.Id}: {paths.Count} элемент(ов) с папками — в один архив");
+            Queue.EnqueueSelection(paths, op);
+            group = FolderPlan.DominantGroup(folders.AllFiles);
+        }
+        else if (folders is not null)
         {
             if (!EnqueueFolders(folders, op)) return;
             group = FolderPlan.DominantGroup(folders.AllFiles);

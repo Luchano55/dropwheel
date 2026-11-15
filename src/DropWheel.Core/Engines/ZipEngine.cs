@@ -33,14 +33,14 @@ public sealed class ZipEngine : IInternalEngine
     };
 
     /// <summary>
-    /// Имя архива (без «.zip»): один файл — как файл (photo.jpg → photo.zip);
-    /// несколько — как папка первого файла (как «Добавить к "Папка.zip"» в 7-Zip),
-    /// а если это корень диска — снова по первому файлу.
+    /// Имя архива (без «.zip»): один файл — как файл (photo.jpg → photo.zip), одна папка — как папка
+    /// (Отпуск.2024 → Отпуск.2024.zip); несколько — как папка, где они лежат (как «Добавить к "Папка.zip"» в 7-Zip),
+    /// а если это корень диска — снова по первому.
     /// </summary>
     public static string ArchiveName(IReadOnlyList<string> inputs)
     {
-        var first = inputs[0];
-        var stem = Path.GetFileNameWithoutExtension(first);
+        var first = Path.TrimEndingDirectorySeparator(inputs[0]);
+        var stem = Directory.Exists(first) ? Path.GetFileName(first) : Path.GetFileNameWithoutExtension(first);
         if (stem.Length == 0) stem = Path.GetFileName(first); // «.gitignore» → «.gitignore.zip»
         if (inputs.Count == 1) return stem;
         var folder = Path.GetFileName(Path.GetDirectoryName(Path.GetFullPath(first)));
@@ -49,23 +49,52 @@ public sealed class ZipEngine : IInternalEngine
 
     // ---------- Упаковка ----------
 
-    /// <summary>Записи — по именам файлов (UTF-8, .NET ставит флаг UTF-8); одинаковые имена → «name (1).ext».</summary>
+    /// <summary>
+    /// Записи — по именам файлов (UTF-8, .NET ставит флаг UTF-8); одинаковые имена → «name (1).ext».
+    /// Папка ложится в архив целиком: «Отпуск/», «Отпуск/море/1.jpg», пустые подпапки — тоже.
+    /// </summary>
     public static async Task PackAsync(IReadOnlyList<string> inputs, string output,
         IProgress<double>? progress, CancellationToken ct)
     {
-        var report = new ByteProgress(inputs.Sum(p => new FileInfo(p).Length), progress);
+        // Что и под каким именем писать: (файл на диске или null для пустой папки, имя записи).
+        var items = new List<(string? File, string Entry)>();
         var used = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var raw in inputs)
+        {
+            var input = Path.TrimEndingDirectorySeparator(raw);
+            if (!Directory.Exists(input))
+            {
+                items.Add((input, UniqueName(Path.GetFileName(input), used)));
+                continue;
+            }
+            var root = UniqueName(Path.GetFileName(input), used);
+            items.Add((null, root + "/"));
+            foreach (var path in Directory.EnumerateFileSystemEntries(input, "*", new EnumerationOptions
+                     { RecurseSubdirectories = true, AttributesToSkip = FileAttributes.ReparsePoint, IgnoreInaccessible = true }))
+            {
+                var name = root + "/" + Path.GetRelativePath(input, path).Replace(Path.DirectorySeparatorChar, '/');
+                if (Directory.Exists(path)) items.Add((null, name + "/"));
+                else items.Add((path, name));
+            }
+        }
+        if (items.Count > MaxEntries) throw new ConversionException(Loc.T.ErrArchiveTooManyFiles, $"{items.Count} > {MaxEntries}");
 
+        var report = new ByteProgress(items.Where(i => i.File is not null).Sum(i => new FileInfo(i.File!).Length), progress);
         await using var stream = new FileStream(output, FileMode.Create, FileAccess.ReadWrite, FileShare.None,
             BufferSize, useAsync: true);
         using var zip = new ZipArchive(stream, ZipArchiveMode.Create, leaveOpen: true);
-        foreach (var input in inputs)
+        foreach (var (file, name) in items)
         {
             ct.ThrowIfCancellationRequested();
-            var entry = zip.CreateEntry(UniqueName(Path.GetFileName(input), used), CompressionLevel.Optimal);
-            entry.LastWriteTime = ZipTime(File.GetLastWriteTime(input));
+            if (file is null)
+            {
+                zip.CreateEntry(name); // папка: запись с «/» на конце
+                continue;
+            }
+            var entry = zip.CreateEntry(name, CompressionLevel.Optimal);
+            entry.LastWriteTime = ZipTime(File.GetLastWriteTime(file));
 
-            await using var source = new FileStream(input, FileMode.Open, FileAccess.Read,
+            await using var source = new FileStream(file, FileMode.Open, FileAccess.Read,
                 FileShare.ReadWrite | FileShare.Delete, BufferSize, useAsync: true);
             await using var target = entry.Open();
             await CopyAsync(source, target, long.MaxValue, report, ct);

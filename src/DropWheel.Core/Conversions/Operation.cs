@@ -66,6 +66,11 @@ public sealed record Operation(
     /// null — имя первого входа (photo.heic → photo). Пример: ZIP из нескольких файлов — по имени папки.
     /// </summary>
     public Func<IReadOnlyList<string>, string>? ResultStem { get; init; }
+    /// <summary>
+    /// true — входом может быть и папка целиком (упаковка в архив: папка попадает в архив со всеми подпапками).
+    /// Такие операции папки не разворачивают в файлы (D-FOLDERS), а получают как есть.
+    /// </summary>
+    public bool AcceptsFolders { get; init; }
     /// <summary>Сколько файлов можно максимум (обрезка видео — только один: у окна обрезки один ролик).</summary>
     public int MaxFiles { get; init; } = int.MaxValue;
     /// <summary>

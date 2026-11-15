@@ -122,11 +122,66 @@ public class ZipEngineTests : IDisposable
         Assert.EndsWith(".zip", job.OutputPath);
     }
 
+    // ---------- Папки целиком ----------
+
+    [Fact]
+    public async Task Pack_one_folder_keeps_structure_and_is_named_like_the_folder()
+    {
+        var a = Bytes(Path.Combine("Отпуск.2024", "море", "1.jpg"), 3000, seed: 4);
+        var b = Bytes(Path.Combine("Отпуск.2024", "заметки.txt"), 500, seed: 5);
+        Directory.CreateDirectory(Path.Combine(_dir.Path, "Отпуск.2024", "пусто"));
+        var folder = Path.Combine(_dir.Path, "Отпуск.2024") + Path.DirectorySeparatorChar; // с «\» на конце — как из проводника
+
+        var result = await _converter.ConvertAsync([folder], Pack);
+
+        Assert.Equal(Path.Combine(_dir.Path, "Отпуск.2024.zip"), result);
+        using var zip = ZipFile.OpenRead(result);
+        Assert.Equal(
+            ["Отпуск.2024/", "Отпуск.2024/заметки.txt", "Отпуск.2024/море/", "Отпуск.2024/море/1.jpg", "Отпуск.2024/пусто/"],
+            zip.Entries.Select(e => e.FullName).Order(StringComparer.Ordinal));
+        using var ms = new MemoryStream();
+        zip.GetEntry("Отпуск.2024/море/1.jpg")!.Open().CopyTo(ms);
+        Assert.Equal(File.ReadAllBytes(a), ms.ToArray());
+        AssertNoTempLeft();
+    }
+
+    [Fact]
+    public async Task Several_folders_and_a_file_go_into_one_archive_next_to_them()
+    {
+        Bytes(Path.Combine("Дача", "1.jpg"), 100, seed: 6);
+        Bytes(Path.Combine("Море", "1.jpg"), 200, seed: 7);
+        var list = Bytes("список.txt", 50, seed: 8);
+        var dacha = Path.Combine(_dir.Path, "Дача");
+        var more = Path.Combine(_dir.Path, "Море");
+
+        var queue = new JobQueue(_converter);
+        var job = Assert.Single(queue.EnqueueSelection([dacha, more, list], Pack));
+        await job.Completion;
+
+        Assert.Equal(JobState.Done, job.State);
+        // Архив — рядом с папками, по имени папки, где они лежат.
+        Assert.Equal(_dir.Path, Path.GetDirectoryName(job.OutputPath));
+        Assert.Equal(Path.GetFileName(_dir.Path) + ".zip", Path.GetFileName(job.OutputPath));
+        using var zip = ZipFile.OpenRead(job.OutputPath!);
+        Assert.Equal(["Дача/", "Дача/1.jpg", "Море/", "Море/1.jpg", "список.txt"],
+            zip.Entries.Select(e => e.FullName).Order(StringComparer.Ordinal));
+        AssertNoTempLeft();
+    }
+
+    [Fact]
+    public async Task Folders_are_not_accepted_by_other_operations()
+    {
+        var folder = Path.Combine(_dir.Path, "Папка");
+        Directory.CreateDirectory(folder);
+        await Assert.ThrowsAsync<ConversionException>(() => _converter.ConvertAsync([folder], Extract));
+    }
+
     [Theory]
     [InlineData(new[] { "/д/фото.jpg" }, "фото")]
     [InlineData(new[] { "/д/.gitignore" }, ".gitignore")]
     [InlineData(new[] { "/д/Отпуск/1.jpg", "/д/Отпуск/2.jpg" }, "Отпуск")]
     [InlineData(new[] { "/1.jpg", "/2.jpg" }, "1")]
+    [InlineData(new[] { "/д/Мама/", "/д/Папа" }, "д")]
     public void Archive_name_rule(string[] inputs, string expected)
     {
         Assert.Equal(expected, ZipEngine.ArchiveName(inputs));

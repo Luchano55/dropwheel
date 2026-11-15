@@ -142,7 +142,8 @@ public static class FolderPlan
     /// <summary>
     /// Операции для файлов из папок: по преобладающему типу. Операция подходит, если каждый файл этого типа
     /// она обрабатывает или он уже в нужном формате (JPG в папке для «JPG» — скопируется как есть).
-    /// Упаковка всего в один архив («В ZIP», «В 7Z») для папок не предлагается: она складывает файлы без подпапок.
+    /// Упаковка в архив («В ZIP», «В 7Z») сюда не входит — её добавляет <see cref="OfferFor(FolderSelection, Func{Operation, string, bool}?)"/>:
+    /// папки уходят в архив целиком, с подпапками.
     /// </summary>
     public static IReadOnlyList<Operation> Offer(IReadOnlyList<string> files, Func<Operation, string, bool>? available = null)
     {
@@ -192,8 +193,17 @@ public static class FolderPlan
     public static WheelOffer OfferFor(FolderSelection selection, Func<Operation, string, bool>? available = null)
     {
         var files = selection.AllFiles;
-        if (selection.TooMany || files.Count == 0) return new([], WheelGroups.Any, selection);
-        return new(Offer(files, available), DominantGroup(files), selection);
+        if (files.Count == 0) return new([], WheelGroups.Any, selection);
+        // Слишком много файлов для поштучной работы — но упаковать папки в архив можно и тогда.
+        if (selection.TooMany) return new(Packers(files, available), WheelGroups.Any, selection);
+        return new([.. Offer(files, available), .. Packers(files, available)], DominantGroup(files), selection);
+    }
+
+    /// <summary>«В ZIP» / «В 7Z» для выбора с папками: все папки и файлы — в один архив, со структурой папок.</summary>
+    public static IReadOnlyList<Operation> Packers(IReadOnlyList<string> files, Func<Operation, string, bool>? available = null)
+    {
+        var extension = files.Count > 0 ? Path.GetExtension(files[0]) : "";
+        return OperationCatalog.All.Where(op => op.AcceptsFolders && op.OnWheel && Accepts(op, extension, available)).ToList();
     }
 
     private static bool Accepts(Operation op, string extension, Func<Operation, string, bool>? available) =>

@@ -23,10 +23,13 @@ public partial class App
     private static string FoldersTitle(FolderSelection folders) =>
         folders.Folders.Count == 1 ? FolderPlan.FolderName(folders.Folders[0].Root) : Loc.Count(folders.Folders.Count, Loc.T.Folders);
 
-    /// <summary>Слишком много файлов или пусто — подсказка в трее вместо колеса.</summary>
-    private bool CanOfferFolders(FolderSelection folders)
+    /// <summary>
+    /// Слишком много файлов или пусто — подсказка в трее вместо колеса.
+    /// packOnly — для колеса: при слишком большом числе файлов на нём остаётся упаковка в архив.
+    /// </summary>
+    private bool CanOfferFolders(FolderSelection folders, bool packOnly = false)
     {
-        if (folders.TooMany)
+        if (folders.TooMany && !packOnly)
         {
             Log.Write($"Папка: больше {FolderPlan.MaxFiles} файлов — не берём");
             _tray?.ShowInfo(FoldersTitle(folders), Loc.F(Loc.T.FolderTooMany, FolderPlan.MaxFiles));

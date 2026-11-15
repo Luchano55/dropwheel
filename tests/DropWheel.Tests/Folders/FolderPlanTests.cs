@@ -155,7 +155,7 @@ public class FolderPlanTests : IDisposable
         Assert.Contains("to-png", ops);
         Assert.Contains("img-compress", ops);
         Assert.Contains("images-to-pdf", ops);
-        // Видео в меньшинстве — его операций нет; упаковки всего в один архив для папок нет.
+        // Видео в меньшинстве — его операций нет; упаковку в архив добавляет OfferFor (папки целиком), не Offer.
         Assert.DoesNotContain("to-mp4", ops);
         Assert.DoesNotContain(Engines.ZipEngine.PackId, ops);
         Assert.DoesNotContain(Engines.SevenZip.PackId, ops);
@@ -222,7 +222,7 @@ public class FolderPlanTests : IDisposable
     }
 
     [Fact]
-    public void Offer_for_too_big_or_empty_folder_is_empty()
+    public void Offer_for_empty_folder_is_empty_and_too_big_folder_can_only_be_packed()
     {
         var empty = Folder("Пусто");
         Assert.Empty(FolderPlan.OfferFor([empty]).Operations);
@@ -230,8 +230,28 @@ public class FolderPlanTests : IDisposable
         var big = Folder("Много");
         for (var i = 0; i < 3; i++) Touch($"Много/{i}.jpg");
         var offer = FolderPlan.OfferFor([big], maxFiles: 2);
-        Assert.Empty(offer.Operations);
+        Assert.Equal([Engines.ZipEngine.PackId, Engines.SevenZip.PackId], offer.Operations.Select(o => o.Id));
         Assert.True(offer.Folders!.TooMany);
+    }
+
+    [Fact]
+    public void Several_folders_and_files_get_pack_to_one_archive()
+    {
+        var a = Folder("Отпуск");
+        Touch("Отпуск/море/1.jpg");
+        var b = Folder("Дача");
+        Touch("Дача/2.jpg");
+        var loose = Touch("список.txt");
+
+        var ops = FolderPlan.OfferFor([a, b, loose]).Operations.Select(o => o.Id).ToList();
+        Assert.Contains(Engines.ZipEngine.PackId, ops);
+        Assert.Contains(Engines.SevenZip.PackId, ops);
+        Assert.Contains("to-png", ops); // поштучные операции по-прежнему есть
+
+        // 7-Zip не установлен — «В 7Z» не предлагается.
+        var noSeven = FolderPlan.OfferFor([a, b], (op, _) => op.Engine != EngineKind.SevenZip).Operations.Select(o => o.Id);
+        Assert.Contains(Engines.ZipEngine.PackId, noSeven);
+        Assert.DoesNotContain(Engines.SevenZip.PackId, noSeven);
     }
 
     // ---------- имя папки-результата ----------

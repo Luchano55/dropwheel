@@ -113,7 +113,7 @@ public static class OperationCatalog
         // ZIP (встроенный движок ZipEngine). «В ZIP» — для любых файлов, все выбранные в один архив;
         // «Распаковать» — в папку с именем архива (photos.zip → photos, занято → photos (1)).
         new(Engines.ZipEngine.PackId, "В ZIP", Tool, Any, Zip, "", OutputRule.Fixed("zip"))
-            { Inputs = InputMode.Combine, ResultStem = Engines.ZipEngine.ArchiveName },
+            { Inputs = InputMode.Combine, ResultStem = Engines.ZipEngine.ArchiveName, AcceptsFolders = true },
         new(Engines.ZipEngine.ExtractId, "Распаковать", Tool, Archive, Zip, "", OutputRule.Fixed("zip"))
             { Result = ResultKind.Folder, InputExtensions = ["zip"] },
 
@@ -146,8 +146,9 @@ public static class OperationCatalog
         new(Engines.SevenZip.ExtractId, "Распаковать", Tool, Archive, SevenZip, "x -y -bso0 -bsp1 -sccUTF-8 -o{out} -pnopassword -- {in}", OutputRule.Fixed("7z"))
             { Result = ResultKind.Folder, InputExtensions = [.. Extensions.Archive.Except(["zip"])], ResultStem = Engines.SevenZip.FolderName },
         // В 7Z: записи — по именам файлов (без папок), имя архива — как у «В ZIP».
+        // Папку 7-Zip кладёт в архив целиком, с подпапками (корень архива — сама папка).
         new(Engines.SevenZip.PackId, "В 7Z", Tool, Any, SevenZip, "a -t7z -mx=7 -bso0 -bsp1 -sccUTF-8 -spd -sse {out} -- {ins}", OutputRule.Fixed("7z"))
-            { Inputs = InputMode.Combine, ResultStem = Engines.ZipEngine.ArchiveName },
+            { Inputs = InputMode.Combine, ResultStem = Engines.ZipEngine.ArchiveName, AcceptsFolders = true },
         // PDF: текст (poppler pdftotext; у скана текста нет — ошибка, см. PdfText), повернуть все страницы (qpdf).
         new("pdf-to-txt", "TXT (текст)", Conv, Pdf, Pdftotext, "-layout -enc UTF-8 {in} {out}", OutputRule.Fixed("txt")),
         // Быстрый Markdown: текст pdftotext в порядке чтения (без -layout — абзацы не рвутся колонками), без разметки.

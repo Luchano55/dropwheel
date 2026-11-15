@@ -257,7 +257,7 @@ The same three steps work for a **whole folder** (`Vacation` → `Vacation (JPG)
 
 The wheel only offers what makes sense for the file you are dragging: a `.jpg` never gets “→ JPG”, a video never gets “→ PDF”. With several files of different types you get the operations they have in common. Result names below are as in the English interface; in the Russian interface the tags are Russian (`photo (сжато).jpg`).
 
-**Folders** get the operations for the kind of file they mostly contain (a folder of photos → the photo wheel). The operation is applied to every file inside that it fits, subfolders included; results go to a new folder next to it — `Vacation` → `Vacation (JPG)`, `Vacation (compressed)` — with the same subfolders. Files already in the target format are copied as they are, unsuitable files are skipped and counted in the notification. *One PDF* and *Merge* make a single file named after the folder (`Vacation (all).pdf`). ZIP and 7Z aren't offered for folders.
+**Folders** get the operations for the kind of file they mostly contain (a folder of photos → the photo wheel). The operation is applied to every file inside that it fits, subfolders included; results go to a new folder next to it — `Vacation` → `Vacation (JPG)`, `Vacation (compressed)` — with the same subfolders. Files already in the target format are copied as they are, unsuitable files are skipped and counted in the notification. *One PDF* and *Merge* make a single file named after the folder (`Vacation (all).pdf`). *To ZIP* and *To 7Z* put folders into the archive whole, with every subfolder: one folder → `Vacation.zip`, several folders (files may be mixed in) → one archive named after the folder they're in; the 1000-file limit doesn't apply to archives.
 
 **Needs:** — = nothing, works on any PC right after unzipping · **Office** = Microsoft Office 2013 or newer installed (most also work with the free LibreOffice — see Office documents) · **Edge** = Edge WebView2 Runtime, already part of Windows 10/11 · **OCR** = a Windows OCR language (see [Known limitations](#known-limitations)). Office, Edge and OCR operations are done by the tray app, not by `dropwheel-cli` (LibreOffice works in both).
 
@@ -392,7 +392,7 @@ Tools keep the format for ordinary pictures; HEIC, AVIF, SVG, PSD and RAW come o
 
 | | Operation | What you get | Needs | CLI id |
 |---|---|---|---|---|
-| Tool | Pack to ZIP (any files) | one file → `photo.zip`; several files → one archive named after their folder | — (built in) | `zip-pack` |
+| Tool | Pack to ZIP (any files) | one file → `photo.zip`; several files → one archive named after their folder; folders go in whole, with subfolders | — (built in) | `zip-pack` |
 | Tool | Pack to 7Z (any files) | the same, as a 7Z archive | — (bundled 7-Zip) | `pack-7z` |
 | Tool | Extract ZIP | into a folder named after the archive; Cyrillic names from old Windows archivers are read correctly; archives with paths outside the folder (Zip Slip) are refused | — (built in) | `zip-extract` |
 | Tool | Extract 7Z · RAR · TAR · GZ · TGZ · BZ2 · XZ | into a folder named after the archive; `.tar.gz` goes straight to the files | — (bundled 7-Zip) | `archive-extract` |
@@ -604,7 +604,7 @@ dropwheel-cli.exe convert clip.mp4 video-trim --start 0:05 --end 0:12 --exact
 - **Scanned PDFs have no text**, so PDF → TXT reports it: export the pages as PNG and use OCR.
 - **Password-protected** archives and Office documents aren't supported (PDF passwords are — see *Protect…* / *Remove password…*).
 - **From a browser — pictures only.** Dragging a picture works in Chrome, Edge and Firefox; other things on a page (videos, PDFs) aren't picked up — download them first. If the browser offers only a link to the picture, DropWheel shows a hint instead of downloading it.
-- **Folders: up to 1000 files at a time**, and ZIP / 7Z aren't offered for folders (Windows' own *Send to → Compressed (zipped) folder* keeps the subfolders). Folders copied to the clipboard are ignored by <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>V</kbd>.
+- **Folders: up to 1000 files at a time** (except *To ZIP* / *To 7Z*: folders of any size are packed whole). Folders copied to the clipboard are ignored by <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>V</kbd>.
 - **Trim** works on one video at a time; the instant mode starts at the nearest keyframe (tick *Frame-accurate* for an exact start). The trim window shows frames, it doesn't play the video.
 - **Screen recording has no sound yet** — neither system audio nor the microphone. Protected video (streaming services, other DRM content) comes out black; one recording lasts up to 30 minutes; there's no pause. The frame and *Stop* pill are hidden from the video only on Windows 10 2004 or newer.
 - **Screenshots:** no scrolling capture yet; to adjust a selection, simply drag a new one.

@@ -5,6 +5,17 @@
 
 Each version section starts with `## <version>`; CI copies it into the GitHub release notes.
 
+## 1.4.1
+
+**Новое в этой версии**
+- «В ZIP» и «В 7Z» для папок: перетащите на колесо одну или несколько папок (можно вместе с файлами) — они попадут
+  в один архив целиком, со всеми подпапками. Одна папка → «Отпуск.zip», несколько → архив по имени папки, где они
+  лежат. Для архива нет ограничения в 1000 файлов.
+
+**New**
+- *To ZIP* and *To 7Z* for folders: drop one or several folders (files may be mixed in) on the wheel — they go into one
+  archive whole, with every subfolder. No 1000-file limit for archives.
+
 ## 1.4.0
 
 **Новое в этой версии**
