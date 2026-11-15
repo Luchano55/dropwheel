@@ -46,13 +46,13 @@ public class FeatureScreenshots
 
     /// <summary>
     /// Колесо для папки, как после «Конвертировать…» в проводнике (режим клика): операции по содержимому папки,
-    /// в «пилюле» — размер всех файлов; в «Инструментах» — «Один PDF» и нет архивов.
+    /// в «пилюле» — размер всех файлов; в «Инструментах» — «Один PDF» и «В ZIP» / «В 7Z» (папка целиком).
     /// </summary>
     internal static void FolderWheel(bool light, OperationMode mode, int? hover, string folderName, string name)
     {
         var offer = FolderPlan.OfferFor(Vacation(folderName));
         Assert.Equal(WheelGroups.Photo, offer.Group);
-        Assert.DoesNotContain(offer.Operations, o => o.Id == "zip-pack");
+        Assert.Contains(offer.Operations, o => o.Id == "zip-pack");
         Assert.Contains(offer.Operations, o => o.Id == "images-to-pdf");
         var (convert, tools) = Arrange(offer);
         Sta.Run(() =>
